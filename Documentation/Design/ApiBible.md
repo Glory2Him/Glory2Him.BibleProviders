@@ -197,6 +197,56 @@ service composed and returns the response. It gets no unit tests.
 
 ---
 
+### APB6.1 How the caller's token composes with this budget (#1)
+
+Required by §ABS33 item 8, because this provider has timeout logic and
+`the-standard-cancellation-patterns` binds once it does.
+
+1. **Link, never replace.** The foundation service creates a linked source for the
+   overall budget and passes *that* token down to the broker:
+
+   ```csharp
+   using var timeoutSource = new CancellationTokenSource(
+       TimeSpan.FromSeconds(configurations.TimeoutSeconds));
+
+   using var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(
+       cancellationToken, timeoutSource.Token);
+   ```
+
+   The caller's token is never dropped and never substituted — rule 6 of the
+   skill's Dos, and its Don'ts #3.
+
+2. **Catch the timeout arm first.** Both arms are present, in this order, because
+   they are otherwise indistinguishable — both surface as
+   `OperationCanceledException`:
+
+   ```csharp
+   catch (OperationCanceledException) when (timeoutSource.IsCancellationRequested)
+   {
+       throw new ApiBibleUnavailableException(
+           message: "API.Bible did not answer within the configured budget.",
+           innerException: exception);          // IBibleUnavailableException
+   }
+   catch (OperationCanceledException)
+   {
+       throw;                                   // the caller went away — §ABS13 rule 3
+   }
+   ```
+
+   Reversing them makes every provider timeout look like caller cancellation, which
+   is the precise failure §ABS13 rule 3 exists to prevent and §ABS38 rule 7 tests
+   for. The skill names the inversion as an anti-pattern (Don'ts #6) and requires
+   both blocks whenever timeout logic exists (its 1.3 Defaults).
+
+3. **The per-attempt timeout is the resilience pipeline's, not this code's**
+   (§APB6). Only the overall budget is linked here; nesting a second manual source
+   per attempt would duplicate what the pipeline already does.
+
+4. **The token reaches the broker and the `HttpClient` call unbroken.** A broker
+   that accepts a token and does not pass it to `SendAsync` is the silent-drop
+   anti-pattern, and nothing above would catch it.
+
+---
 ## APB7. Catalogue resolution (#1)
 
 The public surface speaks in abbreviations (`"NIV"`); the upstream wants opaque

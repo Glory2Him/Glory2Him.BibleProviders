@@ -202,7 +202,34 @@ forgotten.
    | Omitting `KnownTranslations` from `IBibleProvider` (§SOL17 rule 3) | **No** — adding a member to a shipped interface is a break |
    | Consumers persisting scripture before an upstream's terms are read (§YVN14) | **No** — a licence breach is not undone by a refactor |
 
-8. **Out of scope.** §SOL13.
+8. **The public surface is asynchronous and cancellable.** Every method on
+   `IBibleProvider` and `IBibleAbstractionProvider` returns `Task<ScriptureResult>`
+   and takes `CancellationToken cancellationToken = default` as its **last**
+   parameter. Three parts, all deliberate:
+
+   - **Async, because every implementation is I/O.** A provider's whole job is one
+     HTTP round trip; a synchronous surface would force `.Result` on callers and
+     burn a thread pool thread per lookup for up to the 20-second budget (§SOL17
+     rule 4).
+   - **Cancellable, because the caller may leave.** A web request that is abandoned
+     should stop a 20-second provider call, not finish it against a socket nobody is
+     reading. The token flows unbroken to the broker (`the-standard-cancellation-patterns`
+     1.0 rule 5).
+   - **Defaulted to `default`, so cancellation is opt-in for the caller and never
+     required.** A console script or a background job may ignore it entirely.
+
+   **This is recorded here because it is irreversible and was not written down
+   anywhere.** Rule 7's table already lists the published surface as a
+   major-version break; the async shape and the token parameter *are* that surface,
+   so the decision belonged in this list and was only ever visible as an incidental
+   detail of a code sample. It is the same class and the same deadline as the two
+   surface questions still open at §SOL17 rule 3 and §ABS39 rule 5: free now,
+   breaking after the first `RELEASES:` PR.
+
+   The *mechanism* — how a caller's token composes with a provider's own timeout
+   budget — is §ABS13 for the semantics and §APB6.1 / §YVN6.1 for the composition.
+
+9. **Out of scope.** §SOL13.
 
 ---
 
@@ -347,8 +374,9 @@ not resolve.
 **And one thing the dependency table does not show, because it is transitive:**
 
 5. **`Xeption` is not referenced by any shipped package. Settled — see §SOL17
-   rule 6 for the decision and its reasoning.** Test projects reference it
-   directly, where it is not published and costs a consumer nothing.
+   rule 6 for the decision and its reasoning.** Test projects *will* reference it
+   directly — not yet; no `.csproj` in the repository names it today — where it is
+   not published and costs a consumer nothing.
 
    The measured reason: `Xeption` 2.9.0 depends on `FluentAssertions [7.2.2]` and
    `DeepCloner`, and `FluentAssertions` pulls
@@ -780,7 +808,8 @@ are **decisions, not spikes** — no amount of upstream research settles them.
    `Documentation/Design/<Provider>.md` meeting §ABS33.
 
 6. ~~**Do we accept `Xeption`'s transitive closure on a published package?**~~
-   **Settled: no. Shipped packages do not reference `Xeption`; test projects do.**
+   **Settled: no. Shipped packages do not reference `Xeption`; test projects will,
+   once one needs it.**
 
    Every version checked — 2.5, 2.6, 2.8, 2.9 — pins `FluentAssertions = 7.2.2`,
    so there is no lean release to move to, and `PrivateAssets` cannot strip a
@@ -796,9 +825,12 @@ are **decisions, not spikes** — no amount of upstream research settles them.
    `innerException`, lifting actionable detail onto typed properties — is
    untouched, because none of it lives in the base class.
 
-   **What is kept:** test projects reference `Xeption` directly for
-   `SameExceptionAs()` (§ABS35). They are never published, so a consumer's graph
-   never sees it.
+   **What is kept:** test projects may reference `Xeption` directly for
+   `SameExceptionAs()` (§ABS35), and none does yet because none has a test in it.
+   They are never published, so a consumer's graph never sees it either way. Until
+   one takes the reference the `FluentAssertions` pin is preferred rather than
+   forced (§SOL6) — so a test project adding `Xeption` must not also relax that
+   pin, or the restore will resolve two different versions.
 
    **Why this was safe to do:** §ABS7 already made the marker interfaces the entire
    public exception vocabulary, and §ABS7's own rule is that consumers catch markers

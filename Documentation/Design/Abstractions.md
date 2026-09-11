@@ -503,6 +503,22 @@ public abstract class BibleProviderBase : IBibleProvider
 }
 ```
 
+**On `= default` for the `protected` members.** `FetchAsync` and
+`FetchByRawReferenceAsync` take `CancellationToken cancellationToken` with **no
+default**, while the public methods in §ABS4 and §ABS24 default it. That is
+deliberate, not an oversight, and it is a knowing divergence from
+`the-standard-cancellation-patterns` 1.0 rule 2 for one specific reason: C#
+resolves optional arguments **at the call site, by static type**, so a default on
+a `virtual` or `abstract` member is silently ignored when the call comes through a
+derived reference — the classic footgun. These members have exactly one caller,
+`BibleProviderBase` itself, which always holds a token. Requiring it makes
+forgetting to pass it a compile error instead of a silent `CancellationToken.None`.
+
+The rule generalises: **default the token on surfaces a consumer calls; require it
+on surfaces only this library calls.** A third-party provider declining this base
+class (below) is still bound by §ABS4's defaulted public signature, which is the
+one its consumers see.
+
 **Division of labour.** The base parses the input (applying `DefaultTranslation`
 when it was omitted — §ABS20), then calls `FetchAsync`. `FetchAsync` returns a
 *finished* `ScriptureResult`: it resolves the translation against the provider's
@@ -1303,6 +1319,14 @@ this library. Every `Documentation/Design/<Provider>.md` states, explicitly:
    `ScriptureLookupStatus`, and which becomes which exception.
 7. A reserved area prefix registered in [Design.md](Design.md)'s header table, and
    every claim about the upstream carrying a provenance tag.
+8. **How a caller's `CancellationToken` composes with its own timeout budget.**
+   Mandatory for any provider that has one — which is every provider in this
+   solution (§ABS5 rule 8). `the-standard-cancellation-patterns` only bites once
+   timeout logic exists, and that is exactly the point at which this contract stops
+   being able to specify it for you: the linked source, the catch order and the
+   pair of catch blocks are all per-provider code. §ABS13 gives the *semantics*
+   every provider must produce; the provider document gives the *mechanism* that
+   produces them — §APB6.1 and §YVN6.1 are the worked instances.
 
 ---
 
@@ -1338,7 +1362,8 @@ called directly as `IBibleProvider` throws the marked type itself.
 ```csharp
 private static readonly string[] ProviderOrder = { /* from the app's own configuration */ };
 
-public async ValueTask<ScriptureResult> GetScriptureAsync(string reference, CancellationToken ct)
+public async ValueTask<ScriptureResult> GetScriptureAsync(
+    string reference, CancellationToken cancellationToken)
 {
     ScriptureResult? last = null;
     var failures = new List<Exception>();
@@ -1350,7 +1375,7 @@ public async ValueTask<ScriptureResult> GetScriptureAsync(string reference, Canc
         try
         {
             ScriptureResult result = await bibleAbstractionProvider
-                .GetScriptureByReferenceAsync(providerName, reference, ct);
+                .GetScriptureByReferenceAsync(providerName, reference, cancellationToken);
 
             if (result.IsFound) { return result; }
 
@@ -1362,7 +1387,7 @@ public async ValueTask<ScriptureResult> GetScriptureAsync(string reference, Canc
                 break;                                             // no provider will do better
             }
         }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             throw;                                                 // the caller went away
         }
@@ -1413,8 +1438,10 @@ Psalms, Joel and Malachi those editions may number the reference differently
 Per `the-standard-testing`: xUnit + FluentAssertions + Moq, randomised inputs via
 Tynamix.ObjectFiller with DeepCloner, Given/When/Then comments,
 `Should{Action}Async` naming, `VerifyNoOtherCalls()` closing every test,
-`Xeption.SameExceptionAs()` for exception equality — **test projects reference
-`Xeption` directly; no shipped package does (§SOL17 rule 6)** — and partial test classes — a
+`Xeption.SameExceptionAs()` for exception equality, which is the one thing a test
+project adds `Xeption` for — **no shipped package references it (§SOL17 rule 6),
+and no test project does yet either, because none has a test in it** — and partial
+test classes — a
 root plus `{Tests}.{Method}.Logic.cs`, `.Validations.cs`, `.Exceptions.cs`.
 Failing-path tests use `ShouldThrow{Exception}On{Action}If{Condition}AndLogItAsync`
 naming, which encodes the condition *and* the logging assertion in the name.

@@ -182,6 +182,56 @@ at 2 s (**≤ 4 s** total), overall budget **20 s**, `HttpClient.Timeout` left
 
 ---
 
+### YVN6.1 How the caller's token composes with this budget (#1)
+
+Required by §ABS33 item 8, because this provider has timeout logic and
+`the-standard-cancellation-patterns` binds once it does.
+
+1. **Link, never replace.** The foundation service creates a linked source for the
+   overall budget and passes *that* token down to the broker:
+
+   ```csharp
+   using var timeoutSource = new CancellationTokenSource(
+       TimeSpan.FromSeconds(configurations.TimeoutSeconds));
+
+   using var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(
+       cancellationToken, timeoutSource.Token);
+   ```
+
+   The caller's token is never dropped and never substituted — rule 6 of the
+   skill's Dos, and its Don'ts #3.
+
+2. **Catch the timeout arm first.** Both arms are present, in this order, because
+   they are otherwise indistinguishable — both surface as
+   `OperationCanceledException`:
+
+   ```csharp
+   catch (OperationCanceledException) when (timeoutSource.IsCancellationRequested)
+   {
+       throw new YouVersionUnavailableException(
+           message: "YouVersion did not answer within the configured budget.",
+           innerException: exception);          // IBibleUnavailableException
+   }
+   catch (OperationCanceledException)
+   {
+       throw;                                   // the caller went away — §ABS13 rule 3
+   }
+   ```
+
+   Reversing them makes every provider timeout look like caller cancellation, which
+   is the precise failure §ABS13 rule 3 exists to prevent and §ABS38 rule 7 tests
+   for. The skill names the inversion as an anti-pattern (Don'ts #6) and requires
+   both blocks whenever timeout logic exists (its 1.3 Defaults).
+
+3. **The per-attempt timeout is the resilience pipeline's, not this code's**
+   (§YVN6). Only the overall budget is linked here; nesting a second manual source
+   per attempt would duplicate what the pipeline already does.
+
+4. **The token reaches the broker and the `HttpClient` call unbroken.** A broker
+   that accepts a token and does not pass it to `SendAsync` is the silent-drop
+   anti-pattern, and nothing above would catch it.
+
+---
 ## YVN7. Catalogue resolution (#1)
 
 1. **Built per configured language range and merged.** `/bibles` returns results
@@ -325,12 +375,10 @@ but catching it is not the same as not doing it.
 1. **A whole chapter is still one request — through `/passages`, not through
    `/verses`.** The passages endpoint takes a USFM `passage_id`, and a bare chapter
    id (`PSA.119`) is a legal one, so the chapter route is
-   `GET /bibles/{id}/passages/PSA.119`. **[unverified]** — that a bare chapter id is
-   accepted is inference from the USFM grammar, not something the reference states,
-   and §YVN19 rule 3 must confirm it alongside range support. If it is rejected, the
-   chapter-verses endpoint becomes useful after all: call it to enumerate the verse
-   ids, then fetch that span from `/passages` in one request — two calls, still not
-   176.
+   `GET /bibles/{id}/passages/PSA.119`. **[verified]** — the reference documents the
+   path parameter as "The passage identifier (verse or chapter USFM format)", so a
+   chapter id is explicitly in scope and this half of §YVN19 rule 3 is **closed**.
+   Range syntax is a separate question and stays open (rule 4).
 2. Psalm 119 costs one call, or two, and not 176. Either way this removes the worst
    request-cost figure in the design (§SOL12) — the conclusion survives; only the
    endpoint that delivers it changed.
@@ -631,7 +679,9 @@ gets built**, not merely how it is configured.
    whether the shipped `DefaultTranslation` works out of the box (§YVN4).
 3. **Does the passages endpoint accept a verse range** (`JHN.3.16-JHN.3.18`)?
    Decides whether a range is one request or a chapter fetch plus a slice (§YVN9
-   rule 3).
+   rule 4). **Half of this is already closed**: a bare *chapter* id is documented as
+   accepted (§YVN9 rule 1) [verified]; no *range* syntax is documented anywhere, so
+   only the range half needs a live key.
 4. **Confirm the red-letter and poetry class vocabulary** against a licensed
    red-letter version. §YVN10 rule 4's mapping is guesswork until this is done.
 5. **Settle the catalogue parameters** — `language_ranges[]` with literal brackets
