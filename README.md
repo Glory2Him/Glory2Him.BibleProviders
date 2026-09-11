@@ -165,6 +165,8 @@ The short version; each provider's README carries the detail and the figures.
 - **[`Documentation/Design/`](Documentation/Design/)** — the full design, in four
   area-scoped documents. Start at [`Design.md`](Documentation/Design/Design.md).
   Sections are prefixed and cited by number (`§ABS6`, `§APB14`) from code comments.
+- **[`INTENT.md`](INTENT.md)** — what this system is for, and why the design
+  carries the weight of licence obligations that it does.
 - **[`DEVELOPERS.md`](DEVELOPERS.md)** — how work moves from an idea to merged code
   here, and how to drive the four agents.
 - **[`CLAUDE.md`](CLAUDE.md)** — the rules that bind contributors and agents alike.
@@ -175,7 +177,6 @@ The short version; each provider's README carries the detail and the figures.
 
 Tracked on [#3](https://github.com/Glory2Him/Glory2Him.BibleProviders/issues/3):
 
-- `INTENT.md` — what this system is for, in prose.
 - `CLAUDE.md` — trim **Commands** to what exists here, and delete its *Before this
   repository is real* section.
 

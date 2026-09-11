@@ -11,10 +11,8 @@ The setup checklist lives in `README.md`, under "After creating this repository"
 That is the one list — this file does not keep a second copy that would drift from
 it. Delete this section once you have worked through it.
 
-One item on it still matters to you before anything else: **`INTENT.md` does not
-exist**, so there is no prose statement of what this system is for. Treat a
-question about purpose as unsettled rather than inferring it from whatever code
-happens to be here.
+**`INTENT.md` states what this system is for**, including why the design carries
+the weight of licence obligations it does — read it before arguing with one.
 
 The design itself is real. It lives in `Documentation/Design/` as four
 area-scoped files — `Design.md` (solution, `SOL`), `Abstractions.md` (`ABS`),

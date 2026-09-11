@@ -3,8 +3,9 @@
 **Area prefix:** `SOL` · **Sections:** §SOL1 – §SOL19
 
 How this system is built: package boundaries, layer placement, the provider
-contract, and the decisions that belong to no single package. `INTENT.md` says
-what the system is *for* — it does not exist yet (§SOL17 rule 1).
+contract, and the decisions that belong to no single package.
+[`INTENT.md`](../../INTENT.md) says what the system is *for*, and is where the
+reasoning behind this design's weight of licence obligations lives.
 
 **This document is authoritative.** An issue that disagrees with it is stale
 intent, not an instruction — correct the issue.
@@ -841,10 +842,20 @@ can still change what gets built.
 Package-specific questions live in each document. These span the solution and
 are **decisions, not spikes** — no amount of upstream research settles them.
 
-1. **`INTENT.md` does not exist.** `CLAUDE.md` and `DEVELOPERS.md` both treat it
-   as the statement of what this system is for, and both these design documents
-   and the analyst's criteria are supposed to trace to it. Write it, or accept
-   that §SOL1 is doing its job by default.
+1. ~~**`INTENT.md` does not exist.**~~ **Written** — it states what the system is
+   for, who it serves, and the three things that must never go wrong, in the order
+   they matter.
+
+   It also carries the one piece of reasoning this design needs and had nowhere to
+   put: **why so much of it is about obligations.** A reader meeting a `required`
+   usage token, a required-but-nullable `Attribution`, a library that refuses to
+   report on your behalf and a deliberate absence of any shipped copyright table
+   could reasonably read all of it as ceremony. `INTENT.md` is the argument they
+   would be arguing with.
+
+   It was written from what the repository already shows rather than from the
+   owner's own words, and says so. **If it is wrong, correct it there** — this
+   design cites it rather than restating it.
 
 2. ~~**Files still pointing at the deleted `Documentation/Design.md`.**~~
    **Done.** All 30 references across `CLAUDE.md`, `DEVELOPERS.md`, `README.md`,
