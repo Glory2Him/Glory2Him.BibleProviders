@@ -18,6 +18,7 @@ The architect writes here. Nobody else does.
 | The provider contract | `ABS` | [Abstractions.md](Abstractions.md) |
 | API.Bible provider | `APB` | [ApiBible.md](ApiBible.md) |
 | YouVersion provider | `YVN` | [YouVersion.md](YouVersion.md) |
+| Usage permission — storage and onward transmission | `USE` | [UsagePermission.md](UsagePermission.md) |
 
 ---
 
@@ -58,7 +59,7 @@ tomorrow what it meant when it was written, which nothing else in this repositor
 guarantees.
 
 **A new area reserves its prefix in the table above before its file is written.**
-Reserved so far: `SOL`, `ABS`, `APB`, `YVN`. A third provider takes the next free
+Reserved so far: `SOL`, `ABS`, `APB`, `YVN`, `USE`. A third provider takes the next free
 three-letter token and gets `Documentation/Design/<Provider>.md` (§ABS33).
 
 **Every heading carries exactly one tag, never bare:**
@@ -709,6 +710,13 @@ the recommended shape is:
 7. **Persist whatever is needed to link back to the upstream's copyright page.**
    API.Bible's terms require more than a copyright string — see §APB19, which is
    also the one place this design knows the DTO may be a field short.
+
+8. **Read [UsagePermission.md](UsagePermission.md) before you store or share it.**
+   It sets out the storage limits and the onward-transmission rights per provider
+   and per publisher, rather than leaving them scattered through the compliance
+   sections. The headline: storage is permitted on both upstreams, and **passing
+   scripture out of your application is not** — except for public-domain and
+   permissively-licensed translations (§USE1).
 
 ---
 
