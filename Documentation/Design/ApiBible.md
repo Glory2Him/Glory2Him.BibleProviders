@@ -94,6 +94,9 @@ public sealed class ApiBibleConfigurations
     public string ApiKey { get; set; } = string.Empty;                     // required
     public string BaseUrl { get; set; } = "https://rest.api.bible/v1/";
     public string DefaultTranslation { get; set; } = "KJV";                // §APB4
+    /// <summary>Abbreviation -> bibleId override. NOTE: the licensed Bibles on a Starter
+    /// plan are NON-COMMERCIAL ONLY, and "commercial" includes advertising, sponsorship
+    /// and freemium — see the package README before mapping one. §APB20</summary>
     public Dictionary<string, string> TranslationMap { get; set; } = new();// "NIV" -> bibleId override
     public bool UseOrgId { get; set; } = false;                            // §APB13 — never flip against stored keys
     public IList<string> ParseLanguages { get; set; } = new List<string> { "eng" };  // §ABS42.4
