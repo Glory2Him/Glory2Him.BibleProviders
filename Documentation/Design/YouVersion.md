@@ -635,26 +635,38 @@ consecutive-verse cap **because they are not the agreement that would carry one*
 
 ### YVN14.1 Where the storage question actually lives (#1)
 
-Two instruments, neither of them this one:
+Two instruments were named here. **Checking the portal has narrowed it to one.**
 
-1. **The per-version licence agreements** accepted in the portal (§YVN17). These
-   are with the publishers, and the terms say YouVersion passes the developer's own
-   details to them to check eligibility — "those third parties require that we
-   collect from You and share with them certain personally identifiable information
-   ('Developer PII') to ensure that You meet and maintain the standards by the
-   third-party license".
-2. **"YVP Terms"** — per-Tool terms published in the platform, incorporated by
-   reference, and which **override this agreement where they conflict**: "in the
-   event of a conflict among the terms of this Agreement and the YVP Terms, the YVP
-   Terms shall govern for the Tool to which they apply."
+1. **The publisher licence agreements** — **not per *version*, per *publisher***, which
+   an earlier version of this section got wrong. They live at
+   `platform.youversion.com/platform/licenses` under "Fast-track Bible Licensing",
+   each row carrying the Bibles it covers and a **"View Agreement"** link to the
+   document itself [verified]. One Biblica agreement covers 69 Bibles including NIV
+   and NIrV; one Lockman agreement covers NASB and AMP; a Public Domain and Creative
+   Commons row covers 361 and has no agreement to show.
 
-**So rule 1 of the old version of this section stands, for a better reason.** Do
-not persist scripture from this provider yet — not because a figure is unread, but
-because the agreement that would set one has not been identified. What changed is
-what closes it: reading the platform terms was never going to, and §YVN19 rule 9
-was aimed at the wrong document. **Whoever accepts a version in the portal must
-record what that agreement says about retention**, and the YVP Terms for the Bible
-tool must be located and read.
+   **They are already accepted and already readable** — the portal reports "You have
+   accepted all available licenses". So this is not blocked on access. It is
+   roughly nine documents nobody has opened, and it is where a retention figure
+   would be.
+
+2. ~~**"YVP Terms"** — per-Tool terms published in the platform~~ — **very likely
+   do not exist for this Tool.** The Terms of Use define them as "specific to a
+   particular Tool that are set forth in the YVP for that particular Tool", and
+   nothing of the sort surfaces anywhere checked: the terms page itself, Profiles,
+   Licensing, or the Apps list [verified]. The only terms document the portal offers
+   is the Terms of Use, accepted at account creation — the same document §YVN14
+   records.
+
+   **Read the clause as a reservation of right** rather than a pointer to an unread
+   obligation: it lets YouVersion attach per-Tool conditions later, and if the
+   platform sets none forth for the Bible API, there are none to comply with. Not
+   proof of absence — Dev Docs and an application's own Details page were not
+   exhaustively searched — but enough that this should no longer be described as a
+   document blocking storage.
+
+**So the blocker is now one thing, and it is sitting in the portal already
+accepted:** read the publisher agreements and record what they say about retention.
 
 ### YVN14.4 This is a spike, not an integrity matter — and the difference decides what happens next (#3)
 
@@ -814,6 +826,13 @@ The app key only sees versions whose agreements were accepted in the portal. Thi
 is the most common cause of a confusing `TranslationNotSupported`, and it looks
 identical to a translation that does not exist.
 
+**Acceptance is per publisher, not per version** [verified] — one Biblica
+agreement carries 69 Bibles, one Lockman agreement carries 5. So the unit of
+"licensed" is a publisher's whole set, which makes the trap both coarser and
+easier to fix than "accept the version you need": accepting one agreement can add
+hundreds of translations at once, and the portal reports plainly when all available
+agreements have been accepted (§YVN14.1).
+
 Three things follow:
 
 1. The package README must say so **first**, not in an appendix — §SOL19.3 makes it
@@ -884,10 +903,13 @@ gets built**, not merely how it is configured.
    (§YVN11.)
 9. ~~**Read and record the platform terms.**~~ **Done** — §YVN14. It did not
    unblock storage, because the platform terms explicitly grant no rights in the
-   Bible text. **The spike was aimed at the wrong document**, and its replacement is:
-   **locate and read the YVP Terms for the Bible tool, and record what a per-version
-   licence agreement says about retention** (§YVN14.1). That is what storage is
-   actually blocked on. It needs portal access, not a browser.
+   Bible text.
+
+   **Its replacement is narrower than first written.** The YVP Terms half is
+   closed — none appear to exist for this Tool (§YVN14.1 item 2). What remains:
+   **read the publisher agreements at `platform/licenses` and record what they say
+   about retention.** They are already accepted and already readable, roughly nine
+   of them, so this needs someone's attention rather than anyone's permission.
 10. **Does the Bible resource expose a script direction** (or a script code we can
     map from)? §ABS42.6 needs it and §YVN7 rule 4 falls back to a built-in table
     without it. Low cost to check, and it decides whether a Hebrew or Arabic edition

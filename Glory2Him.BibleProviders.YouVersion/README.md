@@ -96,6 +96,10 @@ is absent, so you will know.
 A translation you have not accepted behaves exactly like one that does not exist:
 `TranslationNotSupported`, with nothing to distinguish the two.
 
+Acceptance is **per publisher**, not per version — one Biblica agreement covers 69
+Bibles including NIV, one Lockman agreement covers NASB and AMP. They live under
+**Platform → Licensing** in the portal, and each row links the agreement itself.
+
 So `TranslationNotSupported` from this provider means *"not available to this app
 key, in its configured language ranges"* — which is broader than "not licensed" and
 broader still than "does not exist". **Support guidance should start with "check
