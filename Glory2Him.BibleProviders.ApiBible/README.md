@@ -260,9 +260,9 @@ passage, not on the catalogue. Supply them yourself:
 ```csharp
 TranslationMetadata = new List<TranslationMetadata>
 {
-    new() { Abbreviation = "KJV",
-            Attribution  = "Public Domain",
-            PublisherUrl = "https://…" },
+    new() { Abbreviation = "WEB",
+            Attribution  = "Public Domain. Courtesy of eBible.org",
+            PublisherUrl = "https://ebible.org/web/" },
     // …one per translation you serve. Verified on: 2026-09-11
 },
 ```

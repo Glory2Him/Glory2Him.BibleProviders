@@ -231,6 +231,30 @@ passage response. This upstream gives you more material than most:
 YVP, Life.Church and The Bible App marks unless a Tool's YVP Terms allow it. Name
 the *version* and its copyright holder.
 
+### Filling the gaps — `TranslationMetadata`
+
+This upstream carries more attribution material than most, but not for every
+version. Where the catalogue returns nothing, supply it:
+
+```csharp
+TranslationMetadata = new List<TranslationMetadata>
+{
+    new() { Abbreviation = "WEB",
+            Attribution  = "Public Domain. Courtesy of eBible.org",
+            PublisherUrl = "https://ebible.org/web/" },
+    // …one per translation you serve. Verified on: 2026-09-11
+},
+```
+
+The merge is **per field, and the upstream wins where it returned a value** — your
+entry fills only what came back empty. So a live copyright notice is never
+displaced by a stale one you typed months ago.
+
+**This sample is yours to own and verify.** This package deliberately ships no
+prefilled copyright table: it is legal text about third-party intellectual
+property, a NuGet package cannot be corrected in place, and a row that went stale
+two releases ago looks exactly as authoritative as one that did not.
+
 ### Usage reporting — none owed
 
 Every passage carries `Usage.Obligation == NotRequired`: a positive assertion that
