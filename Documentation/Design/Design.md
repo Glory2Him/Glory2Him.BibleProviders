@@ -25,7 +25,7 @@ The architect writes here. Nobody else does.
 ## Conventions
 
 **The split has happened.** `Documentation/Design.md` was a single stub; it is now
-four area-scoped files under `Documentation/Design/`. Everything below follows
+five area-scoped files under `Documentation/Design/`. Everything below follows
 `DEVELOPERS.md` §4 and §6, adjusted for the fact that the split is done rather
 than hypothetical.
 
@@ -82,7 +82,8 @@ The two example headings above sit inside a code fence and still match that grep
 They use `EVN`, which is not a reserved prefix in this solution, so a sweep can
 discard them on sight rather than chasing a section that does not exist.
 
-**Every heading in all four files currently carries `(#1)`** — the issue that
+**Every heading carries the issue it was settled under** — `(#1)` for the
+original design pass, `(#3)` for the decisions and licence review that followed —
 defined this design in one pass. A sweep therefore finds nothing, and that is
 correct rather than a gap: the tag answers *"which issue defined this section?"*,
 not *"is it built yet?"*.
@@ -214,9 +215,11 @@ forgotten.
      unresolved storage question all bind **the consumer**, and only once the
      consumer chooses to persist. Nothing in this solution can breach them, because
      nothing in it retains anything to breach them with.
-   - **A display-only consumer inherits none of them.** That is why §YVN14 blocks
-     persistence without blocking the provider: YouVersion is fully usable today for
-     anything that fetches and renders. The unresolved question costs a consumer a
+   - **A display-only consumer inherits none of them.** ~~That is why §YVN14 blocks
+     persistence without blocking the provider~~ — **the block lifted, §YVN14.9**;
+     YouVersion storage is permitted and the platform encourages it (§YVN14.11).
+     The point survives the reversal: a display-only consumer still inherits no
+     retention duty at all. The question once cost a consumer a
      cache, not a capability.
    - **The obligations that remain unconditional are the display-time ones** —
      attribution (§ABS32), usage reporting where owed (§ABS30), and verbatim
@@ -423,8 +426,17 @@ not resolve.
 
 5. **`Xeption` is not referenced by any shipped package. Settled — see §SOL17
    rule 6 for the decision and its reasoning.** Test projects *will* reference it
-   directly — not yet; no `.csproj` in the repository names it today — where it is
+   directly — no `.csproj` in the repository names it today — where it is
    not published and costs a consumer nothing.
+
+   **This was false when written and is true now.** `Glory2Him.BibleProviders.Abstractions.csproj`
+   carried `<PackageReference Include="Xeption" Version="2.9.0" />` from the initial
+   project scaffold, so the packed nuspec declared it and the package README's claim
+   of a single dependency was untrue. **The reference is removed**; the packed nuspec
+   now declares `Microsoft.Extensions.Logging.Abstractions` alone [verified by
+   inspecting the nuspec inside the built `.nupkg`]. No production code referenced
+   `Xeption` — only the vendored skill examples under `.claude/`, which are not
+   compiled.
 
    The measured reason: `Xeption` 2.9.0 depends on `FluentAssertions [7.2.2]` and
    `DeepCloner`, and `FluentAssertions` pulls
@@ -797,7 +809,7 @@ abstraction items.
 |---|---|---|
 | Package READMEs (§SOL19) | 0.25 d | **Mostly done:** the root README and the three existing packages' READMEs are written and packing verified. Remaining: one each for `.Fums` and `.Conformance`, with those projects |
 | Scaffolding gaps (§SOL6) | 0.25 d | **Done:** project references, `IsPackable=false`, the `pwsh` fix, the ubuntu long-paths removal. **Remaining:** `Directory.Build.props`, `TreatWarningsAsErrors` + analyzers, and `WireMock.Net` on the three acceptance projects |
-| Abstractions | 8.5–12 d | §ABS40 |
+| Abstractions | 9.5–13 d | §ABS40 |
 | API.Bible | 6.5–9 d | §APB25 |
 | YouVersion | 5–7 d | §YVN21 |
 | **Solution total** | **≈ 21.5–30 dev-days** | |
@@ -839,7 +851,7 @@ can still change what gets built.
 | 1 | Does API.Bible signal an exhausted plan as 429, 403, or something else? | §APB15 | A 403 is currently mapped to `TranslationNotSupported`, which is *returned*. An exhausted plan arriving as 403 would be read as "this translation isn't here", and a consumer would fail over silently and permanently instead of suspending the provider. **The most dangerous unknown in this design** |
 | 2 | YouVersion: `language_ranges[]` with brackets, or `language_ranges` comma-separated? | §YVN7 | Two upstream pages disagree [contested]. Wrong answer ⇒ 422 on every catalogue call ⇒ every lookup fails |
 | 3 | YouVersion: `page_token` or `next_page_token` as the request parameter? | §YVN7 | Two upstream pages disagree [contested]. Wrong answer ⇒ silent single-page catalogue ⇒ licensed translations report as unsupported |
-| 4 | ~~YouVersion platform terms unread~~ — **read**; they grant no rights in the Bible text, so the retention question moves to the per-version licence and the per-Tool YVP Terms | §YVN14.1 | Still blocks persistence, but the document to read has changed |
+| 4 | ~~YouVersion platform terms unread~~ — **read**, and the per-version licences with them: **storage is permitted** (§YVN14.9). The per-Tool YVP Terms are struck as very likely not existing for this Tool | §YVN14.9 | ~~Still blocks persistence~~ — **closed**; nothing blocks persistence on this upstream |
 | 5 | Do critical-text omitted verses return 200-with-empty, 204, or 404? | §APB9, §YVN11 | Decides whether the content check is a safety net or the primary mechanism |
 | 6 | Is a YouVersion passage fetchable for a Bible absent from the catalogue? | §YVN7 | If yes, a catalogue miss is not a sound basis for `TranslationNotSupported` |
 
@@ -1070,13 +1082,14 @@ In this order, because it is the order a consumer needs it:
    inside a package version.
 3. **No section numbers in README prose.** `§ABS45.1` means nothing to someone who
    has not cloned the repository. Link to the design once, at the end.
+4. **Obligations are stated, never summarised away.** If a figure is unestablished,
+   say so and say what it restricts — the §YVN14 shape, which was the model — and §YVN14.9 shows the other half of
+   it, where the figure is found and the restriction lifts.
 5. **Absolute URLs only, in a package README.** nuget.org does not resolve
    repository-relative paths, so a relative image is a broken banner and a relative
    link is a 404. The root README is the opposite case — it is read on GitHub, so
    it links to the project READMEs by relative path and is the only one that may use
    mermaid, which nuget.org does not render.
-4. **Obligations are stated, never summarised away.** If a figure is unestablished,
-   say so and say what it restricts — the §YVN14 shape, which is the model.
 
 **This section is enforced rather than hoped for.** `.claude/agents/qa.md` item 12
 makes README currency a standing check on every pull request: a configuration field

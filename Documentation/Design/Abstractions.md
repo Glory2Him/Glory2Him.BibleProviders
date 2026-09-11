@@ -1415,8 +1415,9 @@ has been refreshed. `ScriptureUsage.IssuedAt` is what makes that decidable.
 
 Each provider document states its upstream's actual figure: API.Bible's is
 **30 days, plus a 24-hour response to a takedown or correction request**
-[verified] (§APB17); YouVersion's is unread and storage is blocked until it is
-(§YVN14).
+[verified] (§APB17); ~~YouVersion's is unread and storage is blocked until it is~~
+— **YouVersion has no cycle at all**: storage is permitted and the duty is
+update-on-request rather than on a timer (§YVN14.9).
 
 **The 24-hour clause has a design consequence the cycle does not.** A periodic
 refresh satisfies the 30-day rule on its own, but it cannot satisfy "within 24
@@ -1677,23 +1678,23 @@ No HTTP anywhere.
 8. **`ScriptureUsageTests`** — `ToStorageString`/`TryParse` round-trip for all four
    obligations, never null or empty including `NotRequired`, survives a token
    containing the delimiter, carries no endpoint.
-9. **`TranslationMetadataMergeTests`** (§ABS45) — the merge as a pure function:
-   per-field, so an entry supplying only `PublisherUrl` leaves a live `Attribution`
-   intact; upstream wins where present; **null, empty and whitespace upstream values
-   all fall through to config** (rule 3); matching is case-insensitive on
-   `Abbreviation`; an unmatched abbreviation changes nothing; and a duplicate
-   abbreviation throws at construction rather than last-one-wins (rule 4).
-10. **`ScriptureMarkupTests`** (§ABS43) — `ToStorageString`/`TryParse` round-trip
+9. **`ScriptureMarkupTests`** (§ABS43) — `ToStorageString`/`TryParse` round-trip
    for all four trust levels; never null or empty including `None`; a
    default-constructed or field-missing value reads as `Unknown` and
    `IsSafeToRender` is false; `Generated` requires a non-null `GeneratedBy`; a blank
    or unparseable stored value parses to `Unknown` rather than throwing or
    defaulting to safe.
-11. **`ScriptureHtmlRendererTests`** — golden tests: `q1` vs `q2` indent surviving,
+10. **`ScriptureHtmlRendererTests`** — golden tests: `q1` vs `q2` indent surviving,
    a `wj` run containing `add` rendering as `<span class="wj it">`, a speech
    crossing a verse boundary rendering as one span, a merged-verse label
    round-tripping, `SectionHeading` omitted from `Text` but present in `Html`,
    scripture text HTML-escaped.
+11. **`TranslationMetadataMergeTests`** (§ABS45) — the merge as a pure function:
+   per-field, so an entry supplying only `PublisherUrl` leaves a live `Attribution`
+   intact; upstream wins where present; **null, empty and whitespace upstream values
+   all fall through to config** (rule 3); matching is case-insensitive on
+   `Abbreviation`; an unmatched abbreviation changes nothing; and a duplicate
+   abbreviation throws at construction rather than last-one-wins (rule 4).
 
 ---
 

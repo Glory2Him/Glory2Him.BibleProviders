@@ -160,7 +160,7 @@ served it. Full detail and the clauses behind every mark:
 
 ### YouVersion
 
-| | Public Domain &<br/>Creative Commons<br/><sub>361 Bibles</sub> | Biblica<br/><sub>NIV, NIrV — 69</sub> | Lockman<br/><sub>NASB, AMP — 5</sub> | Other publishers<br/><sub>1,050</sub> |
+| | Public Domain &<br/>Creative Commons<br/><sub>361 Bibles</sub> | Biblica<br/><sub>NIV, NIrV — 69</sub> | Lockman<br/><sub>NASB, AMP — 5</sub> | Other publishers<br/><sub>1,051</sub> |
 |---|:---:|:---:|:---:|:---:|
 | Look it up and display it in your app | ✅ | ✅ | ✅ | ✅ |
 | Store and cache the text | ✅ | ✅ | ✅ | ✅ |
@@ -168,7 +168,7 @@ served it. Full detail and the clauses behind every mark:
 | **Share the text outside your app** | ⚠️ <sub>per work's own licence</sub> | ❌ | ❌ | ❌ |
 | Share a *reference* + link instead | ✅ | ✅ | ✅ | ✅ |
 | Print it | ❌ | ❌ | ❌ | ❌ |
-| Use commercially | ⚠️ <sub>per work's own licence</sub> | ❌ <sub>free to end users</sub> | ❌ <sub>free to end users</sub> | ✅ <sub>with disclosure</sub> |
+| Use commercially | ⚠️ <sub>per work's own licence</sub> | ❓ <sub>unsourced — see below</sub> | ❌ <sub>no access or membership fees</sub> | ✅ <sub>with disclosure</sub> |
 | Run third-party advertising | ⚠️ | ⚠️ | ❌ | ⚠️ |
 | Display more than 2 chapters / 25 verses at once | ✅ | ❌ | ✅ | ✅ |
 | Hide the footnotes | ✅ | ❌ | ❌ | ❌ |
@@ -241,8 +241,10 @@ The short version; each provider's README carries the detail and the figures.
 
 ## 📚 Documentation
 
-- **[`Documentation/Design/`](Documentation/Design/)** — the full design, in four
+- **[`Documentation/Design/`](Documentation/Design/)** — the full design, in five
   area-scoped documents. Start at [`Design.md`](Documentation/Design/Design.md).
+  [`UsagePermission.md`](Documentation/Design/UsagePermission.md) is the one to read
+  before you store or share anything.
   Sections are prefixed and cited by number (`§ABS6`, `§APB14`) from code comments.
 - **[`INTENT.md`](INTENT.md)** — what this system is for, and why the design
   carries the weight of licence obligations that it does.

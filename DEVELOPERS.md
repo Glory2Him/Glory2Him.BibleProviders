@@ -77,7 +77,7 @@ written into the design document is lost the moment that session ends.
 
 | Role | Durable artifact | Where the next role reads it |
 | --- | --- | --- |
-| architect | a design section | `Documentation/Design/*.md` — four area-scoped files |
+| architect | a design section | `Documentation/Design/*.md` — five area-scoped files |
 | analyst | numbered acceptance criteria | the GitHub issue body, under `## Acceptance criteria` |
 | developer | commits, a branch, a PR, a handoff report | the PR and its diff |
 | qa | BLOCKING / ADVISORY findings | its final report — on the issue when it reviews criteria, on the PR when it reviews code |
@@ -285,7 +285,7 @@ Documentation/
 ```
 
 `Documentation/Design.md` started as a single file. **That split has happened.**
-The design is now four area-scoped files under `Documentation/Design/`:
+The design is now five area-scoped files under `Documentation/Design/`:
 
 | Area | Prefix | File |
 | --- | --- | --- |
@@ -293,6 +293,7 @@ The design is now four area-scoped files under `Documentation/Design/`:
 | Provider contract | `ABS` | `Abstractions.md` |
 | API.Bible provider | `APB` | `ApiBible.md` |
 | YouVersion provider | `YVN` | `YouVersion.md` |
+| Usage permission | `USE` | `UsagePermission.md` |
 
 A new area reserves its prefix in `Design.md`'s header table before its file is
 written. Split by area — never by size.

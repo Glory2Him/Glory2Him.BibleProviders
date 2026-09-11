@@ -69,7 +69,7 @@ unparseable base URL, a timeout budget that does not close.
 | `CatalogueCacheDuration` | 6 hours | |
 | `TimeoutSeconds` | 20 | Overall budget for one lookup |
 | `PerAttemptTimeoutSeconds` | 5 | |
-| `MaxRetryAttempts` | 2 | Retries, not attempts — 2 means 3 attempts |
+| `MaxRetryAttempts` | 1 | Retries, not attempts — 1 means 2 attempts. Low on purpose: a retry spends quota you cannot get back |
 
 ### `LanguageRanges` does double duty
 
@@ -138,7 +138,7 @@ endpoint you called. **The API does not tell you which publisher a translation
 belongs to** — the portal groups them, the catalogue does not — so classify them in
 configuration and default anything that leaves your application to *off*.
 
-| | Public Domain &<br/>Creative Commons<br/><sub>361 Bibles</sub> | Biblica<br/><sub>NIV, NIrV — 69</sub> | Lockman<br/><sub>NASB, AMP — 5</sub> | Other publishers<br/><sub>1,050</sub> |
+| | Public Domain &<br/>Creative Commons<br/><sub>361 Bibles</sub> | Biblica<br/><sub>NIV, NIrV — 69</sub> | Lockman<br/><sub>NASB, AMP — 5</sub> | Other publishers<br/><sub>1,051</sub> |
 |---|:---:|:---:|:---:|:---:|
 | Look it up and display it in your app | ✅ | ✅ | ✅ | ✅ |
 | Store and cache the text | ✅ | ✅ | ✅ | ✅ |
@@ -146,7 +146,7 @@ configuration and default anything that leaves your application to *off*.
 | **Share the text outside your app** | ⚠️ <sub>per work's own licence</sub> | ❌ | ❌ | ❌ |
 | Share a *reference* + link instead | ✅ | ✅ | ✅ | ✅ |
 | Print it | ❌ | ❌ | ❌ | ❌ |
-| Use commercially | ⚠️ <sub>per work's own licence</sub> | ❌ <sub>free to end users</sub> | ❌ <sub>free to end users</sub> | ✅ <sub>with disclosure</sub> |
+| Use commercially | ⚠️ <sub>per work's own licence</sub> | ❓ <sub>unsourced — see below</sub> | ❌ <sub>no access or membership fees</sub> | ✅ <sub>with disclosure</sub> |
 | Run third-party advertising | ⚠️ | ⚠️ | ❌ | ⚠️ |
 | Display more than 2 chapters / 25 verses at once | ✅ | ❌ | ✅ | ✅ |
 | Hide the footnotes | ✅ | ❌ | ❌ | ❌ |
@@ -248,9 +248,24 @@ be told if it is lost, stolen or misused**. This package never logs it.
 
 ### Commercial use
 
-Permitted, with a disclosure: if your application charges a fee, you must
-"conspicuously and explicitly advise Users that the YouVersion Bible App is
-provided at no cost to the User."
+**Permitted for most publishers, with a disclosure**, and **not** for Lockman.
+
+If your application charges a fee you must "conspicuously and explicitly advise
+Users that the YouVersion Bible App is provided at no cost to the User."
+
+**Lockman (NASB, AMP) is the exception and it is absolute**: no third-party
+advertising at all, and **no access charges or membership fees**. Stricter than
+"free to end users", and it is the one publisher position in this table with a
+clause behind it.
+
+**Biblica (NIV, NIrV) is marked ❓ and that is deliberate.** An earlier draft of
+this README said "free to end users", and **no clause supporting that has been
+found**: the agreements' common royalty-free term is about the licence costing
+nothing between the parties, not about what you may charge your users, and
+Biblica's own additions concern a display cap and a removal duty. Rather than keep
+a confident restriction with no source, or relax it to ✅ on the strength of an
+absence, **re-read the Biblica agreement in the portal before charging for an
+application that serves NIV**.
 
 **This is markedly more permissive than API.Bible's non-commercial tier**, which
 bars advertising, freemium and sponsorship outright. Do not assume one upstream's

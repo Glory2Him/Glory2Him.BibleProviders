@@ -61,7 +61,7 @@ startup so a misconfiguration fails the host rather than the first user request.
 | `CatalogueCacheDuration` | 6 hours | |
 | `TimeoutSeconds` | 20 | Overall budget for one lookup |
 | `PerAttemptTimeoutSeconds` | 5 | |
-| `MaxRetryAttempts` | 2 | Retries, not attempts — 2 means 3 attempts |
+| `MaxRetryAttempts` | 1 | Retries, not attempts — 1 means 2 attempts. Low on purpose: a retry spends quota you cannot get back |
 
 ### Why the default is WEB
 
@@ -137,6 +137,23 @@ reporting, the 30-day recency check on anything stored, and the deletion duties 
 those are contractual duties to ABS, not copyright duties to a rights holder. What
 public domain *does* switch off is the copyright-page requirement (§7) and the DRM
 requirement on transmission (§9.9(c)).
+
+### Keeping the content and the key secure
+
+**Terms §12 puts three duties on you that no other section of this README covers**,
+and they apply to public-domain content as much as licensed:
+
+| | |
+|---|:---:|
+| Never make your API key available to any third party | **required** |
+| Keep stored scripture confidential and secure, with **no less care than you use for similar data you store** | **required** |
+| **Notify support@api.bible immediately** on knowing of *or suspecting* a breach or potential vulnerability, then cooperate and remedy it | **required** |
+
+The middle one is a *relative* standard and bites harder than it reads: if you
+encrypt your own user data at rest and leave cached scripture in plaintext, you
+have failed it by the words of the clause.
+
+The third is triggered by **suspicion**, not confirmation.
 
 **And whatever the class, all of these apply:**
 

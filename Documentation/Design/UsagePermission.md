@@ -21,7 +21,7 @@ library, which stores nothing and transmits nothing (§SOL2 rule 5).
 | **API.Bible** — public domain, CC BY, CC BY-SA | Yes, refreshed on cycle | **Yes** — §USE6. **Except the KJV**, which is territorially restricted and may not be transmitted at all (§USE11) |
 | **API.Bible** — any other translation (NIV, ESV, NLT…) | Yes, refreshed on cycle | **No**, unless the rights holder expressly authorised it |
 | **YouVersion** — the Public Domain & Creative Commons set (361) | Yes | **Governed by each work's own PD/CC licence**, not by an agreement — §USE6 |
-| **YouVersion** — any of the nine publisher agreements (1,124) | Yes | **No** — licensed for display *in your application* |
+| **YouVersion** — any of the nine publisher agreements (1,125) | Yes | **No** — licensed for display *in your application* |
 
 **The pattern is the same on both upstreams and worth stating once:** publishers
 licensed *display inside your application*. Storage supports that. Transmission
@@ -139,7 +139,7 @@ scope. All [verified].
    "as to make the downloading of a large portion or the entire UNDERLYING WORKS
    difficult or impractical for use **without REQUESTER's website or application**".
 
-**Reading: a share-out feature is not permitted for the 1,124 Bibles under the
+**Reading: a share-out feature is not permitted for the 1,125 Bibles under the
 nine publisher agreements.** Marked **[unverified]** as a *conclusion* rather than
 a quotation — no clause says "you may not share to social media", and this is
 inference from the scope of the grant. **If a share feature matters commercially,
@@ -652,7 +652,7 @@ update-on-request (§USE3).
 3. **No published rate limit on YouVersion** (§YVN13). "No documented limit" is not
    "generous"; API.Bible's 5,000 a month is at least a number to design against.
 4. **If the translation ever changes, the answer inverts.** Onward sending is
-   foreclosed for all 1,124 publisher-licensed YouVersion Bibles (§USE5), whereas
+   foreclosed for all 1,125 publisher-licensed YouVersion Bibles (§USE5), whereas
    API.Bible at least defines a route — the IP Holder's express authorisation
    (§9.9(a)). A product that may one day send an NIV verse should not build its
    sending path on YouVersion.

@@ -20,8 +20,8 @@ Conventions, heading tags and provenance tags: [Design.md](Design.md), "Conventi
 | Interactive API reference | https://developers.youversion.com/api |
 | **Developer portal** — app keys, per-version licence acceptance | https://platform.youversion.com |
 | Versification specification (Copenhagen Alliance, YouVersion co-authored) | https://github.com/Copenhagen-Alliance/versification-specification |
-| **Platform terms** — read, and they move the blocker rather than lifting it (§YVN14) | https://platform.youversion.com/terms |
-| **Publisher licence agreements** — the remaining unread source (§YVN14.1). Login required; each row links its own agreement | https://platform.youversion.com/platform/licenses |
+| **Platform terms** — read; they grant no rights in the Bible text, so they were never the instrument that could answer the storage question (§YVN14.2) | https://platform.youversion.com/terms |
+| **Publisher licence agreements** — **all nine read** (§YVN14.5); they grant storage expressly (§YVN14.9). Login required; each row links its own agreement | https://platform.youversion.com/platform/licenses |
 
 **YouVersion's public documentation is materially thinner than API.Bible's, and it
 contradicts itself in three places that matter.** There is no published OpenAPI
@@ -40,9 +40,11 @@ different APIs:
 follows first, with the fallback.** Three of these are §SOL16 items because a
 wrong guess is not a degraded feature — it is every call failing.
 
-**The platform terms are published and have not been read.** The page is
-client-rendered and returns no content to a fetch; it must be opened in a browser.
-Until its clauses are recorded here, §YVN14 blocks persistence. This document will
+~~**The platform terms are published and have not been read.**~~ **Read on
+2026-09-11** (§YVN14.2), along with all nine publisher agreements (§YVN14.5), and
+**storage is permitted** (§YVN14.9). The retrieval note is kept because it still
+applies to anyone re-reading them: the page is client-rendered and returns no
+content to a fetch; it must be opened in a browser. This document will
 not state obligations it has not read, and will not treat an unread rule as an
 absent one.
 
@@ -890,6 +892,18 @@ agreement, so:
    requested, not a contract change. `Notes` being populated by one provider and
    empty from another is exactly what a nullable, defaulted collection is for.
 
+### YVN14.7 ~~The agreements are a common template~~ — withdrawn (#3)
+
+**Withdrawn in commit 4c79f44, and restored here as a struck heading rather than a
+gap.** The claim was that the nine agreements share one template with minor
+variation; reading Lockman's disproved it (§YVN14.8, §YVN14.10 rules 8–11).
+
+It was **deleted** rather than struck through, leaving the only numbering gap in
+roughly 140 sections across the five documents — the exact defect the Conventions
+block in [Design.md](Design.md) exists to prevent, committed two days after that
+block was written. A reader following a citation into §YVN14.7 found nothing and
+had no way to tell a withdrawn section from a typo.
+
 ### YVN14.8 §YVN15's `NotRequired` is wrong for Lockman (#3)
 
 §YVN15 declares `ScriptureUsage.NotRequired` on every passage from this provider,
@@ -914,7 +928,7 @@ the five Lockman editions that assertion is false.** Three options:
    publisher and the consumer already configures per translation.
 
 **Now decidable**, since all nine are read: **one publisher of nine, covering five
-Bibles of 1,485.** That makes option 1 defensible and option 2 disproportionate —
+Bibles of 1,486.** That makes option 1 defensible and option 2 disproportionate —
 a published enum member for a single publisher's annual paperwork. **Recommend
 option 1**, with the duty named explicitly in §YVN18 and the package README so a
 consumer serving NASB or AMP meets it in the place they would look.
@@ -1147,7 +1161,8 @@ gets built**, not merely how it is configured.
    question in the affirmative while surfacing four obligations nothing else in this
    design had.
 
-   **Eight agreements remain unread** — Lockman, BroadStreet, MissionAssist, SIL
+   ~~**Eight agreements remain unread**~~ — **all read on 2026-09-11** (§YVN14.5):
+   Lockman, BroadStreet, MissionAssist, SIL
    International, Wycliffe, Biblion, Hawaii Pidgin Bible and Ewangeliczny Instytut
    Biblijny. Each is a "View Agreement" link at `platform/licenses`. Two questions
    for each: does it permit holding content and on what refresh terms, and **does it
