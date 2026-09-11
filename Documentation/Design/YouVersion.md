@@ -614,274 +614,220 @@ concept, and here the honest answer is "not yet known", not "none".
 
 ---
 
-## YVN14. Terms — read, and they move the blocker rather than lifting it (#1)
+## YVN14. Terms — read, and storage is permitted (#1)
 
-**Read in a browser on 2026-09-11; the published version is dated 17 August 2026**
-[verified]. The page is client-rendered and returns nothing to a fetch, which is
-why it stayed unread for so long.
+**Platform terms read 2026-09-11 (version dated 17 August 2026); all nine
+publisher agreements read the same day.** The page is client-rendered and returns
+nothing to a fetch, which is why it stayed unread for so long; the agreements sit
+behind the portal at Platform → Licensing.
 
-**The headline is not what this section expected.** It assumed the platform terms
-were the instrument governing stored scripture, and that reading them would settle
-a retention figure. They are not, and it does not:
+**This section spent most of its life blocking persistence. It no longer does**
+(§YVN14.9), and the path to that answer is worth keeping because it was wrong
+twice.
+
+### YVN14.1 Why the platform terms were never going to answer it (#1)
 
 > "This Agreement is limited to the YV IP. We are not providing You rights in
 > biblical works or works other than YV IP, which You must obtain from their
 > respective owners and licensors."
 
 **The platform terms grant no rights in the Bible text at all.** "YV IP" is the
-platform and the developer tools — the API, the SDKs — and scripture is explicitly
-outside it. So the terms contain no retention clause, no refresh cadence and no
-consecutive-verse cap **because they are not the agreement that would carry one**
-[verified absence, and now a meaningful one].
+platform and the developer tools; scripture is explicitly outside it. So they carry
+no retention clause, no refresh cadence and no caching cap **because they are not
+the agreement that would carry one** [verified absence, and a sound one].
 
-### YVN14.1 Where the storage question actually lives (#1)
+Two instruments were then named as the real home. One turned out not to exist:
 
-Two instruments were named here. **Checking the portal has narrowed it to one.**
-
-1. **The publisher licence agreements** — **not per *version*, per *publisher***, which
-   an earlier version of this section got wrong. They live at
-   `platform.youversion.com/platform/licenses` under "Fast-track Bible Licensing",
-   each row carrying the Bibles it covers and a **"View Agreement"** link to the
-   document itself [verified]. One Biblica agreement covers 69 Bibles including NIV
-   and NIrV; one Lockman agreement covers NASB and AMP; a Public Domain and Creative
-   Commons row covers 361 and has no agreement to show.
-
-   **They are already accepted and already readable** — the portal reports "You have
-   accepted all available licenses". So this is not blocked on access. It is
-   roughly nine documents nobody has opened, and it is where a retention figure
-   would be.
-
+1. **The publisher licence agreements** — **per publisher, not per version.** They
+   are at `platform.youversion.com/platform/licenses`, already accepted, each row
+   linking its own document. **These are the answer** (§YVN14.5).
 2. ~~**"YVP Terms"** — per-Tool terms published in the platform~~ — **very likely
-   do not exist for this Tool.** The Terms of Use define them as "specific to a
-   particular Tool that are set forth in the YVP for that particular Tool", and
-   nothing of the sort surfaces anywhere checked: the terms page itself, Profiles,
-   Licensing, or the Apps list [verified]. The only terms document the portal offers
-   is the Terms of Use, accepted at account creation — the same document §YVN14
-   records.
+   do not exist for this Tool.** The Terms of Use define them as "set forth in the
+   YVP for that particular Tool", and nothing of the sort surfaces on the terms page,
+   Profiles, Licensing or the Apps list [verified]. Read the clause as a reservation
+   of right rather than a pointer to an unread obligation. Not proof of absence —
+   Dev Docs and an application's Details page were not exhaustively searched.
 
-   **Read the clause as a reservation of right** rather than a pointer to an unread
-   obligation: it lets YouVersion attach per-Tool conditions later, and if the
-   platform sets none forth for the Bible API, there are none to comply with. Not
-   proof of absence — Dev Docs and an application's own Details page were not
-   exhaustively searched — but enough that this should no longer be described as a
-   document blocking storage.
-
-**So the blocker is now one thing, and it is sitting in the portal already
-accepted:** read the publisher agreements and record what they say about retention.
-
-**Record the findings here; do not mirror the documents into this repository.**
-Tempting, because they sit behind a login and a Google Docs link that may not
-outlive the account — but three reasons say no, and the first is the one that
-settles it:
+**Record findings here; do not mirror the documents into this repository.**
+Tempting, since they sit behind a login and a Google Docs link that may not outlive
+the account — but three reasons say no, and the first settles it:
 
 1. **Publishing them would plausibly breach the agreement they are part of.** The
    Terms define the YVP as including "the content on the platform", define YV IP as
-   the YVP and the Tools, and then forbid you to "distribute, publish, transfer, or
+   the YVP and the Tools, and forbid you to "distribute, publish, transfer, or
    otherwise make the YV IP available to third-parties" [verified]. This repository
-   is public. Mirroring a licence agreement into it is publishing platform content —
-   breaching the terms we opened them to comply with.
-2. **They are not ours.** Biblica's and Lockman's agreements are those publishers'
-   documents, and §ABS45.3's argument against shipping third-party legal text
-   applies with more force to the agreement itself than to a copyright line.
-3. **They would go stale in the worst way** — a `v1` committed today, superseded
-   later, sitting in the repository looking authoritative while someone relies on
-   it. A stale copyright notice misattributes; a stale retention clause misleads
-   someone into breaching one.
+   is public.
+2. **They are not ours.** §ABS45.3's argument against shipping third-party legal
+   text applies with more force to an agreement than to a copyright line.
+3. **They would go stale in the worst way** — a stale copyright notice
+   misattributes; a stale retention clause misleads someone into breaching one.
 
-**What to record instead**, per row, when someone reads them:
+Record instead: `Publisher — document name — accepted date — clause — figure`.
+Durable, verifiable by anyone with portal access, redistributes nothing, and makes
+drift **detectable**. If durable copies are wanted they belong in the
+organisation's own document store, referenced from here by name and version.
 
-> `Biblica — Fast-track Bible License v1 — accepted 4 Aug 2026 — §N: <the figure>`
+### YVN14.4 Spike, not integrity — and now closed (#3)
 
-Name, version, acceptance date, clause and figure. That is durable, verifiable by
-anyone with portal access, redistributes nothing, and makes drift **detectable** —
-a `v2` appearing in the portal against a `v1` recorded here is a visible mismatch
-rather than a silent one.
+This was recorded as a **spike** rather than an integrity matter, against
+§APB20.1's commercial-use question which is the opposite kind: no determinate
+answer, differs per deployment, documentation is terminal. Here there *was* a
+determinate answer, and reading produced it.
 
-**If durable copies are wanted**, they belong in the organisation's own document
-store, referenced from here by name and version. Not in a public repository, and
-not in one that publishes NuGet packages.
+**That distinction held, and is worth keeping for the next one of its kind.** The
+live blocker was *reading*, not *honouring*; honouring what the agreements say is
+now the same integrity matter as API.Bible's 30 days (§APB17), which this library
+does not enforce either.
 
-### YVN14.4 This is a spike, not an integrity matter — and the difference decides what happens next (#3)
+**Re-read whenever a new publisher agreement is accepted.** The portal label
+"Fast-track Bible License · v1" names a programme, not a document — Lockman's
+shares nothing with the other eight (§YVN14.5).
 
-**Do not file this alongside §APB20.1.** The two look similar — a contractual
-obligation this library will not enforce — and they are not the same kind of thing.
+### YVN14.5 All nine publisher agreements, read — storage is permitted (#3)
 
-| | Commercial use (§APB20.1) | Storage here |
+**Read 2026-09-11 via Platform → Licensing, all nine accepted 4–6 Aug 2026.**
+Everything in §YVN14.5 to §YVN14.9 is [verified] from those documents.
+
+| Publisher | Bibles | Document |
 |---|---|---|
-| Is there a determinate answer? | **No.** It depends on each deployment's business model, permanently, and differs per consumer | **Yes.** What a per-version licence says about retention is a fact, the same for everyone using that version |
-| What closes it? | Nothing. Documentation is the **terminal** state | Someone with portal access, once. Documentation is the **interim** state |
-| What is left afterwards? | The consumer's integrity | A **figure** in this section, and then the consumer's integrity |
+| Public Domain and Creative Commons | 361 | *none — no agreement to show* |
+| Wycliffe | 1,037 | Content License Agreement |
+| Biblica (NIV, NIrV) | 69 | Content License Agreement — **fuller variant** |
+| SIL International | 8 | Content License Agreement |
+| Lockman (NASB, AMP, NBLA, LBLA) | 5 | **Free Distribution Permission Agreement — different document** |
+| Ewangeliczny Instytut Biblijny | 2 | Content License Agreement |
+| BroadStreet (TPT) | 1 | Content License Agreement |
+| MissionAssist (EASY) | 1 | Content License Agreement |
+| Biblion (B21) | 1 | Content License Agreement |
+| Hawaii Pidgin Bible | 1 | Content License Agreement |
 
-So the live blocker is **reading**, not honouring. Honouring a retention figure once
-it is known is the same integrity matter as API.Bible's 30 days (§APB17), which this
-library does not enforce either. §ABS33 rule 5 prescribes precisely the current
-state — say the figure is unestablished, name the spike, state the restriction it
-imposes meanwhile — and that is an interim posture with a defined end, not a
-settled position.
+**Seven are word-for-word identical.** Biblica's is the same family with extra
+clauses; Lockman's shares nothing but its portal label. So "Fast-track Bible
+License · v1" names a *programme*, not a document — and a publisher-specific read
+remains necessary whenever a new one is accepted.
 
-**The consequence of never doing it is a product limitation, not a compliance
-posture:** YouVersion stays display-only for good. That is worth someone's twenty
-minutes rather than a constraint absorbed by default.
+### YVN14.9 The storage question is answered: yes (#3)
 
-**The restriction only binds a consumer that wants to cache.** Display-only
-deployments never touch it, and unlike the sibling provider — where a
-5,000/month quota makes caching effectively mandatory (§SOL12) — this upstream
-publishes no quota at all, so display-only is genuinely viable here for longer than
-it would be there.
+**§YVN14.1's restriction lifts.** The common licence grant covers the right to
+"perform, **store**, distribute, and redistribute the Content on Your Application
+via the Developer Tools", and clause (d) lets a licensee sublicense to users "in
+all manners allowed by YVP, **both online and offline**". Offline use is not
+possible without storage; the grant names storage explicitly.
 
-### YVN14.5 What a publisher agreement actually says — Biblica, read (#3)
+**Refresh is update-on-request, not a fixed cadence.** Biblica's Section VI
+obliges the organisation to make all updates and revisions to held content "as may
+be requested by LICENSOR and as made available via the SDK", and separately to
+update copyright and trademark notices. The common template carries the softer
+form: no edits to the text, and a duty to *notify the publisher* if text appears to
+need revision.
 
-**Read 2026-09-11: *Biblica, Inc. Content License Agreement*, "Fast-track Bible
-License v1", accepted 4 Aug 2026, covering 69 Bibles including NIV and NIrV.**
-One of nine; the other eight are unread (§YVN14.1). Everything below is
-[verified] from that document.
+So a consumer needs §ABS31's forced-refresh path, and does **not** need API.Bible's
+30-day timer (§APB17). **The two upstreams differ in kind here, not degree.**
 
-**It answers the storage question — implicitly, and in the affirmative.**
-Section VI REVISIONS obliges the organisation to "make all updates and revisions
-to any portion or portions of the CONTENT which is included in any current edition
-of the WORK, as may be requested by LICENSOR and as made available via the SDK",
-and separately to update copyright and trademark notices the same way. **An
-obligation to update held content presupposes that holding it is permitted.**
+### YVN14.10 What binds a consumer, across all nine (#3)
 
-So the shape differs from API.Bible (§APB17): **no fixed refresh cadence, an
-update-on-request duty instead.** A consumer needs the same forced-refresh path
-§ABS31 requires, but no 30-day timer.
+Common to the eight Content License Agreements:
 
-**Four obligations that bind harder than anything in the platform terms:**
+1. **All footnotes must be included and accessible to the end-user** — §YVN14.6.
+2. **No alterations to the biblical text** before display, and a duty to tell the
+   publisher if text looks wrong. Reinforces §ABS23 rule 3 from eight sources.
+3. **Direct YVP API access is explicitly contemplated** — not merely tolerated by
+   the platform terms. The approach this provider takes is named in the agreements.
+4. **Industry-standard encryption** against unauthorised supply, onward-supply or
+   reproduction of the content as displayed.
+5. **Digital display only** — no printing or non-digital use without separate
+   written consent.
+6. **No AI-personalised content.** The content may not be used "to produce
+   personalized content through AI Technology". Narrower than the platform terms'
+   AI clause (§YVN14.2 rule 2) and pointing the same way.
+7. **Free of charge**, with no royalties owed either direction.
 
-1. **Footnotes are mandatory, not optional** — V.D: the CONTENT "shall be used in
-   the form and format provided", no alterations before publication, and "**All
-   footnotes to the TRANSLATIONS text must be included along with the TRANSLATIONS
-   text and accessible to the end-user.**" See §YVN14.6 — this contradicts a
-   decision this design took deliberately.
-2. **A hard display cap** — V.F: no more than "**two (2) chapters or twenty-five
-   (25) verses, whichever is greater**" displayed or streamed **per user at any
-   given time**. Tighter than API.Bible's 200-verse request cap and its
-   500-consecutive-verse cache request (§APB18), and measured per *user* and per
-   *moment* rather than per request or per store.
-3. **The content must be free to end users** — V.G: "ORGANIZATION agrees to offer
-   access to the CONTENT free of charge to all end users", and access may not be
-   used to gather personal information for commercial use or third-party
-   distribution. **This is a real commercial restriction**, and a stricter one than
-   the platform terms' mere disclosure requirement (§YVN14.2 rule 4) — which
-   §APB20.1 predicted in principle but not in this form.
-4. **48 hours to remove content** on the licensor's written request (V.I), plus
-   industry-standard encryption against unauthorised reproduction (V.E) and a
-   prohibition on AI/ML personalisation of the content (III.B).
+**Biblica adds**, and these are the tightest constraints found anywhere in this
+design:
 
-**One thing it confirms rather than constrains:** V.C states the organisation
-"shall access the CONTENT primarily through the SDK... **Direct YVP API access may
-also be used where applicable**". The REST-API approach this provider takes is
-explicitly contemplated.
+8. **A hard display cap: no more than two chapters or twenty-five verses,
+   whichever is greater, per user at any given time.** Not per request and not per
+   store — per *user*, per *moment*. §APB18's 500-consecutive-verse request is loose
+   by comparison.
+9. **48 hours** to remove content on written request; a two-year auto-renewing
+   term, after which no rights survive.
 
-**Term:** two years from the effective date, auto-renewing for successive two-year
-terms, and on termination "no rights or privileges will extend beyond the term".
+**Lockman differs entirely:**
 
-### YVN14.7 Lockman, read — and the agreements are not a common template (#3)
+10. **No third-party advertising at all**, and no access charges or membership
+    fees. Stricter than "free to end users", and the closest analogue to API.Bible's
+    non-commercial definition (§APB20) — which makes §APB20.1's conclusion sharper:
+    the restriction is real, it varies per publisher, and no API exposes it.
+11. **Bulk extraction must be made impractical** — display must be arranged "as to
+    make the downloading of a large portion or the entire UNDERLYING WORKS difficult
+    or impractical for use without REQUESTER's website or application".
+12. **A conspicuous clickable link** to lockman.org plus the copyright notice, and
+    where the full notice is impractical a per-verse tag — `NASB 1995`, `AMP` — that
+    **must itself link**. This is the attribution *format* §YVN14.3 recorded as
+    unknown, for this publisher, and the clearest justification for
+    `TranslationSummary.PublisherUrl` (§ABS44.5).
+13. **An annual report** to Lockman by end of February of copies distributed the
+    previous calendar year — §YVN14.8.
 
-**Read 2026-09-11: *Lockman Foundation Free Distribution Permission Agreement*,
-listed as "Fast-track Bible License v1", accepted 4 Aug 2026, covering 5 Bibles
-including NASB 2020, NASB 1995, AMP, LBLA and NBLA.** [verified]
+### YVN14.6 Footnotes are contract-level, and §ABS39 rule 3 must be built (#3)
 
-**The headline is structural: this is a different document, not a different set of
-figures in the same one.** Biblica's is a ten-page "Content License Agreement"
-organised into numbered Articles; Lockman's is three pages of a "Free Distribution
-Permission Agreement" with no such structure. **The portal labels both
-"Fast-track Bible License · v1" and they share almost nothing.** So the remaining
-seven cannot be assumed to follow either, and §YVN14.5's Biblica findings must not
-be generalised into provider-wide rules.
+**Eight of the nine agreements carry the same sentence**: the content "shall be
+used in the form and format provided via SDKs or direct API calls", no alterations
+before display, and "**All footnotes must be included along with the Content and
+accessible to the end-user**" [verified — Biblica, BroadStreet, SIL, Wycliffe,
+MissionAssist, Biblion, Hawaii Pidgin, Ewangeliczny].
 
-**What Lockman requires, and most of it is new to this design:**
-
-1. **No third-party advertising, at all.** Display and distribution "must be
-   completely free of charge, without any access charges or general membership fees
-   of any kind, **and the application and website must not have any third-party
-   advertising**". That is stricter than Biblica's free-to-end-users clause
-   (§YVN14.5 rule 3) and lands in the same place as API.Bible's non-commercial
-   definition (§APB20) — which makes §APB20.1's conclusion sharper, not weaker:
-   the restriction is real, it varies per publisher, and nothing in either API
-   exposes it.
-2. **Bulk extraction must be made impractical.** "Access to and display of THE
-   LICENSED WORKS must be in such a way as to make the downloading of a large
-   portion or the entire UNDERLYING WORKS difficult or impractical for use without
-   REQUESTER's website or application." Not a prohibition on caching — a duty to
-   prevent *your users* harvesting the text through you.
-3. **A conspicuous clickable link is mandatory.** "A clickable link to LOCKMAN's web
-   site home page, this copyright notice, and other such notices as LOCKMAN may from
-   time to time designate, must be placed in a conspicuous place." And where the
-   full notice is impractical, the per-verse tag — `NASB 1995`, `AMP`, `NBLA` — "may
-   be used after the verse(s), **and it must link to** http://www.lockman.org".
-
-   **This is the attribution *format* §YVN14.3 recorded as unknown**, at least for
-   this publisher: a notice, a conspicuous link, and a per-verse tag that is itself
-   a link. It is also the clearest justification yet for
-   `TranslationSummary.PublisherUrl` (§ABS44.5).
-4. **An annual usage report.** "REQUESTER shall provide LOCKMAN, on or before the
-   end of February, with an annual report of the number of copies of THE LICENSED
-   WORKS containing THE UNDERLYING WORKS which REQUESTER has distributed the
-   previous calendar year." See §YVN14.8.
-5. Verbatim copyright notices are specified for each of the five editions.
-   Terminates on thirty days' notice from Lockman **or YouVersion**; governed by
-   California law; not sub-licensable or transferable.
-
-### YVN14.8 §YVN15's `NotRequired` is now wrong for at least one publisher (#3)
-
-§YVN15 declares `ScriptureUsage.NotRequired` on every passage from this provider,
-on the grounds that the platform exposes no reporting mechanism and the platform
-terms create no per-display duty. Both remain true. **The publisher agreement
-creates one anyway** — Lockman's annual distribution report (§YVN14.7 rule 4).
-
-It is not a FUMS-shaped obligation and `ReportOnDisplay` would model it badly:
-it is annual, aggregate, per-publisher, sent by the *organisation* rather than
-emitted per view, and it counts distributed copies rather than displays. Nothing
-this library holds would satisfy it, and §SOL2 rule 5 means the library retains
-nothing to count from.
-
-**But `NotRequired` is a positive assertion that nothing is owed (§ABS29), and for
-Lockman-licensed editions that assertion is false.** Three ways out, and this
-design does not yet choose between them:
-
-1. Keep `NotRequired` and treat the annual report as wholly outside the model —
-   a consumer obligation this library neither surfaces nor tracks, documented in
-   §YVN18 and the README.
-2. Introduce a third obligation value meaning *owed, but not per display and not
-   by this library* — honest, and it costs a published enum member (§SOL7 rule 4).
-3. Surface it through `TranslationMetadata` (§ABS45), since the obligation is
-   per publisher and the consumer already configures per translation.
-
-**Decide once the remaining seven agreements are read**, because whether this is
-Lockman's quirk or a common publisher pattern changes the answer. Option 1 is
-defensible for one publisher and indefensible for five.
-
-### YVN14.6 The footnote finding reopens §ABS39 rule 3 (#3)
-
-**This design suppresses notes everywhere** — §APB8's query string sends
+**This design suppresses notes everywhere.** §APB8's query string sends
 `include-notes=false`, §YVN10 parses only the content, and §ABS39 rule 3 settled
 footnotes as *space reserved, not built*, with `ScripturePassage.Notes` always
-empty.
+empty. **A consumer serving any of those 1,120 Bibles — NIV and TPT among them —
+cannot comply with this design as written.**
 
-**Biblica's agreement requires them.** For the 69 Bibles it covers — NIV among
-them — footnotes "must be included along with the TRANSLATIONS text and accessible
-to the end-user" [verified, §YVN14.5 rule 1]. A consumer displaying NIV through
-this provider, with this design as written, **cannot comply**.
+It is not one publisher's quirk. It is the common clause of the standard
+agreement, so:
 
-That is not a small correction, and it is not one to make hastily:
+1. **Footnote support is a precondition of serving YouVersion content at all**, not
+   a later release. It moves into §YVN21's critical path.
+2. **The reserved-space decision was right**, and is why this is additive rather
+   than breaking — `Notes` and `ScriptureNote` already exist (§ABS16, §ABS22). What
+   was wrong was assuming nothing needed them yet.
+3. **§APB9's interaction must be designed first**, exactly as §ABS39 rule 3 warned:
+   a verse whose only content is a footnote is what the content check currently
+   reads as empty, and enabling notes without that pass turns critical-text
+   omissions into `Found` results carrying nothing but a note.
+4. **API.Bible is unaffected** — its terms carry no such clause, and §APB8 keeps
+   `include-notes=false`. So this is a provider-level divergence in what gets
+   requested, not a contract change. `Notes` being populated by one provider and
+   empty from another is exactly what a nullable, defaulted collection is for.
 
-- **It does not change the abstraction's shape.** `Notes` and `ScriptureNote`
-  already exist (§ABS16, §ABS22) precisely so that populating them later is
-  additive. The reserved-space decision was right; what was wrong was the
-  assumption that nothing needed them yet.
-- **It changes when, not whether.** Footnote support moves from "a later release if
-  anyone asks" to **a precondition of serving Biblica-licensed translations**.
-- **§APB9's interaction must be designed first**, exactly as §ABS39 rule 3 warned:
-  a verse whose only content is a footnote is what the content check currently
-  reads as empty, and turning notes on without that pass converts critical-text
-  omissions into `Found` results carrying nothing but a note.
-- **The other eight agreements may say the same**, and none has been read. If
-  footnotes are a common publisher requirement rather than a Biblica one, this is a
-  contract-level obligation and not a provider quirk.
+### YVN14.8 §YVN15's `NotRequired` is wrong for Lockman (#3)
 
-**Open until the remaining agreements are read**, and tracked as §YVN19 rule 9.
+§YVN15 declares `ScriptureUsage.NotRequired` on every passage from this provider,
+because the platform exposes no reporting mechanism and the platform terms create
+no per-display duty. Both remain true. **Lockman's agreement creates a reporting
+duty anyway** (§YVN14.10 rule 13): an annual report, by end of February, of copies
+distributed the previous calendar year.
+
+It is not FUMS-shaped, and `ReportOnDisplay` would model it badly — annual,
+aggregate, per publisher, counting distributed copies rather than displays, and
+sent by the organisation rather than emitted per view. Nothing this library holds
+would satisfy it, and §SOL2 rule 5 means it retains nothing to count from.
+
+**But `NotRequired` is a positive assertion that nothing is owed (§ABS29), and for
+the five Lockman editions that assertion is false.** Three options:
+
+1. Keep `NotRequired` and treat the annual report as outside the model — documented
+   in §YVN18 and the README, surfaced by neither.
+2. A third obligation value meaning *owed, but not per display and not by this
+   library*. Honest, and it costs a published enum member (§SOL7 rule 4).
+3. Surface it through `TranslationMetadata` (§ABS45), since the obligation is per
+   publisher and the consumer already configures per translation.
+
+**Now decidable**, since all nine are read: **one publisher of nine, covering five
+Bibles of 1,485.** That makes option 1 defensible and option 2 disproportionate —
+a published enum member for a single publisher's annual paperwork. **Recommend
+option 1**, with the duty named explicitly in §YVN18 and the package README so a
+consumer serving NASB or AMP meets it in the place they would look.
 
 ### YVN14.2 What the platform terms *do* impose (#1)
 
@@ -1039,17 +985,26 @@ Nothing in this provider requires the consumer to do anything at display time �
 there is no token to carry and no report to send. What a consumer does inherit:
 
 1. **Attribution** must be displayed (§YVN16).
-2. **Storage is still not sanctioned** (§YVN14), though the reason has changed:
-   the platform terms grant no rights in the Bible text at all, so the retention
-   question lives in the per-version licence and the per-Tool YVP Terms (§YVN14.1).
-   Display-time only until one of those is read.
-3. **Scripture must be reproduced word-for-word and unaltered** (§YVN14.2 rule 1).
+2. **Storage is permitted** (§YVN14.9). The licence grant covers storing the
+   content and sublicensing it to users online *and offline*. There is no fixed
+   refresh cadence — the duty is to update on the publisher's request, so you need a
+   forced-refresh path but not a timer.
+3. **Footnotes must be displayed** (§YVN14.6) for all but the public-domain set.
+   Not optional, and not satisfiable by a link — "accessible to the end-user".
+4. **Biblica caps display at two chapters or twenty-five verses per user at any
+   given time**, whichever is greater (§YVN14.10 rule 8). Per user, per moment.
+5. **Lockman requires a conspicuous clickable link**, a per-verse tag that itself
+   links, no third-party advertising anywhere in your application, and **an annual
+   report by end of February** of copies distributed (§YVN14.10 rules 10–13). This
+   library surfaces none of that — it is yours.
+6. **No AI-personalised content**, and no printing (§YVN14.10 rules 5–6).
+7. **Scripture must be reproduced word-for-word and unaltered** (§YVN14.2 rule 1).
    Anything a consumer does between `Text` and the screen — normalising quotes,
    collapsing whitespace, truncating with an ellipsis — is its own risk to assess.
-4. **Commercial use is permitted with a disclosure** (§YVN14.2 rule 4), which is
+8. **Commercial use is permitted with a disclosure** (§YVN14.2 rule 4), which is
    not true of API.Bible's licensed editions (§APB20). Do not assume one upstream's
    commercial position applies to the other.
-5. **`TranslationNotSupported` is ambiguous here** — unlicensed, or outside the
+9. **`TranslationNotSupported` is ambiguous here** — unlicensed, or outside the
    configured language ranges. Surface the configured `LanguageRanges` in
    diagnostics so the ambiguity is resolvable.
 
