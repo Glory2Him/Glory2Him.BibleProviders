@@ -914,6 +914,13 @@ are **decisions, not spikes** — no amount of upstream research settles them.
    YouVersion and null for API.Bible — which is the provider whose Terms §7 demands
    the link. Building that page for API.Bible stays the consumer's job (§APB19).
 
+9. **Commercial use is not enforced in code, deliberately.** §APB20.1 settles it:
+   nothing in either upstream exposes a licence tier or a commercial-use flag, the
+   determination is made in the portal before this code runs, and a self-declared
+   boolean that gated behaviour would be compliance theatre. The mitigation is
+   documentation placed where it bites. Recorded because "we chose not to build it"
+   and "nobody thought of it" are indistinguishable a year later.
+
 ---
 
 ## SOL18. Reference links (#1)

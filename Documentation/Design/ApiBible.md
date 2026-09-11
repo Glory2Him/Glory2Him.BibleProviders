@@ -885,10 +885,49 @@ sponsorships, freemium models, paid access, "or any other situation that may
 reasonably be considered as a revenue generating activity".
 
 That is wider than most readings of "we don't sell it". **An ad-supported or
-freemium surface is commercial under these Terms**, and whether a given deployment
+freemium surface is commercial under these terms**, and whether a given deployment
 qualifies decides whether a licensed translation (NIV, ESV, NLT) may be configured
 at all. It is a business and legal question, not an engineering one. Resolve it
 before configuring one.
+
+### APB20.1 Why this library enforces nothing, and what it does instead (#3)
+
+**Settled: no configuration flag, no gate, no detection.** The obvious design — a
+`IsNonCommercialUseOnly` switch that blocks licensed translations until a consumer
+declares itself — was considered and rejected on three grounds, the first of which
+is decisive:
+
+1. **There is nothing to detect.** The Bible schema carries `id`, `dblId`,
+   `abbreviation`, `abbreviationLocal`, `copyright`, `language`, `countries`,
+   `name`, `nameLocal`, `description`, `descriptionLocal`, `info`, `type`,
+   `updatedAt`, `relatedDbl` and `audioBibles` [verified] — **no licence tier and no
+   commercial-use flag.** Open-access and licensed Bibles are indistinguishable to
+   this provider, so a gate would either block correctly-licensed deployments or
+   block nothing at all.
+2. **The determination is made before this code runs.** Commercial use is declared
+   to ABS when a licensed Bible is requested in the portal, and ABS grants or
+   refuses. By the time a key can fetch NIV, the question has already been answered
+   by the parties to the agreement — neither of whom is this library.
+3. **A self-declared boolean that gates behaviour is compliance theatre.** The
+   consumer sets it to whatever makes the code work. It binds nobody — the Terms do
+   that — while looking enough like a control to be trusted as one, which is worse
+   than an honest absence.
+
+   It would also be wrong at the abstraction level. YouVersion permits commercial
+   use with a disclosure (§YVN14.2 rule 4) where this upstream forbids advertising
+   and freemium outright; one flag across both would flatten a real difference, and
+   §ABS5 rule 1 keeps provider licensing out of shared configuration for exactly
+   that reason.
+
+**What ships instead is documentation placed where it bites** (§SOL6, §SOL19.2
+item 6): the clause quoted in full above, the same clause in the package README's
+compliance section, and — the one cheap addition — **an XML documentation comment
+on `TranslationMap` and on the `TranslationMetadata` sample naming this section**,
+because configuring `"NIV" → bibleId` is the exact moment someone is deciding to
+use a licensed edition. A developer typing that line reads the restriction then,
+rather than discovering it in an appendix or not at all.
+
+That is the whole mitigation, and it is deliberately the whole of it.
 
 ---
 

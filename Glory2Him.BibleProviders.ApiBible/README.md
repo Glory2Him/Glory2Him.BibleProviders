@@ -53,7 +53,7 @@ startup so a misconfiguration fails the host rather than the first user request.
 | `ApiKey` | — | **Required.** From [api.bible](https://api.bible/) |
 | `BaseUrl` | `https://rest.api.bible/v1/` | |
 | `DefaultTranslation` | `"KJV"` | Fills an unqualified reference. **Safe, not recommended** — see below |
-| `TranslationMap` | empty | `"NIV"` → a specific bibleId. Overrides catalogue lookup; wins, because abbreviations are not unique and licensed access varies per key |
+| `TranslationMap` | empty | `"NIV"` → a specific bibleId. Overrides catalogue lookup; wins, because abbreviations are not unique and licensed access varies per key. **Read [Commercial use](#commercial-use) before mapping a licensed translation** |
 | `TranslationMetadata` | empty | Backfills copyright and publisher links. **You will want this** — see [Attribution](#attribution) |
 | `ParseLanguages` | `["eng"]` | Which languages loose references are read in, ISO 639-3 |
 | `UseOrgId` | `false` | Versification scheme. **Never flip against stored keys** — it changes what every USFM key means |
