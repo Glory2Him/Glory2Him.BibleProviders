@@ -770,12 +770,12 @@ The workflow above assumes things a new repository does not have on its first
 day. Until they exist, the sections that depend on them are description rather
 than mechanism:
 
-- **The `status:` labels** in §7 — `status: needs-scoping`, `ready-for-dev`,
-  `in-progress`, `in-qa`, `done`. The lifecycle is not real until they exist.
-- **The `design: <area>` labels** in §6, one per design area. Note the trap: an
-  all-caps `DESIGN` label already exists, auto-created by the PR linter from a
-  `DESIGN:` title prefix. That is a category label on PRs, not an area label on
-  issues.
+- **One run of the label sync.** GitHub runs no workflows on the commit that
+  created this repository, so nothing in `.github/labels.json` exists yet — the
+  `status:` lifecycle in §7 and the `design: <area>` labels in §6 included. Actions
+  → Labels → Run workflow, once. Note the trap: an all-caps `DESIGN` label turns up
+  regardless, auto-created by the PR linter from a `DESIGN:` title prefix. That is a
+  category label on PRs, not an area label on issues.
 - **Section 1 of `Documentation/Design.md`.** The file ships as a stub with the
   conventions in it, but nothing upstream of the developer works until it holds a
   real section — the architect has nothing to extend and the analyst has nothing
