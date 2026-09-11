@@ -729,6 +729,84 @@ deployments never touch it, and unlike the sibling provider — where a
 publishes no quota at all, so display-only is genuinely viable here for longer than
 it would be there.
 
+### YVN14.5 What a publisher agreement actually says — Biblica, read (#3)
+
+**Read 2026-09-11: *Biblica, Inc. Content License Agreement*, "Fast-track Bible
+License v1", accepted 4 Aug 2026, covering 69 Bibles including NIV and NIrV.**
+One of nine; the other eight are unread (§YVN14.1). Everything below is
+[verified] from that document.
+
+**It answers the storage question — implicitly, and in the affirmative.**
+Section VI REVISIONS obliges the organisation to "make all updates and revisions
+to any portion or portions of the CONTENT which is included in any current edition
+of the WORK, as may be requested by LICENSOR and as made available via the SDK",
+and separately to update copyright and trademark notices the same way. **An
+obligation to update held content presupposes that holding it is permitted.**
+
+So the shape differs from API.Bible (§APB17): **no fixed refresh cadence, an
+update-on-request duty instead.** A consumer needs the same forced-refresh path
+§ABS31 requires, but no 30-day timer.
+
+**Four obligations that bind harder than anything in the platform terms:**
+
+1. **Footnotes are mandatory, not optional** — V.D: the CONTENT "shall be used in
+   the form and format provided", no alterations before publication, and "**All
+   footnotes to the TRANSLATIONS text must be included along with the TRANSLATIONS
+   text and accessible to the end-user.**" See §YVN14.6 — this contradicts a
+   decision this design took deliberately.
+2. **A hard display cap** — V.F: no more than "**two (2) chapters or twenty-five
+   (25) verses, whichever is greater**" displayed or streamed **per user at any
+   given time**. Tighter than API.Bible's 200-verse request cap and its
+   500-consecutive-verse cache request (§APB18), and measured per *user* and per
+   *moment* rather than per request or per store.
+3. **The content must be free to end users** — V.G: "ORGANIZATION agrees to offer
+   access to the CONTENT free of charge to all end users", and access may not be
+   used to gather personal information for commercial use or third-party
+   distribution. **This is a real commercial restriction**, and a stricter one than
+   the platform terms' mere disclosure requirement (§YVN14.2 rule 4) — which
+   §APB20.1 predicted in principle but not in this form.
+4. **48 hours to remove content** on the licensor's written request (V.I), plus
+   industry-standard encryption against unauthorised reproduction (V.E) and a
+   prohibition on AI/ML personalisation of the content (III.B).
+
+**One thing it confirms rather than constrains:** V.C states the organisation
+"shall access the CONTENT primarily through the SDK... **Direct YVP API access may
+also be used where applicable**". The REST-API approach this provider takes is
+explicitly contemplated.
+
+**Term:** two years from the effective date, auto-renewing for successive two-year
+terms, and on termination "no rights or privileges will extend beyond the term".
+
+### YVN14.6 The footnote finding reopens §ABS39 rule 3 (#3)
+
+**This design suppresses notes everywhere** — §APB8's query string sends
+`include-notes=false`, §YVN10 parses only the content, and §ABS39 rule 3 settled
+footnotes as *space reserved, not built*, with `ScripturePassage.Notes` always
+empty.
+
+**Biblica's agreement requires them.** For the 69 Bibles it covers — NIV among
+them — footnotes "must be included along with the TRANSLATIONS text and accessible
+to the end-user" [verified, §YVN14.5 rule 1]. A consumer displaying NIV through
+this provider, with this design as written, **cannot comply**.
+
+That is not a small correction, and it is not one to make hastily:
+
+- **It does not change the abstraction's shape.** `Notes` and `ScriptureNote`
+  already exist (§ABS16, §ABS22) precisely so that populating them later is
+  additive. The reserved-space decision was right; what was wrong was the
+  assumption that nothing needed them yet.
+- **It changes when, not whether.** Footnote support moves from "a later release if
+  anyone asks" to **a precondition of serving Biblica-licensed translations**.
+- **§APB9's interaction must be designed first**, exactly as §ABS39 rule 3 warned:
+  a verse whose only content is a footnote is what the content check currently
+  reads as empty, and turning notes on without that pass converts critical-text
+  omissions into `Found` results carrying nothing but a note.
+- **The other eight agreements may say the same**, and none has been read. If
+  footnotes are a common publisher requirement rather than a Biblica one, this is a
+  contract-level obligation and not a provider quirk.
+
+**Open until the remaining agreements are read**, and tracked as §YVN19 rule 9.
+
 ### YVN14.2 What the platform terms *do* impose (#1)
 
 All [verified], all inherited by the consuming application, and none of them
@@ -938,11 +1016,18 @@ gets built**, not merely how it is configured.
    unblock storage, because the platform terms explicitly grant no rights in the
    Bible text.
 
-   **Its replacement is narrower than first written.** The YVP Terms half is
-   closed — none appear to exist for this Tool (§YVN14.1 item 2). What remains:
-   **read the publisher agreements at `platform/licenses` and record what they say
-   about retention.** They are already accepted and already readable, roughly nine
-   of them, so this needs someone's attention rather than anyone's permission.
+   **Its replacement is narrower still, and one of nine is now done.** The YVP
+   Terms half is closed — none appear to exist for this Tool (§YVN14.1 item 2). The
+   Biblica agreement is read and recorded (§YVN14.5), and it answered the storage
+   question in the affirmative while surfacing four obligations nothing else in this
+   design had.
+
+   **Eight agreements remain unread** — Lockman, BroadStreet, MissionAssist, SIL
+   International, Wycliffe, Biblion, Hawaii Pidgin Bible and Ewangeliczny Instytut
+   Biblijny. Each is a "View Agreement" link at `platform/licenses`. Two questions
+   for each: does it permit holding content and on what refresh terms, and **does it
+   require footnotes** (§YVN14.6)? If footnotes are a common publisher requirement
+   rather than Biblica's alone, that is a contract-level obligation.
 10. **Does the Bible resource expose a script direction** (or a script code we can
     map from)? §ABS42.6 needs it and §YVN7 rule 4 falls back to a built-in table
     without it. Low cost to check, and it decides whether a Hebrew or Arabic edition

@@ -1680,6 +1680,15 @@ third-party provider can take the same medicine (§SOL7 rule 3), and carries no
    later is then **additive and MINOR** rather than a model change and MAJOR
    (§SOL7 rule 4) — which is the whole reason to spend the twenty lines now.
 
+   **Reopened by evidence, and no longer hypothetical.** Biblica's licence — which
+   covers NIV — requires that "all footnotes to the TRANSLATIONS text must be
+   included along with the TRANSLATIONS text and accessible to the end-user"
+   [verified, §YVN14.6]. The reserved-space decision still stands and is exactly why
+   this is additive rather than breaking; what was wrong was assuming nothing needed
+   them yet. **Footnote support is a precondition of serving Biblica-licensed
+   translations**, not a later nicety, and eight further publisher agreements remain
+   unread.
+
    **Whoever populates them must design the §APB9 interaction first.** A verse
    whose *only* content is a footnote is exactly the case the content check has to
    read as empty, and suppressing notes is currently what makes that detectable.
