@@ -65,7 +65,7 @@ even mid-draft.
 
 - Read the code before writing criteria. Existing behaviour is a requirement until
   someone decides otherwise.
-- `Documentation/Design.md` on main is authoritative. Where the issue and the
+- `Documentation/Design/Design.md` on main is authoritative. Where the issue and the
   design disagree, the design wins and the issue needs correcting — say so rather
   than writing criteria against stale intent.
 - Write criteria in domain language. "When a contributor submits an item that is

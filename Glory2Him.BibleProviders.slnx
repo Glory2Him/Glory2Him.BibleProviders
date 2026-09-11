@@ -1,0 +1,27 @@
+<Solution>
+  <Folder Name="/Abstractions/">
+    <Project Path="Glory2Him.BibleProviders.Abstractions.Tests.Acceptance/Glory2Him.BibleProviders.Abstractions.Tests.Acceptance.csproj" />
+    <Project Path="Glory2Him.BibleProviders.Abstractions.Tests.Integrations/Glory2Him.BibleProviders.Abstractions.Tests.Integrations.csproj" />
+    <Project Path="Glory2Him.BibleProviders.Abstractions.Tests.Unit/Glory2Him.BibleProviders.Abstractions.Tests.Unit.csproj" />
+    <Project Path="Glory2Him.BibleProviders.Abstractions/Glory2Him.BibleProviders.Abstractions.csproj" Id="a1ff27be-5068-43c7-9bc6-70d19495303b" />
+  </Folder>
+  <Folder Name="/Documentation/">
+    <Project Path="Documentation/Glory2Him.BibleProviders.Documentation.csproj" />
+  </Folder>
+  <Folder Name="/Infrastructure/">
+    <Project Path="Glory2Him.BibleProviders.Infrastructure/Glory2Him.BibleProviders.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/Providers/" />
+  <Folder Name="/Providers/ApiBible/">
+    <Project Path="Glory2Him.BibleProviders.ApiBible.Tests.Acceptance/Glory2Him.BibleProviders.ApiBible.Tests.Acceptance.csproj" />
+    <Project Path="Glory2Him.BibleProviders.ApiBible.Tests.Integrations/Glory2Him.BibleProviders.ApiBible.Tests.Integrations.csproj" />
+    <Project Path="Glory2Him.BibleProviders.ApiBible.Tests.Unit/Glory2Him.BibleProviders.ApiBible.Tests.Unit.csproj" />
+    <Project Path="Glory2Him.BibleProviders.ApiBible/Glory2Him.BibleProviders.ApiBible.csproj" Id="48148741-6dcd-43e5-9648-70775ef5472c" />
+  </Folder>
+  <Folder Name="/Providers/YouVersion/">
+    <Project Path="Glory2Him.BibleProviders.YouVersion.Tests.Acceptance/Glory2Him.BibleProviders.YouVersion.Tests.Acceptance.csproj" />
+    <Project Path="Glory2Him.BibleProviders.YouVersion.Tests.Integrations/Glory2Him.BibleProviders.YouVersion.Tests.Integrations.csproj" />
+    <Project Path="Glory2Him.BibleProviders.YouVersion.Tests.Unit/Glory2Him.BibleProviders.YouVersion.Tests.Unit.csproj" />
+    <Project Path="Glory2Him.BibleProviders.YouVersion/Glory2Him.BibleProviders.YouVersion.csproj" Id="d14eb48f-badd-4089-8c32-df6801a12f37" />
+  </Folder>
+</Solution>

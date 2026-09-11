@@ -31,11 +31,11 @@ PR linter, the analyst and the status lifecycle all have nothing to work with.
 
 - [ ] Fill in *What is {{REPOSITORY_NAME}}?*, *Key Features* and *Getting started* below.
 - [ ] Write `INTENT.md` — what this system is for, in prose, before any of it exists.
-- [ ] Fill in `Documentation/Design.md`. A stub is there carrying the section
-      conventions and no design. The architect records layer placement, event
-      contracts and the security boundary there, and every agent treats it as
-      outranking any issue that disagrees with it. Until section 1 is real they have
-      nothing to check a design against.
+- [x] ~~Fill in the design.~~ Done: `Documentation/Design/` holds four area-scoped
+      documents — `Design.md` (`SOL`), `Abstractions.md` (`ABS`), `ApiBible.md`
+      (`APB`) and `YouVersion.md` (`YVN`). The architect records layer placement and
+      boundaries there, and every agent treats it as outranking any issue that
+      disagrees with it.
 
 **`CLAUDE.md`**
 

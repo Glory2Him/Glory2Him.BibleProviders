@@ -1,6 +1,6 @@
-﻿{{REPOSITORY_NAME}}
+﻿Glory2Him.BibleProviders
 
-Copyright (c) {{YEAR}} Glory 2 Him. All rights reserved.
+Copyright (c) 2025 Glory 2 Him. All rights reserved.
 
 ---
 Material in this repository is made available under the following terms:

@@ -158,8 +158,8 @@ jobs:
           }
     permissions:
       contents: read
-      pull-requests: write
       issues: write
+      pull-requests: write
   requireIssueOrTask:
     name: Require Issue Or Task Association
     runs-on: ubuntu-latest
@@ -206,46 +206,3 @@ jobs:
     permissions:
       contents: read
       pull-requests: read
-  setAuthorAsPrAssignee:
-    name: Set Author As PR Assignee
-    runs-on: ubuntu-latest
-    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
-    steps:
-    - name: Set Author As PR Assignee
-      uses: actions/github-script@v8
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        script: >
-          const pr = context.payload.pull_request;
-
-          if (!pr) {
-            console.log('No pull request context available.');
-            return;
-          }
-
-
-          const author = pr.user.login;
-
-          if (author.endsWith('[bot]')) {
-            console.log(`Skipping bot author: ${author}`);
-            return;
-          }
-
-
-          console.log(`Assigning PR to author: ${author}`);
-
-
-          try {
-            await github.rest.issues.addAssignees({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: pr.number,
-              assignees: [author]
-            });
-          } catch (error) {
-            console.log(`Unable to assign ${author} as PR assignee: ${error.message}`);
-          }
-    permissions:
-      contents: read
-      issues: write
-      pull-requests: write

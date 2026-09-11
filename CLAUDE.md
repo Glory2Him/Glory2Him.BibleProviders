@@ -1,7 +1,7 @@
 # {{REPOSITORY_NAME}}
 
 *One line on what this system does.* See `INTENT.md` for what the system does and
-`Documentation/Design.md` for how it is designed. `DEVELOPERS.md` walks a person
+`Documentation/Design/Design.md` for how it is designed. `DEVELOPERS.md` walks a person
 through the same workflow end to end — the four roles, the documentation layout,
 and how a mockup becomes a design section, an issue, and merged code.
 
@@ -11,20 +11,25 @@ The setup checklist lives in `README.md`, under "After creating this repository"
 That is the one list — this file does not keep a second copy that would drift from
 it. Delete this section once you have worked through it.
 
-Two items on it matter to you before anything else: `Documentation/Design.md` and
-`INTENT.md`. The design document is a stub carrying conventions and no design, and
-`INTENT.md` does not exist at all. Until both are real there is no design to check
-an issue against and no statement of what this system is for, so treat a design
-question as unsettled rather than inferring the answer from whatever code happens
-to be here.
+One item on it still matters to you before anything else: **`INTENT.md` does not
+exist**, so there is no prose statement of what this system is for. Treat a
+question about purpose as unsettled rather than inferring it from whatever code
+happens to be here.
+
+The design itself is real. It lives in `Documentation/Design/` as four
+area-scoped files — `Design.md` (solution, `SOL`), `Abstractions.md` (`ABS`),
+`ApiBible.md` (`APB`) and `YouVersion.md` (`YVN`) — and `Design.md` carries the
+conventions the other three follow.
 
 ## Where the rules live
 
 - **The Standard** — `.claude/skills/the-standard-*`. These own the layer model,
   naming, testing discipline, and the commit, branch and PR formats. Load the
   skill for the layer you are working in rather than working from memory.
-- **The design** — `Documentation/Design.md` on main is authoritative. An issue
-  that disagrees with it is stale intent, not an instruction; correct the issue.
+- **The design** — `Documentation/Design/` on main is authoritative, starting at
+  `Design.md`. Sections are flat and area-prefixed (`§ABS6`, `§APB14`), so cite
+  them by prefix. An issue that disagrees with it is stale intent, not an
+  instruction; correct the issue.
 - **The CI gates** — `.github/workflows/prLinter.yml` holds the authoritative PR
   title prefixes and fails any PR whose body links no issue or task. `Closes
   #<n>` is the preferred form; `fixes`/`resolves` (and their past-tense
@@ -41,7 +46,7 @@ Non-trivial work moves through four roles, defined in `.claude/agents/`. Each
 hands over a durable artifact, not a conversation.
 
 1. **architect** — settles layer placement, event contracts and the security
-   boundary, recorded in `Documentation/Design.md`. Skip only for changes
+   boundary, recorded in `Documentation/Design/Design.md`. Skip only for changes
    touching a single file, no schema, no event and no boundary.
 2. **analyst** — writes numbered acceptance criteria into the GitHub issue.
    Requires approval before the developer starts.
@@ -92,10 +97,14 @@ list — this section describes it rather than competing with it.
 
 `build.yml` discovers test projects by glob, so name them so a recursive
 `*Tests.Unit*.csproj` or `*Tests.Acceptance*.csproj` match finds them and CI picks
-up a new test project without anyone editing the workflow. It also passes cleanly
-while the repository has no projects at all — the required `Build` check has to
-report something before there is anything to build. The comment at the foot of the
-workflow lists what to add as the repository grows.
+up a new test project without anyone editing the workflow. Integration tests are
+deliberately not discovered — they need live credentials and are a local guard
+only.
+
+**`.github/workflows/*.yml` are build output. Edit
+`Glory2Him.BibleProviders.Infrastructure` and regenerate; never hand-edit the
+YAML** — a hand-edit is reverted silently by the next regeneration, with no
+conflict and no warning. Design §SOL7 rule 10.
 
 ## Worktrees
 
