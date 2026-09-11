@@ -24,7 +24,7 @@ is a licence condition rather than a nicety.
 var configurations = new ApiBibleConfigurations
 {
     ApiKey = "…",                 // required
-    DefaultTranslation = "KJV",   // see below
+    DefaultTranslation = "WEB",   // World English Bible — see below
 };
 
 using var provider = new ApiBibleProvider(configurations);
@@ -52,7 +52,7 @@ startup so a misconfiguration fails the host rather than the first user request.
 |---|---|---|
 | `ApiKey` | — | **Required.** From [api.bible](https://api.bible/) |
 | `BaseUrl` | `https://rest.api.bible/v1/` | |
-| `DefaultTranslation` | `"KJV"` | Fills an unqualified reference. **Safe, not recommended** — see below |
+| `DefaultTranslation` | `"WEB"` | Fills an unqualified reference. World English Bible — public domain, shareable, **safe *and* recommended** |
 | `TranslationMap` | empty | `"NIV"` → a specific bibleId. Overrides catalogue lookup; wins, because abbreviations are not unique and licensed access varies per key. **Read [Commercial use](#commercial-use) before mapping a licensed translation** |
 | `TranslationMetadata` | empty | Backfills copyright and publisher links. **You will want this** — see [Attribution](#attribution) |
 | `ParseLanguages` | `["eng"]` | Which languages loose references are read in, ISO 639-3 |
@@ -63,22 +63,28 @@ startup so a misconfiguration fails the host rather than the first user request.
 | `PerAttemptTimeoutSeconds` | 5 | |
 | `MaxRetryAttempts` | 2 | Retries, not attempts — 2 means 3 attempts |
 
-### Why the default is KJV
+### Why the default is WEB
 
 An unqualified reference is a first-class input, and the default silently fills the
 gap — so the shipped value decides whether a freshly-keyed installation works at
-all. **KJV is in the open-access set**, so it resolves on a new key without
-spending one of the three licensed-Bible slots.
+all.
 
-It is a **safe** default, not a recommended one. `NIV` is the worst candidate:
-licensed, non-commercial-only, and absent from a fresh key's catalogue. Set
-`DefaultTranslation` explicitly if you hold a licence.
+**The World English Bible is in the open-access set**, so it resolves on a new key
+without spending one of the three licensed-Bible slots, and it is **public domain
+by dedication**: no licence to accept, no territorial restriction, and it may be
+sent on by email or messaging. Unusually for a default in this library, it is
+**safe *and* recommended**.
 
-> **⚠️ If any of your readers are in the UK, change this.** API.Bible grants no
-> licence for the KJV in the United Kingdom or fifteen other territories, whatever
-> its public-domain status elsewhere, and it may not be sent on by email or
-> messaging anywhere. **`WEB` is the drop-in alternative** — public domain by
-> dedication, open access, no territorial restriction. See the table below.
+**It replaced `KJV`, and the reason matters if you are upgrading.** API.Bible
+grants **no licence for the King James Version** in the United Kingdom, the Isle of
+Man, Jersey, Guernsey or thirteen British Overseas Territories — "irrespective of
+whether your use is Commercial Use or Non-Commercial Use … **whether the content
+is identified as Public Domain**, and irrespective of format" (Terms §9.8) — and
+separately bars transmitting it anywhere (§9.9(b)(i)). **The duty follows your
+reader's location, not yours.**
+
+`NIV` is the worst candidate: licensed, non-commercial-only, and absent from a
+fresh key's catalogue. Set `DefaultTranslation` explicitly if you hold a licence.
 
 ---
 

@@ -31,7 +31,7 @@ var configurations = new YouVersionConfigurations
 {
     AppKey = "…",                            // required, sent as X-YVP-App-Key
     LanguageRanges = new List<string> { "eng" },   // required upstream
-    DefaultTranslation = "KJV",
+    DefaultTranslation = "WEB",              // resolves to WEBUS, id 206
 };
 
 using var provider = new YouVersionProvider(configurations);
@@ -60,8 +60,8 @@ unparseable base URL, a timeout budget that does not close.
 | `AppKey` | — | **Required.** From [platform.youversion.com](https://platform.youversion.com). Sent as `X-YVP-App-Key` |
 | `LanguageRanges` | `["eng"]` | **Required upstream.** ISO 639-3, in preference order. Also the scope loose references are parsed in |
 | `BaseUrl` | `https://api.youversion.com/v1/` | |
-| `DefaultTranslation` | `"KJV"` | Fills an unqualified reference. **Verify your key can see it** — see below |
-| `TranslationMap` | empty | `"NIV"` → a numeric version id. Overrides catalogue lookup, and is authoritative |
+| `DefaultTranslation` | `"WEB"` | Fills an unqualified reference. Mapped to `WEBUS` (id 206). **Verify your key can see it** — see below |
+| `TranslationMap` | `{"WEB": 206}` | `"NIV"` → a numeric version id. Overrides catalogue lookup, and is authoritative. Ships one entry — see below |
 | `TranslationMetadata` | empty | Backfills copyright and publisher links where the catalogue has none |
 | `IncludeAllAvailable` | `false` | Widens the listing beyond what your key is licensed for. **Diagnostics only** — see below |
 | `MaxStitchedVerses` | 30 | Caps the size of a stitched range |
@@ -77,16 +77,33 @@ references are read. That is deliberate: the languages you can serve and the
 languages you can parse references in are then the same list by construction. A
 Spanish deployment sets `["spa"]` and gets both.
 
-### Why the default is KJV, and the caveat
+### Why the default is WEB — and why it is spelled `WEBUS` here
 
-KJV is version id `1` and public domain, so it is the most plausible translation to
-be available on any key. **But access is gated per accepted licence**, and whether a
-*fresh* key sees KJV without accepting anything in the portal is unverified.
+The World English Bible is public domain and sits in the portal's **Public Domain
+and Creative Commons** group, the one licence row with **no agreement to accept**,
+so it is the most plausible translation to be available on any key. It also matches
+the ApiBible package's default, so one abbreviation means one thing whichever
+provider answers.
 
-If it does not, set `DefaultTranslation` to a version your key has actually
-accepted — otherwise every unqualified reference returns `TranslationNotSupported`.
-The provider logs at **Error** on its first catalogue load if the configured default
-is absent, so you will know.
+**The trap: YouVersion does not call it `WEB`.** It publishes version **`206`**,
+"World English Bible, American English Edition, without Strong's Numbers",
+abbreviated **`WEBUS`**. A bare `"WEB"` would resolve on API.Bible and return
+`TranslationNotSupported` here.
+
+**So this package ships one `TranslationMap` entry, `"WEB"` → `206`.** Ask for
+`WEB` and it works; ask for `WEBUS` and that works too. If you replace
+`TranslationMap` wholesale, re-add the entry or switch the default to `WEBUS`.
+
+**It replaced `KJV`.** Not because of a YouVersion clause — there is none — but
+because rights in the King James Version in the UK are vested in the Crown as a
+matter of law rather than of either platform's contract, and defaulting the two
+providers to different translations would defeat the point of the abstraction.
+
+**The caveat that applied to KJV still applies.** Access is gated per accepted
+licence, so set `DefaultTranslation` to a version your key has actually accepted if
+the default does not resolve — otherwise every unqualified reference returns
+`TranslationNotSupported`. The provider logs at **Error** on its first catalogue
+load if the configured default is absent, so you will know.
 
 ---
 

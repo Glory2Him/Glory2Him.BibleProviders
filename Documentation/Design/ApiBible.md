@@ -93,7 +93,7 @@ public sealed class ApiBibleConfigurations
 {
     public string ApiKey { get; set; } = string.Empty;                     // required
     public string BaseUrl { get; set; } = "https://rest.api.bible/v1/";
-    public string DefaultTranslation { get; set; } = "KJV";                // §APB4
+    public string DefaultTranslation { get; set; } = "WEB";                // §APB4
     /// <summary>Abbreviation -> bibleId override. NOTE: the licensed Bibles on a Starter
     /// plan are NON-COMMERCIAL ONLY, and "commercial" includes advertising, sponsorship
     /// and freemium — see the package README before mapping one. §APB20</summary>
@@ -133,26 +133,41 @@ default to the base, which owns `Name`, per §ABS5 rule 1 and §ABS14.
 
 ---
 
-## APB4. Why the default translation is KJV (#1)
+## APB4. Why the default translation is WEB (#1)
 
 An unqualified reference is a first-class input (§ABS20), and the default is what
 silently fills the gap — so the shipped value decides whether a freshly-keyed
 installation works at all.
 
-On API.Bible, **KJV is in the open-access set on Starter**, so it resolves on a
-new key without spending one of the three licensed-Bible slots [unverified —
-§APB23 rule 2]. `NIV` is the worst candidate: licensed, non-commercial-only, and
-absent from a fresh key's catalogue.
+**The shipped default is `WEB`, the World English Bible.** ~~KJV.~~ **Changed**,
+and §APB27 is the reason: Terms §9.8 grants **no licence for the KJV within the
+United Kingdom and fifteen other named territories**, *irrespective of its
+public-domain status*, and §9.9(b)(i) bars transmitting it anywhere. **A shipped
+default must not be one that a whole class of deployments may not lawfully
+serve**, and this repository's own developer sits inside the Restricted Territory.
 
-> **Superseded in part — see §APB27.** Terms §9.8 grants no licence for the KJV
-> within the United Kingdom and fifteen other named territories, *irrespective of
-> its public-domain status*, and §9.9(b)(i) bars transmitting it anywhere. The
-> availability reasoning above still holds; the conclusion that KJV is a safe
-> shipped default does not. **§APB27.4 rule 1 proposes `WEB` instead**, and that
-> decision is open.
+`WEB` answers every requirement the old reasoning had, and two it did not:
+
+| Requirement | KJV | WEB |
+|---|:---:|:---:|
+| In the open-access set, so it resolves on a fresh key without spending a licensed slot | ✅ | ✅ [unverified — §APB23 rule 2] |
+| Public domain, so no licence to accept | ✅ | ✅ |
+| Servable to a reader anywhere | ❌ §9.8 | ✅ |
+| May be sent on by email or messaging | ❌ §9.9(b)(i) | ✅ §9.9(a) |
+| Modern English a reader unfamiliar with scripture can follow | ❌ | ✅ |
+
+`NIV` remains the worst candidate: licensed, non-commercial-only on the free tier,
+and absent from a fresh key's catalogue.
 
 A deployment holding a licence sets `DefaultTranslation` explicitly. **The shipped
-constant is a *safe* default, not a recommended one.**
+constant is now a *safe and recommended* default** — the distinction §SOL19 rule 3
+asks every README to draw, and the first shipped default in this design where the
+two coincide.
+
+**One caveat this default does not remove.** `WEB` is a public-domain *dedication*
+rather than an expired copyright, and eBible.org holds the **name** as a
+trademark: a consumer that alters the text may not still call it the World English
+Bible. §ABS17 forbids altering it, so a conforming consumer cannot trip this.
 
 ---
 
@@ -1046,7 +1061,7 @@ are not repeated.
    disrupted plan actually returns** (§APB15). The highest-value item in this
    document — it is the one unknown that can silently disable failover. Exhaust a
    test plan if that is what it takes, or ask ABS directly.
-2. **Confirm `KJV` is in a fresh, unconfigured key's catalogue** — it is the
+2. **Confirm `WEB` is in a fresh, unconfigured key's catalogue** — it is the
    shipped `DefaultTranslation` (§APB4).
 3. **Probe the omitted-verse behaviour** — `MAT.17.21`, `ACT.8.37`, `ROM.16.24`
    against a critical-text translation. Commit the real responses as fixtures.
@@ -1309,11 +1324,10 @@ of the Authorized Version in the sense the clause defines.
    fresh key. That is still true. **But the default now has a territorial
    condition that the previous reasoning never considered**, and this repository's
    own developer is in GB.
-2. **The recommendation is to change the shipped `DefaultTranslation` to `WEB`**
-   for this provider — public domain by dedication, no territorial restriction, no
-   share-alike obligation, open access, and with a British edition available. This
-   is a **behaviour change to a published default** and therefore an architect
-   decision under §SOL7; it is recorded as open at §APB27.4 rather than made here.
+2. ~~**The recommendation is to change the shipped `DefaultTranslation` to
+   `WEB`**…~~ **Done** — §APB4. Public domain by dedication, no territorial
+   restriction, no share-alike obligation, open access, and with a British edition
+   available.
 3. **Nothing in this library can enforce §9.8.** The provider does not know the
    reader's territory, and §SOL2 rule 5 keeps it that way. This is a consumer
    obligation, documented, and the correct mechanism is `TranslationMetadata`
@@ -1327,11 +1341,11 @@ of the Authorized Version in the sense the clause defines.
 
 ### APB27.4 Open (#3)
 
-1. **Should `DefaultTranslation` change from `KJV` to `WEB`?** (§APB27.3 rule 2.)
-   It is a default-value change before first release, so MINOR under §SOL7 rule 4.
-   The counter-argument is that KJV is the most recognisable abbreviation and the
-   most likely to be present on any key; the argument for is that a shipped default
-   should not be one that a whole class of deployments may not lawfully serve.
+1. ~~**Should `DefaultTranslation` change from `KJV` to `WEB`?**~~ **Decided —
+   yes, and done.** §APB4 now ships `WEB`, and §YVN4 matches it. MINOR under §SOL7
+   rule 4, taken before first release. The recognisability argument for KJV lost to
+   the plain fact that a shipped default must be lawfully servable everywhere the
+   package can be installed.
 2. **Does the same reasoning apply to `KJVA`** and any other KJV edition in the
    catalogue? The clause says "any other edition of that translation", so
    presumptively yes, but the catalogue's edition names have not been enumerated

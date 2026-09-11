@@ -454,8 +454,8 @@ config row was missing is exactly the silent breach this design is built to avoi
    ~~KJV, ASV and WEB are shareable on both upstreams, and are the shipped defaults
    for a reason (§APB4, §YVN4).~~ **Corrected:** ASV, WEB and BSB are shareable;
    the KJV is territorially restricted on API.Bible and excluded from the
-   transmission permission outright (§USE11). **Reach for WEB or BSB** (§USE6.6).
-   The shipped default is `KJV` and §APB27.4 rule 1 proposes changing it.
+   transmission permission outright (§USE11). **Reach for WEB or BSB** (§USE6.6) —
+   **now the shipped default on both providers** (§APB4, §YVN4).
 4. **Share a reference, not the text, when in doubt.** "John 3:16 (NIV)" plus a link
    to your own page carries no licensed text at all, and no clause above restricts
    it. This is the design's recommendation for licensed translations.
@@ -523,10 +523,11 @@ about an upstream they are not using.
    public-domain and permissively-licensed set. Its rights classes are [verified]
    facts about the works; **availability on a given key remains [unverified]** and
    is the consumer's to confirm.
-6. **Should the shipped `DefaultTranslation` change from `KJV` to `WEB`?**
-   §APB27.4 rule 1 makes the case. It is a MINOR default-value change before first
-   release, and it is the one open item on this page that changes shipped
-   behaviour rather than documentation.
+6. ~~**Should the shipped `DefaultTranslation` change from `KJV` to `WEB`?**~~
+   **Decided — yes, and done** (§APB4, §YVN4). It surfaced a second finding on the
+   way: YouVersion abbreviates the World English Bible **`WEBUS`**, not `WEB`, so
+   that provider ships a default `TranslationMap` entry to keep one abbreviation
+   meaning one thing across both (§YVN4.1).
 7. **§USE11's last paragraph is inference.** API.Bible's §9.8 does not bind
    YouVersion, and no YouVersion agreement records a KJV territorial restriction —
    but the Crown's letters patent are a fact of UK law rather than a term of either

@@ -92,11 +92,12 @@ public sealed class YouVersionConfigurations
 {
     public string AppKey { get; set; } = string.Empty;                     // required — header X-YVP-App-Key
     public string BaseUrl { get; set; } = "https://api.youversion.com/v1/";
-    public string DefaultTranslation { get; set; } = "KJV";                // §YVN4
+    public string DefaultTranslation { get; set; } = "WEB";                // §YVN4
     public IList<string> LanguageRanges { get; set; } = new List<string> { "eng" };  // required upstream; also the parse scope (§ABS42.4)
     public IList<TranslationMetadata> TranslationMetadata { get; set; } = new List<TranslationMetadata>();  // §ABS45
     public bool IncludeAllAvailable { get; set; } = false;                 // §YVN7 rule 6
-    public Dictionary<string, int> TranslationMap { get; set; } = new();   // "NIV" -> 111 override
+    public Dictionary<string, int> TranslationMap { get; set; }
+        = new() { ["WEB"] = 206 };                                         // §YVN4.1; "NIV" -> 111 override
     public TimeSpan CatalogueCacheDuration { get; set; } = TimeSpan.FromHours(6);
     public int MaxStitchedVerses { get; set; } = 30;                       // §YVN9
     public int TimeoutSeconds { get; set; } = 20;
@@ -125,12 +126,53 @@ Plain POCO plus optional logger, per §ABS5 rule 1.
 
 ---
 
-## YVN4. Why the default translation is KJV, and the caveat (#1)
+## YVN4. Why the default translation is WEB, and the abbreviation trap (#1)
 
-KJV is version id `1` and is public domain, so it is the most plausible
-translation to be available on any key. **But YouVersion gates access per accepted
-licence agreement**, and whether a *fresh* app key sees KJV without accepting
-anything in the portal is **[unverified]** (§YVN19 rule 2).
+**The shipped default is `WEB`, matching §APB4.** ~~KJV, version id `1`.~~
+**Changed** for the reason §APB27 gives — the KJV is territorially restricted, and
+although §9.8 is an API.Bible term that does not bind this upstream, the Crown's
+rights in the Authorized Version are a fact of UK law rather than of either
+contract (§USE9 rule 7). **Defaulting the two providers to different translations
+would also break the promise §ABS4 exists to make** — that an abbreviation means
+the same thing whichever provider answers.
+
+WEB is additionally the *better* bet on this upstream, not merely the safer one:
+it sits in the **Public Domain and Creative Commons** row of the portal, the one
+licence group with **no agreement to accept** (§YVN14.1), so it is more likely
+than KJV to be visible to a fresh app key rather than less.
+
+### YVN4.1 The abbreviation is not `WEB` on this upstream (#3)
+
+**This is the trap, and it is why the default cannot simply be copied from
+§APB4.** YouVersion publishes the World English Bible as version **`206`**, named
+"World English Bible, American English Edition, without Strong's Numbers", and
+abbreviated **`WEBUS`** — not `WEB` [verified,
+[bible.com/versions/206](https://www.bible.com/versions/206-web-world-english-bible):
+"This Public Domain Bible text is courtesy of eBible.org"].
+
+So a bare `DefaultTranslation = "WEB"` would resolve on API.Bible and return
+`TranslationNotSupported` here. **The same abbreviation meaning different things on
+the two upstreams is exactly what §ABS4 exists to hide from a consumer.**
+
+**Resolution: this provider ships a default `TranslationMap` entry**, `"WEB"` to
+`206`, so `WEB` resolves on both providers out of the box. `TranslationMap` is
+already documented as authoritative over catalogue lookup (§YVN7 rule 7), which is
+precisely the override needed, and a consumer preferring the upstream's own
+spelling may still ask for `WEBUS` directly.
+
+That the two upstreams disagree about an abbreviation is **not a defect in
+either** — it is why §ABS44's `TranslationSummary` carries `ProviderEditionId`
+separately from `Abbreviation`, and why §ABS18 forbids echoing an upstream's
+reference string back to a consumer.
+
+**[unverified]:** that version `206` is exposed through the Platform API rather
+than only through the Bible App, and that it is visible to a key which has
+accepted no agreement. §YVN19 rule 2 now asks both.
+
+**The caveat that applied to KJV still applies to WEB.** YouVersion gates access
+per accepted licence agreement, and whether a *fresh* app key sees the
+public-domain set without accepting anything in the portal is **[unverified]**
+(§YVN19 rule 2).
 
 If it does not, `DefaultTranslation` must be set to a version the deployment's key
 has actually accepted — otherwise every unqualified reference returns
@@ -1021,7 +1063,9 @@ gets built**, not merely how it is configured.
    **Existential, not cosmetic:** it is the only endpoint in this upstream known to
    return scripture text, so if it is gone §YVN8 is not rewritten — the provider is
    (§YVN8). Run this spike first.
-2. **Does a fresh app key see KJV (id 1) without accepting an agreement?** Decides
+2. **Does a fresh app key see WEB (`WEBUS`, id 206) without accepting an
+   agreement, and is id 206 exposed through the Platform API at all?** (§YVN4.1.)
+   Ask the same of KJV (id 1) while there. Decides
    whether the shipped `DefaultTranslation` works out of the box (§YVN4).
 3. **Does the passages endpoint accept a verse range** (`JHN.3.16-JHN.3.18`)?
    Decides whether a range is one request or a chapter fetch plus a slice (§YVN9

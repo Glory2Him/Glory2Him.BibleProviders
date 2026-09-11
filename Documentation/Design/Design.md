@@ -1033,8 +1033,11 @@ In this order, because it is the order a consumer needs it:
    provider, one lookup, read `Text` and `Attribution`. It must compile as written.
 3. **Every configuration field**, with which are mandatory, what each defaults to,
    and — for anything with a shipped default that is a *safe* choice rather than a
-   *recommended* one — which is which. `DefaultTranslation` is the example that
-   bites: KJV is safe on a fresh key and is not a recommendation (§APB4, §YVN4).
+   *recommended* one — which is which. `DefaultTranslation` **used to be** that
+   example and is now the counter-example: `WEB` is both safe and recommended
+   (§APB4, §YVN4). The rule stands for every other such field, and §APB27 is why it
+   stands — the previous default, `KJV`, read as safe for two drafts before anyone
+   read the territorial clause.
 4. **The `TranslationMetadata` sample block** (§ABS45.3), dated, with a sentence
    saying it is the consumer's to own and verify. This is the one piece of
    documentation this design deliberately ships *instead of* code.
