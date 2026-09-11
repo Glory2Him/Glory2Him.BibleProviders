@@ -20,7 +20,8 @@ Conventions, heading tags and provenance tags: [Design.md](Design.md), "Conventi
 | Interactive API reference | https://developers.youversion.com/api |
 | **Developer portal** — app keys, per-version licence acceptance | https://platform.youversion.com |
 | Versification specification (Copenhagen Alliance, YouVersion co-authored) | https://github.com/Copenhagen-Alliance/versification-specification |
-| **Platform terms** — published, unread, and blocking (§YVN14) | https://platform.youversion.com/terms |
+| **Platform terms** — read, and they move the blocker rather than lifting it (§YVN14) | https://platform.youversion.com/terms |
+| **Publisher licence agreements** — the remaining unread source (§YVN14.1). Login required; each row links its own agreement | https://platform.youversion.com/platform/licenses |
 
 **YouVersion's public documentation is materially thinner than API.Bible's, and it
 contradicts itself in three places that matter.** There is no published OpenAPI
@@ -667,6 +668,38 @@ Two instruments were named here. **Checking the portal has narrowed it to one.**
 
 **So the blocker is now one thing, and it is sitting in the portal already
 accepted:** read the publisher agreements and record what they say about retention.
+
+**Record the findings here; do not mirror the documents into this repository.**
+Tempting, because they sit behind a login and a Google Docs link that may not
+outlive the account — but three reasons say no, and the first is the one that
+settles it:
+
+1. **Publishing them would plausibly breach the agreement they are part of.** The
+   Terms define the YVP as including "the content on the platform", define YV IP as
+   the YVP and the Tools, and then forbid you to "distribute, publish, transfer, or
+   otherwise make the YV IP available to third-parties" [verified]. This repository
+   is public. Mirroring a licence agreement into it is publishing platform content —
+   breaching the terms we opened them to comply with.
+2. **They are not ours.** Biblica's and Lockman's agreements are those publishers'
+   documents, and §ABS45.3's argument against shipping third-party legal text
+   applies with more force to the agreement itself than to a copyright line.
+3. **They would go stale in the worst way** — a `v1` committed today, superseded
+   later, sitting in the repository looking authoritative while someone relies on
+   it. A stale copyright notice misattributes; a stale retention clause misleads
+   someone into breaching one.
+
+**What to record instead**, per row, when someone reads them:
+
+> `Biblica — Fast-track Bible License v1 — accepted 4 Aug 2026 — §N: <the figure>`
+
+Name, version, acceptance date, clause and figure. That is durable, verifiable by
+anyone with portal access, redistributes nothing, and makes drift **detectable** —
+a `v2` appearing in the portal against a `v1` recorded here is a visible mismatch
+rather than a silent one.
+
+**If durable copies are wanted**, they belong in the organisation's own document
+store, referenced from here by name and version. Not in a public repository, and
+not in one that publishes NuGet packages.
 
 ### YVN14.4 This is a spike, not an integrity matter — and the difference decides what happens next (#3)
 
