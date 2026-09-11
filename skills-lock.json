@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "skills": {
+    "The Standard Architecture": {
+      "source": "hassanhabib/the-standard-skills",
+      "sourceType": "github",
+      "computedHash": "fcd21f5ea43f3b60ed2bb0b4dd2f939a1d3756db3d1c4a58d24d86bd01aa41e3"
+    },
+    "The Standard Code CSharp": {
+      "source": "hassanhabib/the-standard-skills",
+      "sourceType": "github",
+      "computedHash": "0d2eaf0b428df0279674bca01f6de4140d0be39a413a68c7e05679e68934b6c6"
+    },
+    "The Standard Core": {
+      "source": "hassanhabib/the-standard-skills",
+      "sourceType": "github",
+      "computedHash": "0fd56ddca08fe4d3bd7bac455862818a550d7e36f87fda5808230f68813cf16b"
+    },
+    "The Standard Practices": {
+      "source": "hassanhabib/the-standard-skills",
+      "sourceType": "github",
+      "computedHash": "2d6bc51921f375a8605ba764cefc8683b4d6d826a4dbc8ae56612fcc9ce80b65"
+    },
+    "The Standard Testing": {
+      "source": "hassanhabib/the-standard-skills",
+      "sourceType": "github",
+      "computedHash": "74b2c574c3fca1cf97344cf2ac73d7be9e9fd70ff6039bd1c0f3f19db9d7a12d"
+    },
+    "The Standard Versioning": {
+      "source": "hassanhabib/the-standard-skills",
+      "sourceType": "github",
+      "computedHash": "13914572cf04f6cab666f2a00b1287f66eca7d1c035d9e4f94f173eab20f23c0"
+    }
+  }
+}

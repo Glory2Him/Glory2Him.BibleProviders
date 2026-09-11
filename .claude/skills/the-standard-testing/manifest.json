@@ -1,0 +1,11 @@
+{
+  "name": "the-standard-testing",
+  "version": "0.1.0",
+  "description": "Enforces TDD discipline, test naming, FAIL/PASS commit patterns, mocking rules, and test structure.",
+  "the_standard_version": "v2.50.0",
+  "skill_version": "v0.1.0",
+  "inputs": ["C# test source file (*Tests*.cs)"],
+  "outputs": ["Standard-compliant test code", "Review feedback citing rule IDs"],
+  "dependencies": ["the-standard-core", "the-standard-foundations"],
+  "applies_to": ["*Tests*.cs"]
+}

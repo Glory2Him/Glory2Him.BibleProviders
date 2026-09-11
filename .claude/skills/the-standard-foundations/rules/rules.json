@@ -1,0 +1,20 @@
+{
+  "skill": "the-standard-foundations",
+  "rules": [
+    { "id": "ts-foundations-001", "severity": "ERROR", "category": "Single Entity", "rule": "Foundation services must serve only one entity type." },
+    { "id": "ts-foundations-002", "severity": "ERROR", "category": "Validation", "rule": "Foundation services must perform structural and logical validation on all incoming models." },
+    { "id": "ts-foundations-003", "severity": "ERROR", "category": "Broker Dependency", "rule": "Foundation services must call only brokers — never another service." },
+    { "id": "ts-foundations-004", "severity": "ERROR", "category": "Broker Dependency", "rule": "Foundation services must not enrich a model with business data. Audit stamping through the security audit broker is required, not a violation." },
+    { "id": "ts-foundations-005", "severity": "ERROR", "category": "Exception Handling", "rule": "Foundation services must map broker exceptions to local exceptions using dependency validation wrappers." },
+    { "id": "ts-foundations-006", "severity": "ERROR", "category": "Exception Handling", "rule": "Foundation services must wrap all broker calls in try-catch blocks." },
+    { "id": "ts-foundations-007", "severity": "ERROR", "category": "Structure", "rule": "Foundation services must be partial classes split by concern (.cs, .Substrate.cs, .Validations.cs, .Exceptions.cs), not by operation category." },
+    { "id": "ts-foundations-008", "severity": "ERROR", "category": "Naming", "rule": "Foundation service interfaces must follow the naming pattern I{Entity}Service." },
+    { "id": "ts-foundations-009", "severity": "ERROR", "category": "Identity", "rule": "Foundation services must take the acting identity from the inbound envelope's SecurityContext and pass it explicitly to every audit and user-id call — never an ambient accessor." },
+    { "id": "ts-foundations-010", "severity": "ERROR", "category": "Identity", "rule": "Foundation services must enforce their own security; no layer may assume an upstream layer already gated the caller." },
+    { "id": "ts-foundations-011", "severity": "ERROR", "category": "Identity", "rule": "Event-path handlers must verify the envelope's integrity signature in the receiver, against the handler's event name and the request direction." },
+    { "id": "ts-foundations-012", "severity": "ERROR", "category": "Identity", "rule": "A read the caller may not perform must answer not-found, never unauthorized; the true denial reason is logged server-side only." },
+    { "id": "ts-foundations-013", "severity": "ERROR", "category": "Dual Path", "rule": "Every operation that has a request address (Adding, Modifying, RemovingById, HardRemovingById, RetrievingById) must be reachable both directly and via the substrate, converging on one private DoXAsync. RetrieveAll has no request address and is deliberately excluded." },
+    { "id": "ts-foundations-014", "severity": "ERROR", "category": "Dual Path", "rule": "Mutating event handlers must check ProcessedEvents before acting and record both the inbound request id and the outbound fact id after; a deduplicated delivery replies null." },
+    { "id": "ts-foundations-015", "severity": "ERROR", "category": "Dual Path", "rule": "Event-path handlers must always rethrow after categorizing so the substrate records the delivery as Error and drives retries." }
+  ]
+}

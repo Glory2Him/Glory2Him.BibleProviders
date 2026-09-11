@@ -1,0 +1,11 @@
+{
+  "name": "the-standard-foundations",
+  "version": "0.2.0",
+  "description": "Enforces structural validation, single-entity responsibility, envelope-carried identity, and the dual-path (direct + event substrate) shape for foundation services.",
+  "the_standard_version": "v2.50.0",
+  "skill_version": "v0.2.0",
+  "inputs": ["C# foundation service source file (*Service*.cs)"],
+  "outputs": ["Standard-compliant foundation service code", "Review feedback citing rule IDs"],
+  "dependencies": ["the-standard-core", "the-standard-brokers"],
+  "applies_to": ["*Service*.cs"]
+}

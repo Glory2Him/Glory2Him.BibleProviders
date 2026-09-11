@@ -1,0 +1,11 @@
+{
+  "name": "the-standard-versioning",
+  "version": "0.1.0",
+  "description": "Enforces semantic versioning, backward-compatible API design, and version exposure rules.",
+  "the_standard_version": "v2.50.0",
+  "skill_version": "v0.1.0",
+  "inputs": ["C# source files (*.cs)", "Project files (*.csproj)"],
+  "outputs": ["Standard-compliant versioned API code", "Review feedback citing rule IDs"],
+  "dependencies": ["the-standard-core"],
+  "applies_to": ["*.cs", "*.csproj"]
+}

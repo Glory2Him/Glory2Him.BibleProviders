@@ -1,0 +1,14 @@
+{
+  "skill": "the-standard-core",
+  "version": "1.0.0",
+  "naming": {
+    "rule": "Names must describe what something is, not how it works.",
+    "forbidden_suffixes": ["Helper", "Util", "Manager", "Handler"],
+    "required_pattern": "Describe the artifact's purpose, not its mechanism."
+  },
+  "structure": {
+    "layer_order": ["Broker", "Foundation", "Processing", "Orchestration", "Aggregation", "Exposer"],
+    "allowed_dependency": "Each layer may only depend on the layer directly below it.",
+    "forbidden_dependency": "A layer must not call two levels below itself."
+  }
+}

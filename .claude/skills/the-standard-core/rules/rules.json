@@ -1,0 +1,14 @@
+{
+  "skill": "the-standard-core",
+  "rules": [
+    { "id": "ts-core-001", "severity": "ERROR", "category": "Single Responsibility", "rule": "Every component must serve one and only one purpose." },
+    { "id": "ts-core-002", "severity": "ERROR", "category": "Naming", "rule": "Name every artifact by what it is, not how it works." },
+    { "id": "ts-core-003", "severity": "ERROR", "category": "Layering", "rule": "Every layer must depend only on the layer directly below it — never skip layers." },
+    { "id": "ts-core-004", "severity": "ERROR", "category": "Testability", "rule": "Every public member must be testable without modification." },
+    { "id": "ts-core-005", "severity": "ERROR", "category": "Encapsulation", "rule": "Expose only what callers need; hide all implementation details." },
+    { "id": "ts-core-006", "severity": "ERROR", "category": "Business Rules", "rule": "All business rules must live in a service, never in a controller or broker." },
+    { "id": "ts-core-007", "severity": "ERROR", "category": "Naming", "rule": "Code must communicate intent clearly without requiring comments." },
+    { "id": "ts-core-008", "severity": "ERROR", "category": "Single Responsibility", "rule": "Favour small, composable units over large monolithic implementations." },
+    { "id": "ts-core-009", "severity": "ERROR", "category": "Single Responsibility", "rule": "Separate what changes frequently from what stays stable." }
+  ]
+}

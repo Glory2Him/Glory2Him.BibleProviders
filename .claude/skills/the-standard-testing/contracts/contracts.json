@@ -1,0 +1,27 @@
+{
+  "skill": "the-standard-testing",
+  "version": "1.0.0",
+  "naming": {
+    "test_class_pattern": "{SubjectUnderTest}Tests",
+    "test_method_pattern": "Should{Outcome}_{Condition}Async",
+    "examples": [
+      "ShouldAddStudentAsync",
+      "ShouldThrowValidationExceptionOnAddIfStudentIsNullAsync",
+      "ShouldThrowDependencyExceptionOnAddIfSqlExceptionOccursAsync",
+      "ShouldThrowServiceExceptionOnAddIfUnexpectedExceptionOccursAsync"
+    ]
+  },
+  "tdd_commit_format": {
+    "failing": "{TestName} -> FAIL",
+    "passing": "{TestName} -> PASS"
+  },
+  "required_coverage_paths": [
+    "Happy path",
+    "Validation exception (null, empty, invalid)",
+    "Dependency validation exception (conflict, not found)",
+    "Dependency exception (storage/infra failure)",
+    "Service exception (unexpected)"
+  ],
+  "mock_library": "Moq",
+  "test_framework": "xUnit"
+}

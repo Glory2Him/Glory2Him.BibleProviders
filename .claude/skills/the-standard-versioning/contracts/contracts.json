@@ -1,0 +1,14 @@
+{
+  "skill": "the-standard-versioning",
+  "version": "1.0.0",
+  "semantic_versioning": {
+    "format": "MAJOR.MINOR.PATCH",
+    "initial_ga": "1.0.0",
+    "initial_prerelease": "0.1.0",
+    "breaking_change": "increment MAJOR, reset MINOR and PATCH to 0",
+    "new_feature": "increment MINOR, reset PATCH to 0",
+    "bug_fix": "increment PATCH"
+  },
+  "api_route_pattern": "/api/v{major}/{resource}",
+  "csproj_version_element": "<Version>{MAJOR}.{MINOR}.{PATCH}</Version>"
+}

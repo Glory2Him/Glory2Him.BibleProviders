@@ -1,0 +1,77 @@
+name: Build
+on:
+  push:
+    branches:
+    - main
+  pull_request:
+    types:
+    - opened
+    - synchronize
+    - reopened
+    branches:
+    - main
+jobs:
+  build:
+    # This name is the status check the org ruleset requires. Renaming the job
+    # renames the check, and the rule then waits forever on one that never reports.
+    name: Build
+    runs-on: windows-latest
+    steps:
+    - name: Check out
+      uses: actions/checkout@v5
+    - name: Detect What Is Here
+      id: detect
+      shell: pwsh
+      run: |
+        # A repository made from the template has no projects on its first day. The
+        # required check still has to report, so this passes with nothing to do rather
+        # than failing and blocking the first pull request.
+        $projects = @(Get-ChildItem -Path . -Recurse -File -Include *.slnx, *.sln, *.csproj)
+        $hasDotnet = $projects.Count -gt 0
+        "dotnet=$($hasDotnet.ToString().ToLower())" | Out-File $env:GITHUB_OUTPUT -Append
+        if ($hasDotnet) {
+          Write-Host "Found $($projects.Count) project file(s)."
+        } else {
+          Write-Host "No .NET projects yet — nothing to build."
+        }
+    - name: Setup .Net
+      if: steps.detect.outputs.dotnet == 'true'
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: 10.x
+    - name: Restore
+      if: steps.detect.outputs.dotnet == 'true'
+      run: dotnet restore
+    - name: Build
+      if: steps.detect.outputs.dotnet == 'true'
+      run: dotnet build --no-restore
+    - name: Run Unit Tests
+      if: steps.detect.outputs.dotnet == 'true'
+      shell: pwsh
+      run: |
+        # Discovered by glob, so a new test project runs in CI without anyone
+        # editing this workflow. Name it *Tests.Unit* and it is picked up.
+        $projects = Get-ChildItem -Path . -Filter "*Tests.Unit*.csproj" -Recurse
+        foreach ($project in $projects) {
+          Write-Host "Running tests for: $($project.FullName)"
+          dotnet test $project.FullName --no-build --verbosity normal
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        }
+    - name: Run Acceptance Tests
+      if: steps.detect.outputs.dotnet == 'true'
+      shell: pwsh
+      run: |
+        $projects = Get-ChildItem -Path . -Filter "*Tests.Acceptance*.csproj" -Recurse
+        foreach ($project in $projects) {
+          Write-Host "Running tests for: $($project.FullName)"
+          dotnet test $project.FullName --no-build --verbosity normal
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        }
+    # Add as this repository grows, rather than up front:
+    #   - Integration tests. windows-latest ships SQL Server LocalDB; start it with
+    #     `sqllocaldb start MSSQLLocalDB` before globbing *Tests.Integration*.csproj.
+    #   - A JavaScript app. Set up Node, then npm ci / lint / test / build in the app's
+    #     own directory. `npm run build` is the step that type-checks — dotnet build
+    #     will not do it for you.
+    #   - `dotnet ef migrations has-pending-model-changes`, once there are migrations.
+    #     Nothing else notices a model change with no migration behind it.

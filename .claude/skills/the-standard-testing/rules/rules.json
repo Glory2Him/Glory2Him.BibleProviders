@@ -1,0 +1,13 @@
+{
+  "skill": "the-standard-testing",
+  "rules": [
+    { "id": "ts-testing-001", "severity": "ERROR", "category": "TDD", "rule": "Tests must be written before implementation — failing test must exist first." },
+    { "id": "ts-testing-002", "severity": "ERROR", "category": "Naming", "rule": "Test methods must follow Should{Outcome}_{Condition}Async naming pattern." },
+    { "id": "ts-testing-003", "severity": "ERROR", "category": "Structure", "rule": "Each test must assert one specific behavior." },
+    { "id": "ts-testing-004", "severity": "ERROR", "category": "Isolation", "rule": "Tests must use mocks/fakes — never real infrastructure." },
+    { "id": "ts-testing-005", "severity": "ERROR", "category": "TDD", "rule": "Failing test must be committed as {TestName} -> FAIL." },
+    { "id": "ts-testing-006", "severity": "ERROR", "category": "TDD", "rule": "Passing implementation must be committed as {TestName} -> PASS." },
+    { "id": "ts-testing-007", "severity": "ERROR", "category": "Naming", "rule": "Test classes must follow {SubjectUnderTest}Tests naming pattern." },
+    { "id": "ts-testing-008", "severity": "ERROR", "category": "Coverage", "rule": "Tests must cover happy path, validation failures, dependency failures, and service failures." }
+  ]
+}

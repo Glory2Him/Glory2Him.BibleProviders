@@ -1,0 +1,110 @@
+name: Labels
+on:
+  workflow_dispatch:
+  push:
+    branches:
+    - main
+    paths:
+    - .github/labels.json
+    - .github/workflows/labels.yml
+jobs:
+  sync:
+    name: Sync
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out
+      uses: actions/checkout@v5
+    - name: Sync Labels
+      uses: actions/github-script@v8
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const fs = require('fs');
+
+          // A repository created from the template does not always run workflows on its
+          // very first commit. If the labels are missing, run this workflow by hand once:
+          // Actions -> Labels -> Run workflow.
+          const manifest = JSON.parse(fs.readFileSync('.github/labels.json', 'utf8'));
+
+          const existing = await github.paginate(github.rest.issues.listLabelsForRepo, {
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            per_page: 100
+          });
+
+          // Keyed lower case because GitHub treats label names as case insensitive for
+          // uniqueness. Creating DOCUMENTATION while the stock "documentation" label is
+          // still on a new repository is a 422, so that one is a rename, not a create.
+          const byName = new Map(existing.map(label => [label.name.toLowerCase(), label]));
+          const failures = [];
+          let created = 0;
+          let renamed = 0;
+          let updated = 0;
+
+          for (const label of manifest) {
+            const current = byName.get(label.name.toLowerCase());
+
+            try {
+              if (!current) {
+                await github.rest.issues.createLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: label.name,
+                  color: label.color,
+                  description: label.description
+                });
+
+                console.log(`Created: ${label.name}`);
+                created++;
+                continue;
+              }
+
+              const nameMatches = current.name === label.name;
+              const colorMatches = current.color.toLowerCase() === label.color.toLowerCase();
+              const descriptionMatches = (current.description || '') === label.description;
+
+              if (nameMatches && colorMatches && descriptionMatches) {
+                continue;
+              }
+
+              // Addressed by the name it currently has, renamed to the name the manifest
+              // asks for. Passing the manifest name as "name" would 404 on a case change.
+              await github.rest.issues.updateLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: current.name,
+                new_name: label.name,
+                color: label.color,
+                description: label.description
+              });
+
+              if (nameMatches) {
+                console.log(`Updated: ${label.name}`);
+                updated++;
+              } else {
+                console.log(`Renamed: ${current.name} -> ${label.name}`);
+                renamed++;
+              }
+            } catch (error) {
+              // Collected rather than thrown, so one bad label cannot hide the state of
+              // the other hundred. The job still fails at the end.
+              console.log(`Failed: ${label.name}: ${error.message}`);
+              failures.push(`${label.name}: ${error.message}`);
+            }
+          }
+
+          // Labels are never deleted. A label this repository added by hand, and the stock
+          // labels GitHub created with the repository, are left exactly as they are.
+          const summary =
+            `${created} created, ${renamed} renamed, ${updated} updated, ` +
+            `${failures.length} failed, ${manifest.length} in manifest.`;
+
+          console.log(summary);
+          await core.summary.addRaw(summary).write();
+
+          if (failures.length) {
+            core.setFailed(`Could not sync ${failures.length} label(s):\n${failures.join('\n')}`);
+          }
+    permissions:
+      contents: read
+      issues: write

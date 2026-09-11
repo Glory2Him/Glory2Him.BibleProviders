@@ -1,0 +1,4 @@
+# Shell scripts must keep LF endings. Checked out with CRLF on Windows, the
+# shebang becomes "#!/bin/bash\r" and the interpreter is not found — the script
+# fails everywhere it is run through a real shell, including Git Bash and CI.
+*.sh text eol=lf

@@ -1,0 +1,622 @@
+[
+  {
+    "name": "INFRA",
+    "color": "1e90ff",
+    "description": "Project setup, creating the build project / build scripts"
+  },
+  {
+    "name": "MINOR INFRA",
+    "color": "1e90ff",
+    "description": "Project setup, creating the build project / build scripts — a minor change"
+  },
+  {
+    "name": "MEDIUM INFRA",
+    "color": "1e90ff",
+    "description": "Project setup, creating the build project / build scripts — a medium change"
+  },
+  {
+    "name": "MAJOR INFRA",
+    "color": "1e90ff",
+    "description": "Project setup, creating the build project / build scripts — a major change"
+  },
+  {
+    "name": "PROVISIONS",
+    "color": "2e8b57",
+    "description": "Provisions scripts"
+  },
+  {
+    "name": "RELEASES",
+    "color": "2ae9f8",
+    "description": "The releases category"
+  },
+  {
+    "name": "DATA",
+    "color": "daa520",
+    "description": "The data category"
+  },
+  {
+    "name": "MINOR DATA",
+    "color": "daa520",
+    "description": "The data category — a minor change"
+  },
+  {
+    "name": "MEDIUM DATA",
+    "color": "daa520",
+    "description": "The data category — a medium change"
+  },
+  {
+    "name": "MAJOR DATA",
+    "color": "daa520",
+    "description": "The data category — a major change"
+  },
+  {
+    "name": "BROKERS",
+    "color": "4682b4",
+    "description": "The brokers category"
+  },
+  {
+    "name": "MINOR BROKERS",
+    "color": "4682b4",
+    "description": "The brokers category — a minor change"
+  },
+  {
+    "name": "MEDIUM BROKERS",
+    "color": "4682b4",
+    "description": "The brokers category — a medium change"
+  },
+  {
+    "name": "MAJOR BROKERS",
+    "color": "4682b4",
+    "description": "The brokers category — a major change"
+  },
+  {
+    "name": "FOUNDATIONS",
+    "color": "a11ee7",
+    "description": "The foundations category"
+  },
+  {
+    "name": "MINOR FOUNDATIONS",
+    "color": "a11ee7",
+    "description": "The foundations category — a minor change"
+  },
+  {
+    "name": "MEDIUM FOUNDATIONS",
+    "color": "a11ee7",
+    "description": "The foundations category — a medium change"
+  },
+  {
+    "name": "MAJOR FOUNDATIONS",
+    "color": "a11ee7",
+    "description": "The foundations category — a major change"
+  },
+  {
+    "name": "PROCESSINGS",
+    "color": "8a2be2",
+    "description": "The processings category"
+  },
+  {
+    "name": "MINOR PROCESSINGS",
+    "color": "8a2be2",
+    "description": "The processings category — a minor change"
+  },
+  {
+    "name": "MEDIUM PROCESSINGS",
+    "color": "8a2be2",
+    "description": "The processings category — a medium change"
+  },
+  {
+    "name": "MAJOR PROCESSINGS",
+    "color": "8a2be2",
+    "description": "The processings category — a major change"
+  },
+  {
+    "name": "ORCHESTRATIONS",
+    "color": "20b2aa",
+    "description": "The orchestrations category"
+  },
+  {
+    "name": "MINOR ORCHESTRATIONS",
+    "color": "20b2aa",
+    "description": "The orchestrations category — a minor change"
+  },
+  {
+    "name": "MEDIUM ORCHESTRATIONS",
+    "color": "20b2aa",
+    "description": "The orchestrations category — a medium change"
+  },
+  {
+    "name": "MAJOR ORCHESTRATIONS",
+    "color": "20b2aa",
+    "description": "The orchestrations category — a major change"
+  },
+  {
+    "name": "COORDINATIONS",
+    "color": "5f9ea0",
+    "description": "The coordinations category"
+  },
+  {
+    "name": "MINOR COORDINATIONS",
+    "color": "5f9ea0",
+    "description": "The coordinations category — a minor change"
+  },
+  {
+    "name": "MEDIUM COORDINATIONS",
+    "color": "5f9ea0",
+    "description": "The coordinations category — a medium change"
+  },
+  {
+    "name": "MAJOR COORDINATIONS",
+    "color": "5f9ea0",
+    "description": "The coordinations category — a major change"
+  },
+  {
+    "name": "MANAGEMENTS",
+    "color": "b60205",
+    "description": "The management category"
+  },
+  {
+    "name": "MINOR MANAGEMENTS",
+    "color": "b60205",
+    "description": "The management category — a minor change"
+  },
+  {
+    "name": "MEDIUM MANAGEMENTS",
+    "color": "b60205",
+    "description": "The management category — a medium change"
+  },
+  {
+    "name": "MAJOR MANAGEMENTS",
+    "color": "b60205",
+    "description": "The management category — a major change"
+  },
+  {
+    "name": "AGGREGATIONS",
+    "color": "426dd3",
+    "description": "The aggregations category"
+  },
+  {
+    "name": "MINOR AGGREGATIONS",
+    "color": "426dd3",
+    "description": "The aggregations category — a minor change"
+  },
+  {
+    "name": "MEDIUM AGGREGATIONS",
+    "color": "426dd3",
+    "description": "The aggregations category — a medium change"
+  },
+  {
+    "name": "MAJOR AGGREGATIONS",
+    "color": "426dd3",
+    "description": "The aggregations category — a major change"
+  },
+  {
+    "name": "CONTROLLERS",
+    "color": "db3abe",
+    "description": "The controllers category"
+  },
+  {
+    "name": "MINOR CONTROLLERS",
+    "color": "db3abe",
+    "description": "The controllers category — a minor change"
+  },
+  {
+    "name": "MEDIUM CONTROLLERS",
+    "color": "db3abe",
+    "description": "The controllers category — a medium change"
+  },
+  {
+    "name": "MAJOR CONTROLLERS",
+    "color": "db3abe",
+    "description": "The controllers category — a major change"
+  },
+  {
+    "name": "CLIENTS",
+    "color": "db3abe",
+    "description": "The clients category"
+  },
+  {
+    "name": "MINOR CLIENTS",
+    "color": "db3abe",
+    "description": "The clients category — a minor change"
+  },
+  {
+    "name": "MEDIUM CLIENTS",
+    "color": "db3abe",
+    "description": "The clients category — a medium change"
+  },
+  {
+    "name": "MAJOR CLIENTS",
+    "color": "db3abe",
+    "description": "The clients category — a major change"
+  },
+  {
+    "name": "EXPOSERS",
+    "color": "db3abe",
+    "description": "The exposers category"
+  },
+  {
+    "name": "MINOR EXPOSERS",
+    "color": "db3abe",
+    "description": "The exposers category — a minor change"
+  },
+  {
+    "name": "MEDIUM EXPOSERS",
+    "color": "db3abe",
+    "description": "The exposers category — a medium change"
+  },
+  {
+    "name": "MAJOR EXPOSERS",
+    "color": "db3abe",
+    "description": "The exposers category — a major change"
+  },
+  {
+    "name": "PROVIDERS",
+    "color": "db3abe",
+    "description": "The providers category"
+  },
+  {
+    "name": "BASE",
+    "color": "708090",
+    "description": "The base components category"
+  },
+  {
+    "name": "MINOR BASE",
+    "color": "708090",
+    "description": "The base components category — a minor change"
+  },
+  {
+    "name": "MEDIUM BASE",
+    "color": "708090",
+    "description": "The base components category — a medium change"
+  },
+  {
+    "name": "MAJOR BASE",
+    "color": "708090",
+    "description": "The base components category — a major change"
+  },
+  {
+    "name": "COMPONENTS",
+    "color": "00ced1",
+    "description": "The components category"
+  },
+  {
+    "name": "MINOR COMPONENTS",
+    "color": "00ced1",
+    "description": "The components category — a minor change"
+  },
+  {
+    "name": "MEDIUM COMPONENTS",
+    "color": "00ced1",
+    "description": "The components category — a medium change"
+  },
+  {
+    "name": "MAJOR COMPONENTS",
+    "color": "00ced1",
+    "description": "The components category — a major change"
+  },
+  {
+    "name": "VIEWS",
+    "color": "9370db",
+    "description": "The views category"
+  },
+  {
+    "name": "MINOR VIEWS",
+    "color": "9370db",
+    "description": "The views category — a minor change"
+  },
+  {
+    "name": "MEDIUM VIEWS",
+    "color": "9370db",
+    "description": "The views category — a medium change"
+  },
+  {
+    "name": "MAJOR VIEWS",
+    "color": "9370db",
+    "description": "The views category — a major change"
+  },
+  {
+    "name": "PAGES",
+    "color": "c4bb46",
+    "description": "The pages category"
+  },
+  {
+    "name": "MINOR PAGES",
+    "color": "c4bb46",
+    "description": "The pages category — a minor change"
+  },
+  {
+    "name": "MEDIUM PAGES",
+    "color": "c4bb46",
+    "description": "The pages category — a medium change"
+  },
+  {
+    "name": "MAJOR PAGES",
+    "color": "c4bb46",
+    "description": "The pages category — a major change"
+  },
+  {
+    "name": "ACCEPTANCE",
+    "color": "40e0d0",
+    "description": "The acceptance tests category"
+  },
+  {
+    "name": "MINOR ACCEPTANCE",
+    "color": "40e0d0",
+    "description": "The acceptance tests category — a minor change"
+  },
+  {
+    "name": "MEDIUM ACCEPTANCE",
+    "color": "40e0d0",
+    "description": "The acceptance tests category — a medium change"
+  },
+  {
+    "name": "MAJOR ACCEPTANCE",
+    "color": "40e0d0",
+    "description": "The acceptance tests category — a major change"
+  },
+  {
+    "name": "INTEGRATIONS",
+    "color": "7b68ee",
+    "description": "The integration tests category"
+  },
+  {
+    "name": "MINOR INTEGRATIONS",
+    "color": "7b68ee",
+    "description": "The integration tests category — a minor change"
+  },
+  {
+    "name": "MEDIUM INTEGRATIONS",
+    "color": "7b68ee",
+    "description": "The integration tests category — a medium change"
+  },
+  {
+    "name": "MAJOR INTEGRATIONS",
+    "color": "7b68ee",
+    "description": "The integration tests category — a major change"
+  },
+  {
+    "name": "CODE RUB",
+    "color": "9a3bc5",
+    "description": "The code rub category is for small changes (not for bug fixes)"
+  },
+  {
+    "name": "MINOR CODE RUB",
+    "color": "9a3bc5",
+    "description": "The code rub category is for small changes (not for bug fixes) — a minor change"
+  },
+  {
+    "name": "MEDIUM CODE RUB",
+    "color": "9a3bc5",
+    "description": "The code rub category is for small changes (not for bug fixes) — a medium change"
+  },
+  {
+    "name": "MAJOR CODE RUB",
+    "color": "9a3bc5",
+    "description": "The code rub category is for small changes (not for bug fixes) — a major change"
+  },
+  {
+    "name": "MINOR FIX",
+    "color": "e99695",
+    "description": "A minor bug fix / change that do not significantly alter the overall functionality of the program"
+  },
+  {
+    "name": "MEDIUM FIX",
+    "color": "d93f0b",
+    "description": "A medium fix has a moderate level of impact on the functionality or performance of the program"
+  },
+  {
+    "name": "MAJOR FIX",
+    "color": "b60205",
+    "description": "A major bug fix is a significant repair or correction made to addresses a critical or major issue"
+  },
+  {
+    "name": "DOCUMENTATION",
+    "color": "0075ca",
+    "description": "The documentation category"
+  },
+  {
+    "name": "CONFIG",
+    "color": "8fbc8f",
+    "description": "The configuration category is for any configuration changes i.e. setting up appsettings.json"
+  },
+  {
+    "name": "STANDARD",
+    "color": "006b75",
+    "description": "Changes to The Standard skills or the engineering rules"
+  },
+  {
+    "name": "DESIGN",
+    "color": "ff8c00",
+    "description": "Architecture and design decisions"
+  },
+  {
+    "name": "MINOR DESIGN",
+    "color": "ff8c00",
+    "description": "Architecture and design decisions — a minor change"
+  },
+  {
+    "name": "MEDIUM DESIGN",
+    "color": "ff8c00",
+    "description": "Architecture and design decisions — a medium change"
+  },
+  {
+    "name": "MAJOR DESIGN",
+    "color": "ff8c00",
+    "description": "Architecture and design decisions — a major change"
+  },
+  {
+    "name": "BUSINESS",
+    "color": "3cb371",
+    "description": "The business category is for documentation of business processes / Standard Operating Procedures"
+  },
+  {
+    "name": "MIGRATIONS",
+    "color": "cd853f",
+    "description": "Database schema migrations"
+  },
+  {
+    "name": "PLANNING",
+    "color": "bfd4f2",
+    "description": "Planning and backlog shaping"
+  },
+  {
+    "name": "MINOR PLANNING",
+    "color": "bfd4f2",
+    "description": "Planning and backlog shaping — a minor change"
+  },
+  {
+    "name": "MAJOR PLANNING",
+    "color": "bfd4f2",
+    "description": "Planning and backlog shaping — a major change"
+  },
+  {
+    "name": "MENTORSHIP",
+    "color": "fef2c0",
+    "description": "Mentorship and knowledge sharing"
+  },
+  {
+    "name": "MINOR MENTORSHIP",
+    "color": "fef2c0",
+    "description": "Mentorship and knowledge sharing — a minor change"
+  },
+  {
+    "name": "MAJOR MENTORSHIP",
+    "color": "fef2c0",
+    "description": "Mentorship and knowledge sharing — a major change"
+  },
+  {
+    "name": "DISCUSSION",
+    "color": "d4c5f9",
+    "description": "Open discussion, no code change expected"
+  },
+  {
+    "name": "MINOR DISCUSSION",
+    "color": "d4c5f9",
+    "description": "Open discussion, no code change expected — a minor change"
+  },
+  {
+    "name": "MAJOR DISCUSSION",
+    "color": "d4c5f9",
+    "description": "Open discussion, no code change expected — a major change"
+  },
+  {
+    "name": "IMPORTS",
+    "color": "c2e0c6",
+    "description": "Bulk imports of content or data"
+  },
+  {
+    "name": "REVIEWS",
+    "color": "bfdadc",
+    "description": "Code or content review work"
+  },
+  {
+    "name": "STATUS",
+    "color": "c5def5",
+    "description": "Status reporting, no code change"
+  },
+  {
+    "name": "Opus 5 - Small",
+    "color": "fbca04",
+    "description": "Suggested model and effort for this issue"
+  },
+  {
+    "name": "Opus 5 - Medium",
+    "color": "fbca04",
+    "description": "Suggested model and effort for this issue"
+  },
+  {
+    "name": "Opus 5 - High",
+    "color": "fbca04",
+    "description": "Suggested model and effort for this issue"
+  },
+  {
+    "name": "Opus 5 - Extra",
+    "color": "fbca04",
+    "description": "Suggested model and effort for this issue"
+  },
+  {
+    "name": "Opus 5 - Max",
+    "color": "fbca04",
+    "description": "Suggested model and effort for this issue"
+  },
+  {
+    "name": "Sonnet 5 - Low",
+    "color": "fbca04",
+    "description": "Suggested model and effort for this issue"
+  },
+  {
+    "name": "Sonnet 5 - Medium",
+    "color": "fbca04",
+    "description": "Suggested model and effort for this issue"
+  },
+  {
+    "name": "Sonnet 5 - High",
+    "color": "fbca04",
+    "description": "Suggested model and effort for this issue"
+  },
+  {
+    "name": "Fable 5 - Low",
+    "color": "fbca04",
+    "description": "Suggested model and effort for this issue"
+  },
+  {
+    "name": "Fable 5 - Medium",
+    "color": "fbca04",
+    "description": "Suggested model and effort for this issue"
+  },
+  {
+    "name": "Fable 5 - High",
+    "color": "fbca04",
+    "description": "Suggested model and effort for this issue"
+  },
+  {
+    "name": "status: needs-scoping",
+    "color": "e4e669",
+    "description": "Criteria written, waiting on a human to approve them"
+  },
+  {
+    "name": "status: ready-for-dev",
+    "color": "0e8a16",
+    "description": "Approved. The developer will not start without this"
+  },
+  {
+    "name": "status: in-progress",
+    "color": "1d76db",
+    "description": "A developer is implementing it"
+  },
+  {
+    "name": "status: in-qa",
+    "color": "5319e7",
+    "description": "Implemented, under adversarial verification"
+  },
+  {
+    "name": "status: done",
+    "color": "6a737d",
+    "description": "Merged and verified"
+  },
+  {
+    "name": "design: architecture",
+    "color": "f9d0c4",
+    "description": "Touches the architecture design"
+  },
+  {
+    "name": "design: domain",
+    "color": "f9d0c4",
+    "description": "Touches the domain design"
+  },
+  {
+    "name": "design: events",
+    "color": "f9d0c4",
+    "description": "Touches the events design"
+  },
+  {
+    "name": "design: security",
+    "color": "f9d0c4",
+    "description": "Touches the security design"
+  },
+  {
+    "name": "design: ui",
+    "color": "f9d0c4",
+    "description": "Touches the ui design"
+  }
+]

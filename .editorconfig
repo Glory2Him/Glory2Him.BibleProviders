@@ -1,0 +1,14 @@
+# Remove the line below if you want to inherit .editorconfig settings from higher directories
+
+# C# or VB files
+[*.{cs,vb,ts,tsx}]
+guidelines = 120
+
+#### Core EditorConfig Options ####
+
+#Formatting - header template
+file_header_template = ────────────────────────────────────────────────────────────────────────────────\nCopyright (c) Glory 2 Him. All rights reserved.\nLicensed under the Glory 2 Him Software License (G2HSL).\nSee License.txt in the project root for full license information.\nFREE TO USE TO HELP SHARE THE GOSPEL\nJohn 14:6 (NIV) "Jesus answered, ‘I am the way and the truth and the life.\n                 No one comes to the Father except through me.’"\nhttps://john.bible/john-14-6\nIf Jesus is who He said He is, what does that mean for you, today?\n────────────────────────────────────────────────────────────────────────────────
+
+#sort System.* using directives alphabetically, and place them before other usings
+dotnet_sort_system_directives_first = true
+

@@ -1,0 +1,13 @@
+{
+  "skill": "the-standard-practices",
+  "rules": [
+    { "id": "ts-practices-001", "severity": "ERROR", "category": "Branching", "rule": "Contributions must be made from a fork — never push feature branches to upstream." },
+    { "id": "ts-practices-002", "severity": "ERROR", "category": "Branching", "rule": "Branch names must follow users/{handle}/{type}/{short-description} in lowercase kebab-case." },
+    { "id": "ts-practices-003", "severity": "ERROR", "category": "Commits", "rule": "Commit messages must be imperative mood with ALL CAPS category prefix." },
+    { "id": "ts-practices-003b", "severity": "ERROR", "category": "Commits", "rule": "Commit messages must not be vague — fix, update, changes, wip are forbidden without specifics." },
+    { "id": "ts-practices-004", "severity": "ERROR", "category": "Pull Requests", "rule": "Each pull request must be focused on a single concern." },
+    { "id": "ts-practices-005", "severity": "ERROR", "category": "Pull Requests", "rule": "A PR must have a passing build and all tests green before review." },
+    { "id": "ts-practices-006", "severity": "ERROR", "category": "Secrets", "rule": "Secrets and connection strings must never be committed to source control." },
+    { "id": "ts-practices-007", "severity": "ERROR", "category": "CI/CD", "rule": "CI pipelines must use ADotNet or equivalent YAML-based configuration." }
+  ]
+}
