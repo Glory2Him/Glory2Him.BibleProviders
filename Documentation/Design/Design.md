@@ -758,12 +758,12 @@ abstraction items.
 
 | Package | Estimate | Detail |
 |---|---|---|
-| Package READMEs (§SOL19) | 1–1.5 d | Five consumer-facing READMEs plus the `PackageReadmeFile` repoint. Priced for the obligation sections, which have to be right rather than brief |
+| Package READMEs (§SOL19) | 0.25 d | **Mostly done:** the root README and the three existing packages' READMEs are written and packing verified. Remaining: one each for `.Fums` and `.Conformance`, with those projects |
 | Scaffolding gaps (§SOL6) | 0.25 d | **Done:** project references, `IsPackable=false`, the `pwsh` fix, the ubuntu long-paths removal. **Remaining:** `Directory.Build.props`, `TreatWarningsAsErrors` + analyzers, and `WireMock.Net` on the three acceptance projects |
 | Abstractions | 8.5–12 d | §ABS40 |
 | API.Bible | 6.5–9 d | §APB25 |
 | YouVersion | 5–7 d | §YVN21 |
-| **Solution total** | **≈ 22.5–31 dev-days** | |
+| **Solution total** | **≈ 21.5–30 dev-days** | |
 
 **Cross-package sequencing:**
 
@@ -937,15 +937,22 @@ not shipped. **This section specifies what a consumer gets instead.**
 
 ### SOL19.1 The defect this section starts from (#3)
 
-**All three shipped packages currently set `<PackageReadmeFile>README.md</PackageReadmeFile>`
-pointing at the repository root README**, which is the template's setup checklist —
-it opens `# {{REPOSITORY_NAME}}` and "After creating this repository". That is what
-a consumer would see on nuget.org for `Glory2Him.BibleProviders.ApiBible`.
+~~All three shipped packages set `<PackageReadmeFile>` pointing at the repository
+root README~~ — the template's setup checklist, opening `# {{REPOSITORY_NAME}}` and
+"After creating this repository". That is what a consumer would have seen on
+nuget.org for `Glory2Him.BibleProviders.ApiBible`, while three places in this
+design already said "the package README" as though one existed: §ABS45.3, §YVN17
+and §SOL6's shipping list.
 
-Three places in this design already say "the package README" as though one exists:
-§ABS45.3 (the sample configuration), §YVN17 (the licence-acceptance trap), and
-§SOL6's shipping list. **None of them is currently true.** Every shipped package
-needs its own README, and the `PackageReadmeFile` must point at it.
+**Fixed.** Each of the three existing packages now carries and packs its own
+README, verified by packing each `.nupkg` and reading the embedded file rather
+than trusting the project file. The two packages not yet created (§SOL5) take
+theirs with them.
+
+**The banner must survive**, and in a package README it can only be an absolute
+URL — nuget.org does not resolve repository-relative image paths. Same for links:
+relative paths work on GitHub and break on nuget.org, so package READMEs link to
+nuget.org and to the repository by full URL.
 
 ### SOL19.2 What every package README contains (#3)
 
@@ -991,5 +998,10 @@ In this order, because it is the order a consumer needs it:
    inside a package version.
 3. **No section numbers in README prose.** `§ABS45.1` means nothing to someone who
    has not cloned the repository. Link to the design once, at the end.
+5. **Absolute URLs only, in a package README.** nuget.org does not resolve
+   repository-relative paths, so a relative image is a broken banner and a relative
+   link is a 404. The root README is the opposite case — it is read on GitHub, so
+   it links to the project READMEs by relative path and is the only one that may use
+   mermaid, which nuget.org does not render.
 4. **Obligations are stated, never summarised away.** If a figure is unestablished,
    say so and say what it restricts — the §YVN14 shape, which is the model.
