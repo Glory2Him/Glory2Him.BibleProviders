@@ -100,7 +100,7 @@ public sealed class YouVersionConfigurations
     public int MaxStitchedVerses { get; set; } = 30;                       // §YVN9
     public int TimeoutSeconds { get; set; } = 20;
     public int PerAttemptTimeoutSeconds { get; set; } = 5;
-    public int MaxRetryAttempts { get; set; } = 2;
+    public int MaxRetryAttempts { get; set; } = 1;
 }
 ```
 
@@ -167,14 +167,22 @@ The broker holds no logic and gets no unit tests (§SOL8 rule 1).
 
 ## YVN6. Retry and timeout budget (#1)
 
-Per §ABS5 rule 8, with this provider's numbers: per-attempt **5 s**, **2** retries
-(⇒ 3 attempts), backoff exponential + jitter with base 0.5 s and each delay capped
-at 2 s (**≤ 4 s** total), overall budget **20 s**, `HttpClient.Timeout` left
+Per §ABS5 rule 8, with this provider's numbers: per-attempt **5 s**, **1** retry
+(⇒ 2 attempts), backoff exponential + jitter with base 0.5 s and each delay capped
+at 2 s (**≤ 2 s** total), overall budget **20 s**, `HttpClient.Timeout` left
 `Timeout.InfiniteTimeSpan` so the pipeline owns all timing.
+
+**One retry, not two, and §APB6.2 carries the argument** — it is a quota policy
+rather than a timeout one, and a second retry rarely converts a failure the first
+did not while always costing another metered request. It applies less sharply here,
+since this upstream publishes no quota, but the same reasoning holds: failing over
+to another provider is likelier to succeed than a third attempt at a struggling
+one. Keeping both providers on the same default also means a consumer tuning one
+is not surprised by the other.
 
 1. The constructor validates the closure inequality —
    `PerAttemptTimeoutSeconds × (MaxRetryAttempts + 1) + backoffCap ≤ TimeoutSeconds`
-   (5 × 3 + 4 = 19 ≤ 20) — and throws when it does not hold.
+   (5 × 2 + 2 = 12 ≤ 20, with 8 s of slack) — and throws when it does not hold.
 2. **`Retry-After` is documented here, unlike on the sibling provider.** The quick
    reference states that a 429 response carries a **`Retry-After` header** and
    recommends exponential backoff [verified]. So this provider has a real

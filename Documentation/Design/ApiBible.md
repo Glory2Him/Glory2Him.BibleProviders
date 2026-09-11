@@ -105,7 +105,7 @@ public sealed class ApiBibleConfigurations
     public TimeSpan CatalogueCacheDuration { get; set; } = TimeSpan.FromHours(6);
     public int TimeoutSeconds { get; set; } = 20;                          // overall budget for one lookup
     public int PerAttemptTimeoutSeconds { get; set; } = 5;
-    public int MaxRetryAttempts { get; set; } = 2;                         // retries, not attempts: 2 ⇒ 3 attempts
+    public int MaxRetryAttempts { get; set; } = 1;                         // retries, not attempts: 1 ⇒ 2 attempts. §SOL17 rule 4
 }
 ```
 
@@ -183,9 +183,9 @@ service composed and returns the response. It gets no unit tests.
 | Knob | Config | Default | Note |
 |---|---|---|---|
 | Per-attempt timeout | `PerAttemptTimeoutSeconds` | 5 | each HTTP attempt |
-| Retries | `MaxRetryAttempts` | 2 (⇒ 3 attempts) | on 408 / 429-transient / 5xx and transient socket errors |
-| Backoff | — | exponential + jitter, base 0.5 s, each delay ≤ 2 s | ≤ 4 s total |
-| Overall budget | `TimeoutSeconds` | 20 | 3 × 5 s + ≤ 4 s = ≤ 19 s ⇒ fits |
+| Retries | `MaxRetryAttempts` | **1 (⇒ 2 attempts)** | on 408 / 429-transient / 5xx and transient socket errors. §APB6.2 explains why this is 1 |
+| Backoff | — | exponential + jitter, base 0.5 s, each delay ≤ 2 s | ≤ 2 s total at one retry |
+| Overall budget | `TimeoutSeconds` | 20 | 2 × 5 s + ≤ 2 s = ≤ 12 s ⇒ fits, with 8 s of slack |
 | `HttpClient.Timeout` | — | `Timeout.InfiniteTimeSpan` | otherwise it pre-empts the pipeline |
 
 1. The constructor validates
@@ -263,6 +263,46 @@ Required by §ABS33 item 8, because this provider has timeout logic and
    anti-pattern, and nothing above would catch it.
 
 ---
+
+### APB6.2 Why the retry default is 1, not 2 (#3)
+
+**`MaxRetryAttempts` is a quota policy wearing a timeout's clothes**, and an
+earlier version of this section did not say so. Every retry is another **metered
+request**. At two retries a single failing lookup burns three of the 5,000 this
+plan allows in a month (§SOL12), so a bad hour of upstream 5xx consumes the
+allowance three times faster while succeeding no more often — and past the
+allowance, service is disrupted rather than billed.
+
+Three reasons the second retry is not worth its request:
+
+1. **It rarely converts a failure the first did not.** A transient blip is caught
+   by attempt two; an upstream that is actually struggling is not fixed by attempt
+   three.
+2. **Failing over is cheaper and likelier to succeed.** The consumer's
+   orchestration already holds another provider (§ABS34). A third attempt at a sick
+   upstream spends a metered request to probably fail again; the next provider
+   spends one to probably succeed.
+3. **It buys slack in an arithmetic that had almost none.** The old budget closed
+   at 19 s of 20; this one closes at 12, so slow DNS or a TLS handshake no longer
+   risks tripping the ceiling.
+
+**`TimeoutSeconds` is deliberately left at 20, because it is a ceiling and not a
+target.** §APB6.1 links the caller's token with this budget, so a caller who cares
+passes a `CancellationToken` and gets *their* number — an interactive page passing
+three seconds gets three seconds whatever this POCO says. The provider budget binds
+only when nobody specified, which is exactly when it should be forgiving.
+
+That is also why §SOL17 rule 4's `TimeoutSeconds = 12` alternative was not taken:
+it closes with **zero** slack, which makes the arithmetic brittle for no gain,
+since a caller wanting twelve seconds should pass a token rather than have the
+backstop moved.
+
+**This is a judgement on numbers nobody has measured.** The unmeasured quantity is
+what fraction of failures a third attempt actually rescues; if it turns out to be
+high, raise the default and say so here.
+
+---
+
 ## APB7. Catalogue resolution (#1)
 
 The public surface speaks in abbreviations (`"NIV"`); the upstream wants opaque

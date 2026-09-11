@@ -876,13 +876,28 @@ are **decisions, not spikes** — no amount of upstream research settles them.
    support check. §ABS44. Landed before the first release, which is what kept it a
    MINOR-cost addition rather than a MAJOR one.
 
-4. **Is a ~20-second worst-case lookup acceptable?** Both providers ship a 20 s
-   overall / 5 s per-attempt / 2-retry budget — the smallest that closes
-   arithmetically while leaving room for a real retry. An interactive page may
-   prefer to fail faster (`MaxRetryAttempts = 1`, `TimeoutSeconds = 12`, which
-   also closes). Because these are per-provider POCO values, an interactive
-   surface and a background import can be configured differently — so the
-   question is really *which surface calls this*.
+4. ~~**Is a ~20-second worst-case lookup acceptable?**~~ **Settled, and the
+   question was framed as one dial when it is two.**
+
+   **`TimeoutSeconds` stays 20 — it is a ceiling, not a target.** §APB6.1 links the
+   caller's token with the provider's budget, so a caller who cares passes a
+   `CancellationToken` and gets *their* number; an interactive page passing three
+   seconds gets three seconds. The provider budget binds only when nobody
+   specified, which is exactly when it should be forgiving. The `TimeoutSeconds = 12`
+   alternative this rule used to float was rejected for closing with **zero** slack —
+   brittle arithmetic for no gain, since a caller wanting twelve seconds should pass
+   a token rather than move the backstop.
+
+   **`MaxRetryAttempts` drops from 2 to 1, and that is the change that mattered.**
+   It is a quota policy wearing a timeout's clothes: every retry is another metered
+   request, so at two retries one failing lookup burned three of API.Bible's
+   5,000-a-month while succeeding no more often (§SOL12). §APB6.2 carries the full
+   argument; both providers take the same default so that tuning one does not
+   surprise anyone about the other.
+
+   **"Which surface calls this" therefore mostly dissolves.** With the token
+   honoured the caller decides, and what the default must be is *quota-safe*,
+   because the default is what gets used by everyone who did not think about it.
 
 5. **A third provider** — construct it and add it to the list; there is no
    registry to extend. Its obligations are §ABS5's rules, the §ABS7 markers, a
