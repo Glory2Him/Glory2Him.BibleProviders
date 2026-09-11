@@ -19,8 +19,9 @@ platform is free.
    is the single most common cause of a confusing `TranslationNotSupported`, and it
    looks identical to a translation that does not exist. See
    [the licence trap](#the-licence-acceptance-trap).
-2. **Storing scripture from this provider is not yet sanctioned.** See
-   [Storage](#storage--not-yet-sanctioned). Display-time only for now.
+2. **Storing scripture is permitted here, and the platform encourages it** — no
+   refresh timer, no purge clock, no usage reporting. See
+   [Storage](#storage--permitted-and-encouraged).
 
 ---
 
@@ -169,39 +170,41 @@ request rather than on a cycle. You still need a forced-refresh path.
 
 ## Compliance
 
-### Storage — not yet sanctioned
+### Storage — permitted, and encouraged
 
-**Do not persist scripture from this provider yet.** Not because a figure is
-unread, but because of what the platform terms actually say:
+**You may persist scripture from this provider.** An earlier draft of this README
+said otherwise; it was written before the publisher agreements had been read, and
+it was wrong.
 
-> "This Agreement is limited to the YV IP. We are not providing You rights in
-> biblical works or works other than YV IP, which You must obtain from their
-> respective owners and licensors."
+Three things support it, and the first is the one that grants the right:
 
-The platform terms cover the *tools* — the API and SDKs — and grant no rights in
-the Bible text at all. They therefore carry no retention clause, no refresh cadence
-and no caching cap, **because they are not the agreement that would carry one.**
+1. **The publisher agreements grant storage expressly.** The common licence covers
+   the right to "perform, **store**, distribute, and redistribute the Content on
+   Your Application", and permits sublicensing to users "both online and
+   **offline**". Offline use is not possible without storage.
+2. **YouVersion's own SDKs cache scripture locally.**
+3. **The platform documentation tells you to.** "Cache responses when possible" is
+   the first of the Quick Reference's Best Practices.
 
-The retention question lives in two places instead, and neither is this one:
+**The platform terms themselves grant nothing in the Bible text** — "We are not
+providing You rights in biblical works … which You must obtain from their
+respective owners and licensors" — which is why the right comes from the publisher
+agreement you accepted in the portal, or, for the public-domain versions, from the
+work's own dedication.
 
-1. **The per-version licence agreements** you accept in the portal, which are with
-   the publishers.
-2. **The per-Tool "YVP Terms"** published in the platform, incorporated by
-   reference, and which **override the platform terms where they conflict**.
+**What you owe instead of a timer:**
 
-Until one of those is read and recorded, treat results from this provider as
-**display-time only**.
+- **Update on request, not on a cycle.** There is no 30-day refresh requirement
+  here. Biblica obliges updates "as may be requested by LICENSOR"; the common
+  template requires no edits and a duty to *notify* the publisher if text looks
+  wrong. **You still need a forced-refresh path** — you just do not need a sweep.
+- **Encrypt against unauthorised onward-supply**, and keep all footnotes displayed.
+- **Rights cease when the agreement does.** Biblica's term is two years,
+  auto-renewing; Lockman's ends on thirty days' notice.
 
-**This restricts you, not this package.** Nothing here stores scripture — a
-passage lives for the call and no longer — so the provider itself is fully usable
-today. The unresolved question costs you a cache, not a capability.
-
-**To be clear about what this is and is not:** nothing anyone has read forbids
-caching. The restriction exists because the permission is unestablished, not
-because a refusal was found — and YouVersion's own SDKs cache scripture locally,
-so the likely answer is that storage is permitted under conditions nobody has
-written down yet. That is a reason to go and read the agreement you accepted, not
-a reason to assume either way.
+**This package still stores nothing itself.** A passage lives for the duration of
+the call; the only thing held is the catalogue, in memory, for six hours. Storage
+is yours to build and yours to own.
 
 ### Reproduce the text verbatim
 
@@ -272,7 +275,8 @@ when it does not.
 - **Resolve loose references server-side.** This upstream takes USFM only, so
   references are parsed locally. A reference the parser cannot read stays
   `InvalidReference` rather than being guessed at.
-- **Cache or persist passages.** See [Storage](#storage--not-yet-sanctioned).
+- **Cache or persist passages.** The package holds nothing beyond the call — but
+  *you* may, and [Storage](#storage--permitted-and-encouraged) says on what terms.
 - **Choose between providers.** That is your orchestration layer's job.
 - **Map versification between editions.** This upstream exposes no organizational
   id, and a USFM key is edition-relative.

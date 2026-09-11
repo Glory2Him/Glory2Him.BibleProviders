@@ -146,9 +146,24 @@ than KJV to be visible to a fresh app key rather than less.
 **This is the trap, and it is why the default cannot simply be copied from
 §APB4.** YouVersion publishes the World English Bible as version **`206`**, named
 "World English Bible, American English Edition, without Strong's Numbers", and
-abbreviated **`WEBUS`** — not `WEB` [verified,
-[bible.com/versions/206](https://www.bible.com/versions/206-web-world-english-bible):
-"This Public Domain Bible text is courtesy of eBible.org"].
+abbreviated **`WEBUS`** — not `WEB` [verified, **the platform's own
+[Quick Reference](https://developers.youversion.com/quick-reference)**, whose
+"Common Bible IDs" table reads:]
+
+| ID | Abbreviation | Name |
+|---|---|---|
+| 12 | `ASV` | American Standard Version |
+| 111 | `NIV` | New International Version |
+| **206** | **`WEBUS`** | **World English Bible, American English Edition, without Strong's Numbers** |
+| 3034 | `BSB` | Berean Standard Bible |
+
+Corroborated by [bible.com/versions/206](https://www.bible.com/versions/206-web-world-english-bible):
+"This Public Domain Bible text is courtesy of eBible.org".
+
+**Two of the other three matter too.** `BSB` is id **3034** and `ASV` is id **12**,
+so the two translations §USE6.6 recommends alongside WEB are both present and both
+named in first-party documentation. This is the first verified statement in this
+design that *any* specific version id is reachable on this upstream.
 
 So a bare `DefaultTranslation = "WEB"` would resolve on API.Bible and return
 `TranslationNotSupported` here. **The same abbreviation meaning different things on
@@ -165,9 +180,10 @@ either** — it is why §ABS44's `TranslationSummary` carries `ProviderEditionId
 separately from `Abbreviation`, and why §ABS18 forbids echoing an upstream's
 reference string back to a consumer.
 
-**[unverified]:** that version `206` is exposed through the Platform API rather
-than only through the Bible App, and that it is visible to a key which has
-accepted no agreement. §YVN19 rule 2 now asks both.
+**Still [unverified]:** that version `206` is visible to a key which has accepted
+no agreement in the portal. That it is exposed through the Platform API at all is
+now **[verified]** — the Quick Reference is Platform API documentation and its
+examples call `/bibles/3034` directly. §YVN19 rule 2 is narrowed accordingly.
 
 **The caveat that applied to KJV still applies to WEB.** YouVersion gates access
 per accepted licence agreement, and whether a *fresh* app key sees the
@@ -766,6 +782,36 @@ need revision.
 So a consumer needs §ABS31's forced-refresh path, and does **not** need API.Bible's
 30-day timer (§APB17). **The two upstreams differ in kind here, not degree.**
 
+### YVN14.11 The platform documentation tells you to cache (#3)
+
+The **Quick Reference**, under **Best Practices**, lists five items and the first
+is [verified, retrieved 2026-09-11, page last modified 2026-09-10]:
+
+> "**Cache responses when possible**"
+
+**What this is worth, and what it is not.** It sits under *Best Practices*,
+immediately below *Rate Limiting* — so its purpose is engineering guidance about
+call volume, **not a licence grant**, and it cannot be one: the platform terms
+expressly disclaim granting rights in the biblical text (§YVN14.2). A consumer's
+right to store a passage comes from the publisher agreement (§YVN14.9) or, for the
+public-domain set, from the work's own dedication (§USE6.4).
+
+**But it is the third independent signal pointing the same way**, and it is the
+only one that is first-party, current and public:
+
+| Signal | Kind |
+|---|---|
+| The publisher agreements grant "store" expressly (§YVN14.9) | **Permission** |
+| YouVersion's own SDKs cache locally (§YVN14.3) | Evidence |
+| The documentation instructs developers to cache | Evidence, and an expectation |
+
+**The practical consequence is a real one:** a consumer caching aggressively on
+this upstream is doing what the vendor asks, not straining a permission. **Contrast
+API.Bible**, where storage is permitted but arrives wrapped in a 30-day recency
+check, a deletion duty, a 72-hour purge and FUMS (§USE2, §USE6.2). **On the
+store-and-reuse axis these two upstreams are not close**, and §USE12 works through
+what that does and does not imply.
+
 ### YVN14.10 What binds a consumer, across all nine (#3)
 
 Common to the eight Content License Agreements:
@@ -922,19 +968,20 @@ it is a sound absence for items that would live in a different agreement
 in the YVP Terms.
 
 **Silence is not prohibition, and this design does not claim otherwise.** Nothing
-read so far forbids caching scripture from this provider. The restriction in
-§YVN14.1 exists because the *permission* is unestablished, not because a refusal
-was found — "they said no" and "nobody has asked" are different positions, and only
-the second is ours. Contrast §APB18, where caching is affirmatively permitted with
-conditions attached; there the figures are known, here the instrument is not yet
-identified.
+read forbids caching scripture from this provider. Contrast §APB18, where caching
+is affirmatively permitted with conditions attached.
 
-**Indirect evidence, recorded as evidence and not as permission:** YouVersion ships
-first-party SDKs that maintain a local cache of fetched scripture [verified]. A
-blanket prohibition on caching would sit oddly beside a vendor SDK that caches by
-design, so the likely answer is that storage *is* permitted under conditions nobody
-has read. That is a reason to run §YVN19 rule 9's replacement rather than to assume
-either way — it does not license a single stored row.
+> ~~The restriction in §YVN14.1 exists because the *permission* is
+> unestablished…~~ **Lifted — see §YVN14.9.** The publisher agreements grant
+> storage expressly. This paragraph is kept because the *reasoning* it records is
+> the one this design wants repeated: "they said no" and "nobody has asked" are
+> different positions, and only the second was ever ours.
+
+**The indirect evidence, which turned out to point the right way:** YouVersion
+ships first-party SDKs that maintain a local cache of fetched scripture [verified],
+and its **own developer documentation lists "Cache responses when possible" as the
+first of its Best Practices** [verified, §YVN14.11]. A blanket prohibition would
+have sat oddly beside either. §YVN14.9 then found the express grant.
 
 ## YVN15. Usage reporting — none found (#1)
 
@@ -1064,8 +1111,9 @@ gets built**, not merely how it is configured.
    return scripture text, so if it is gone §YVN8 is not rewritten — the provider is
    (§YVN8). Run this spike first.
 2. **Does a fresh app key see WEB (`WEBUS`, id 206) without accepting an
-   agreement, and is id 206 exposed through the Platform API at all?** (§YVN4.1.)
-   Ask the same of KJV (id 1) while there. Decides
+   agreement?** (§YVN4.1.) ~~And is id 206 exposed through the Platform API at
+   all?~~ **Closed** — the Quick Reference documents it. Ask the same of BSB
+   (3034) and ASV (12) while there. Decides
    whether the shipped `DefaultTranslation` works out of the box (§YVN4).
 3. **Does the passages endpoint accept a verse range** (`JHN.3.16-JHN.3.18`)?
    Decides whether a range is one request or a chapter fetch plus a slice (§YVN9

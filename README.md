@@ -226,9 +226,13 @@ The short version; each provider's README carries the detail and the figures.
 - **Stored scripture is a refreshable cache, not an archive.** API.Bible requires a
   check at least every 30 days, deletion when content is withdrawn upstream, and
   removal within 72 hours of a request or a lapsed subscription.
-- **Storing YouVersion scripture is not yet sanctioned** — its platform terms grant
-  no rights in the Bible text at all, so the retention question lives in the
-  per-version licence you accept in their portal.
+- **Storing YouVersion scripture is permitted, and the platform encourages it.**
+  The publisher agreements grant "store" expressly and the developer docs list
+  "Cache responses when possible" first among their best practices. There is **no
+  refresh timer, no purge clock and no usage reporting** on that upstream — the
+  duty is to update on request. Its platform terms grant no rights in the Bible
+  text themselves, so the right comes from the per-version licence you accept in
+  their portal.
 - **Size your request budget.** Every lookup is one live upstream call. API.Bible's
   free tier is 5,000 a month — about 165 lookups a day — and past it *service is
   disrupted rather than billed*.

@@ -581,3 +581,101 @@ the edition at all in the Restricted Territory.
 [unverified, §YVN14] — but the Crown's rights are a fact of UK law rather than a
 term of the API.Bible contract, so a UK deployment should not read that silence as
 permission (§USE9 rule 7).
+
+---
+
+## USE12. Which provider for "store it, then email it"? (#3)
+
+**This design has no default provider and will not acquire one.** The abstraction
+resolves by name and nothing else (§ABS4, §SOL2) — choosing an order is an
+application concern, deliberately, because which providers exist and under what
+subscription changes independently of any contract here. So the question below is
+a **consumer orchestration** question, and this section answers it as guidance
+rather than as a shipped behaviour.
+
+The use case is concrete: **look a verse up, keep it, and later send it to someone
+by email, WhatsApp or SMS.**
+
+### USE12.1 Separate the two permissions before comparing (#3)
+
+**They are different rights with different sources, and the two upstreams are
+strong on opposite ones.**
+
+| | Store it | Send it on |
+|---|---|---|
+| **API.Bible** | Permitted, **with machinery**: 30-day recency, delete-on-withdrawal, 72-hour purge, 24-hour removal on request (§USE2, §APB28) | **Expressly permitted in writing** for public domain, CC BY and CC BY-SA — §9.9(a) |
+| **YouVersion** | Permitted, **and encouraged**: express "store" grant in the publisher agreements, "Cache responses when possible" in the docs, **no timer, no purge clock, no FUMS** (§USE3, §YVN14.9, §YVN14.11) | **No express permission anywhere.** For publisher content the grant is bounded to "digital display in Your Application" and forecloses it (§USE5). For the public-domain set, the platform grants no rights in the text at all — your right to send comes from the work's own dedication (§USE6.4) |
+
+**So the instinct is half right, and the half that is right is the important
+half.** YouVersion is materially better for *storing*. It is **not** better for
+*sending* — on that axis API.Bible is the only one of the two that has written
+anything down.
+
+### USE12.2 The argument that actually favours YouVersion: FUMS (#3)
+
+**The strongest reason is one the caching line does not mention.**
+
+API.Bible requires FUMS reporting **per display, not per fetch** (§APB14), and it
+is owed on public-domain content too (§USE6.2). A stored-then-emailed verse is
+exactly where that obligation becomes awkward:
+
+- The reporting mechanism ABS documents is a **JavaScript tracker in a webapp**.
+- **An email is not a webapp.** It renders in a mail client, often with images and
+  script stripped.
+- §11 shows ABS *contemplated* transmission — it measures recency "as of the time
+  of transmission" for Electronic Correspondence — **but §14 says nothing about how
+  a transmitted display is reported**, and §3 scopes the FUMS duty to webapps.
+
+**That gap is unresolved and this design should not paper over it.** A consumer
+building store-and-email on API.Bible has a compliance question to ask ABS.
+**On YouVersion the question does not arise**: `Usage.Obligation` is
+`NotRequired`, positively asserted (§YVN15), and there is no reporting mechanism
+to keep enabled on the REST API.
+
+**Add the retention machinery to the same ledger.** Emailed content on API.Bible
+must have been no more than 30 days stale when it left (§11), the stored copy
+behind it needs a 30-day sweep and a delete path, and a lapsed or unpaid plan
+obliges removal within 72 hours. YouVersion imposes none of those — its duty is
+update-on-request (§USE3).
+
+### USE12.3 What argues the other way (#3)
+
+1. **Express permission beats inferred permission.** §9.9(a) is a clause a
+   consumer can point at. YouVersion's position for WEB rests on eBible.org's
+   dedication plus platform silence — sound, but it is an argument rather than a
+   grant, and §USE9 rule 2 still records that §USE5 is inference.
+2. **The licence-acceptance gate.** A YouVersion key sees only what its portal
+   agreements cover, and whether a fresh key sees the public-domain set with **no**
+   agreement accepted is **[unverified]** (§YVN19 rule 2). API.Bible's open-access
+   set needs no acceptance step at all. **This is the one that could stop a
+   deployment working**, and it is cheap to settle.
+3. **No published rate limit on YouVersion** (§YVN13). "No documented limit" is not
+   "generous"; API.Bible's 5,000 a month is at least a number to design against.
+4. **If the translation ever changes, the answer inverts.** Onward sending is
+   foreclosed for all 1,124 publisher-licensed YouVersion Bibles (§USE5), whereas
+   API.Bible at least defines a route — the IP Holder's express authorisation
+   (§9.9(a)). A product that may one day send an NIV verse should not build its
+   sending path on YouVersion.
+
+### USE12.4 The recommendation (#3)
+
+**For a store-and-send feature on a public-domain translation, prefer YouVersion —
+and hold API.Bible as the failover.** The reasoning is the absence of FUMS and of
+the retention clocks, not the caching line; caching is permitted on both.
+
+**Four conditions attach, and the first is not optional:**
+
+1. **Settle §YVN19 rule 2 first.** If a fresh key cannot see `WEBUS` without
+   accepting an agreement, the ordering above is wrong on day one.
+2. **Send only public-domain or CC BY / CC BY-SA text.** Default `ShareRights` to
+   `Unknown` and treat it as not shareable (§USE7). WEB and BSB are the intended
+   translations (§USE6.6), and both are id-verified on YouVersion (§YVN4.1).
+3. **Never send the KJV from either provider** (§USE11).
+4. **Carry the attribution into the message**, because it leaves your UI with the
+   text (§USE8 rule 5).
+
+**And the point that makes this a two-provider design rather than a one-provider
+one:** these are different *strengths*, not a ranking. Storage favours YouVersion;
+written permission to transmit favours API.Bible; availability favours whichever
+key is actually provisioned. **Which is why the abstraction refuses to choose and
+makes failover writable instead** (§SOL2).

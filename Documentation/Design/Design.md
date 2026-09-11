@@ -1058,7 +1058,7 @@ In this order, because it is the order a consumer needs it:
 | **Abstractions** | The two-channel rule (§ABS6) — returns for scripture outcomes, throws for availability — and the marker interfaces, because a consumer's `catch` blocks depend on it. The composition-root sample and its three traps (§ABS28) |
 | **ApiBible** | FUMS in full: it is a licence condition, not analytics, and the consumer reports on **display** (§APB16). The content-recency and 72-hour removal duties (§APB17). The non-commercial definition (§APB20) — broad enough that an ad-supported surface is commercial |
 | **ApiBible.Fums** | That it deliberately does not reference the provider package, and why (§SOL2 rule 6). The browser and server paths, and the four silent browser failures |
-| **YouVersion** | The licence-acceptance trap first, because it is the most common support question and looks identical to a translation that does not exist (§YVN17). That storage is **not yet sanctioned** (§YVN14) |
+| **YouVersion** | The licence-acceptance trap first, because it is the most common support question and looks identical to a translation that does not exist (§YVN17). That storage is **permitted and encouraged** — express grant, no refresh timer, no usage reporting (§YVN14.9, §YVN14.11) |
 | **Abstractions.Conformance** | How to inherit it — one class, one override (§ABS38) |
 
 ### SOL19.4 Rules (#3)
