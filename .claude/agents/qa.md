@@ -227,7 +227,7 @@ Check, in order:
 1. **Coverage.** Every design section for this feature has an issue behind it:
 
    ```bash
-   grep -rn "(needs issue)" Documentation/Design.md Documentation/Design/*.md
+   grep -rn "^## .*(needs issue)" Documentation/Design/*.md
    ```
 
    A heading for this feature still carrying that tag after the analyst's sweep is
@@ -297,7 +297,7 @@ can answer. Say instead which issues you consider ready to hand to a developer.
   unstated intention. **When reviewing issues**, criteria that are missing, thin
   or untestable are the finding you were called for; report them rather than
   stopping.
-- `Documentation/Design.md` on main outranks the issue. If the implementation
+- `Documentation/Design/Design.md` on main outranks the issue. If the implementation
   matches a stale issue and contradicts the design, that is a finding.
 
 Being wrong about a defect costs a conversation. Missing one costs a release.

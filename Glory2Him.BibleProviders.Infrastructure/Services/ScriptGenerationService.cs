@@ -100,6 +100,7 @@ namespace Glory2Him.BibleProviders.Infrastructure.Services
                                 new TestTask
                                 {
                                     Name = "Run Acceptance Tests",
+                                    Shell = "pwsh",
                                     Run =
                                         """
                                         $projects = Get-ChildItem -Path . -Filter "*Tests.Acceptance*.csproj" -Recurse

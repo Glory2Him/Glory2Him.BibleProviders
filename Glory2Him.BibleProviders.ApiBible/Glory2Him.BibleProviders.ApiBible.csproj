@@ -54,4 +54,8 @@
 		</None>
 	</ItemGroup>
 
+	<ItemGroup>
+	  <ProjectReference Include="..\Glory2Him.BibleProviders.Abstractions\Glory2Him.BibleProviders.Abstractions.csproj" />
+	</ItemGroup>
+
 </Project>

@@ -8,7 +8,7 @@ version for a person: it explains the same workflow, plus the parts an agent
 never sees — where a mockup goes, how to brief a fresh session, and which
 conventions are enforced by tooling rather than by good intentions.
 
-Read `INTENT.md` for what the system is for, and `Documentation/Design.md` for
+Read `INTENT.md` for what the system is for, and `Documentation/Design/Design.md` for
 how it is designed. In a repository created from the template `INTENT.md` does not
 exist yet and the design document is a stub carrying the conventions and no
 design — writing both is the first real work.
@@ -77,7 +77,7 @@ written into the design document is lost the moment that session ends.
 
 | Role | Durable artifact | Where the next role reads it |
 | --- | --- | --- |
-| architect | a design section | `Documentation/Design.md`, or `Documentation/Design/*.md` once split |
+| architect | a design section | `Documentation/Design/*.md` — four area-scoped files |
 | analyst | numbered acceptance criteria | the GitHub issue body, under `## Acceptance criteria` |
 | developer | commits, a branch, a PR, a handoff report | the PR and its diff |
 | qa | BLOCKING / ADVISORY findings | its final report — on the issue when it reviews criteria, on the PR when it reviews code |
@@ -93,7 +93,7 @@ Act as the architect. Read issue #512 and settle the design for it.
 
 ```
 Act as the analyst. Issue #512 now has a design section at
-Documentation/Design.md §12. Write acceptance criteria into the issue.
+Documentation/Design/Design.md §12. Write acceptance criteria into the issue.
 ```
 
 ```
@@ -125,7 +125,7 @@ Documentation/Mockups/saved-searches/ — panel.html for the interaction and
 panel.webp for the screens, with the images embedded in the issue body. Open the
 HTML, not just the image: hover states, spacing and the real DOM are in there.
 
-Settle the UI design and write it into Documentation/Design.md as a numbered
+Settle the UI design and write it into Documentation/Design/Design.md as a numbered
 section tagged (#512). Name the component boundaries, the state each owns, the
 events they raise and what the server re-decides regardless of what the client
 shows.
@@ -148,12 +148,12 @@ Documentation/Imported/legacy-search-spec.md, written before this repository
 existed. It describes behaviour we intend to keep, but it is a source input and
 not an authority.
 
-Port what still applies into Documentation/Design.md in this document's
+Port what still applies into Documentation/Design/Design.md in this document's
 conventions: numbered sections, numbered rules within them, and every heading
 tagged (#512) or (needs issue). Do not restate it wholesale — the parts that no
 longer apply must not survive the move just because they were written down once.
 
-Where it disagrees with what is already in Documentation/Design.md, this
+Where it disagrees with what is already in Documentation/Design/Design.md, this
 document wins, and say so explicitly in the section rather than silently
 choosing. List at the end what you deliberately dropped and why, and anything
 you could not verify against the code — a claim you could not check is not a
@@ -284,9 +284,18 @@ Documentation/
   Images/                  static visual assets referenced from issues and design docs
 ```
 
-`Documentation/Design.md` starts as a single file. Split it when it is genuinely
-too big to navigate, and split **by area** — architecture, domain, events,
-security, UI — never by size.
+`Documentation/Design.md` started as a single file. **That split has happened.**
+The design is now four area-scoped files under `Documentation/Design/`:
+
+| Area | Prefix | File |
+| --- | --- | --- |
+| Solution overview | `SOL` | `Design.md` |
+| Provider contract | `ABS` | `Abstractions.md` |
+| API.Bible provider | `APB` | `ApiBible.md` |
+| YouVersion provider | `YVN` | `YouVersion.md` |
+
+A new area reserves its prefix in `Design.md`'s header table before its file is
+written. Split by area — never by size.
 
 ### Why sections carry prefixes once you split
 
@@ -350,7 +359,7 @@ spec:
 ```markdown
 # Content item search panel
 Source: Claude Design export, 2026-05-04. Issue: #37.
-Superseded by the design at `Documentation/Design.md` §14 — that section wins
+Superseded by the design at `Documentation/Design/Design.md` §14 — that section wins
 wherever the two disagree.
 ```
 
@@ -387,7 +396,7 @@ is history — go back and add the "Superseded by" line to the mockup's README.
 ### 5.4 Then the analyst writes criteria in words
 
 ```
-Act as the analyst. Issue #512's design is at Documentation/Design.md §14.
+Act as the analyst. Issue #512's design is at Documentation/Design/Design.md §14.
 Write acceptance criteria into the issue.
 ```
 
@@ -443,7 +452,7 @@ and propose issues for them.
 It runs:
 
 ```bash
-grep -rn "(needs issue)" Documentation/Design.md Documentation/Design/*.md
+grep -rn "^## .*(needs issue)" Documentation/Design/*.md
 ```
 
 and for each hit does exactly what it does for a human-described feature — the
@@ -504,7 +513,7 @@ DOCUMENTATION: Add The Saved Searches Panel Mockup
 Act as the architect. There are Claude Design mockups at
 Documentation/Mockups/saved-searches/ and no issue yet. Open the HTML as well as
 the images, extract the requirements, and write the design into
-Documentation/Design.md. Tag every heading you add (needs issue).
+Documentation/Design/Design.md. Tag every heading you add (needs issue).
 ```
 
 It writes §14 for the panel and §15 for persisting a saved search, both tagged
@@ -537,7 +546,7 @@ is the **feature**, not one issue:
 
 ```
 Act as QA, reviewing the issues rather than a change. The saved-searches feature
-is designed at Documentation/Design.md §14 and §15, and the analyst has logged
+is designed at Documentation/Design/Design.md §14 and §15, and the analyst has logged
 issues #512 and #513 against them. There is no code yet — do not look for any.
 ```
 
@@ -598,7 +607,7 @@ Someone files issue #512 describing the panel in prose before any design exists.
 Step 2 then points the architect at the issue rather than the mockup, and its
 heading is tagged `(#512)` from the start. Step 3 is the ordinary analyst instead
 of sweep mode: *"Act as the analyst. Issue #512's design is at
-Documentation/Design.md §14. Write acceptance criteria into the issue."*
+Documentation/Design/Design.md §14. Write acceptance criteria into the issue."*
 Everything from step 4 on is identical.
 
 ---
@@ -613,18 +622,18 @@ Act as the architect. Read issue #512 and settle the design.
 
 ```
 Act as the architect. Review PR #520 against the design at
-Documentation/Design.md §14 and report structural findings only.
+Documentation/Design/Design.md §14 and report structural findings only.
 ```
 
 ```
 Act as the architect. Issue #512 has Claude Design mockups at
 Documentation/Mockups/saved-searches/. Open the HTML as well as the images, and
-write the UI design into Documentation/Design.md tagged (#512). Anything you
+write the UI design into Documentation/Design/Design.md tagged (#512). Anything you
 cannot state in words is not design — say so rather than citing the picture.
 ```
 
 ```
-Act as the architect. Port the design at <path> into Documentation/Design.md in
+Act as the architect. Port the design at <path> into Documentation/Design/Design.md in
 this document's conventions. It is a source input, not an authority — where it
 disagrees with what is already there, this document wins. List what you dropped
 and why, and anything you could not verify against the code.
@@ -674,7 +683,7 @@ Act as QA. PR #520 has had a round of fixes since your last pass. Re-verify.
 
 ```
 Act as QA, reviewing the issues rather than a change. The saved-searches feature
-is designed at Documentation/Design.md §14 and §15, with issues #512 and #513
+is designed at Documentation/Design/Design.md §14 and §15, with issues #512 and #513
 logged against them. No code exists yet.
 ```
 
@@ -776,10 +785,10 @@ than mechanism:
   all-caps `DESIGN` label already exists, auto-created by the PR linter from a
   `DESIGN:` title prefix. That is a category label on PRs, not an area label on
   issues.
-- **Section 1 of `Documentation/Design.md`.** The file ships as a stub with the
-  conventions in it, but nothing upstream of the developer works until it holds a
-  real section — the architect has nothing to extend and the analyst has nothing
-  to derive criteria from.
+- ~~**Section 1 of the design.**~~ Done — `Documentation/Design/` holds four
+  area-scoped documents (§4). The architect has sections to extend and the analyst
+  has design to derive criteria from; the implementation backlog is the
+  work-breakdown table at the foot of each file.
 - **`INTENT.md`** — what this system is for, in prose.
 - **`Documentation/Mockups/`** — created on first use. Its README explains the
   layout.

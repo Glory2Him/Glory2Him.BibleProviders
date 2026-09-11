@@ -43,6 +43,7 @@ jobs:
           Write-Host "Running tests for: $($project.FullName)"
           dotnet test $project.FullName --no-build --verbosity normal
         }
+      shell: pwsh
   add_tag:
     name: Tag and Release
     runs-on: ubuntu-latest
