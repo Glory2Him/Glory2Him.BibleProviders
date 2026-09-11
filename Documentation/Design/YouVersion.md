@@ -718,13 +718,28 @@ previously in this design:
    per-version agreement's problem (§YVN14.1).
 8. Governing law is Oklahoma, with a class-action waiver.
 
-### YVN14.3 What they still do not say (#1)
+### YVN14.3 What they still do not say — and what that is *not* (#1)
 
 No retention period, no refresh cadence, no caching cap, and no attribution
 *format* — and after §APB18, "absent" is a claim this design makes carefully. Here
 it is a sound absence for items that would live in a different agreement
 (§YVN14.1), and an open question for attribution format, which could plausibly sit
 in the YVP Terms.
+
+**Silence is not prohibition, and this design does not claim otherwise.** Nothing
+read so far forbids caching scripture from this provider. The restriction in
+§YVN14.1 exists because the *permission* is unestablished, not because a refusal
+was found — "they said no" and "nobody has asked" are different positions, and only
+the second is ours. Contrast §APB18, where caching is affirmatively permitted with
+conditions attached; there the figures are known, here the instrument is not yet
+identified.
+
+**Indirect evidence, recorded as evidence and not as permission:** YouVersion ships
+first-party SDKs that maintain a local cache of fetched scripture [verified]. A
+blanket prohibition on caching would sit oddly beside a vendor SDK that caches by
+design, so the likely answer is that storage *is* permitted under conditions nobody
+has read. That is a reason to run §YVN19 rule 9's replacement rather than to assume
+either way — it does not license a single stored row.
 
 ## YVN15. Usage reporting — none found (#1)
 
