@@ -52,19 +52,19 @@ correct and the older one as legacy.
 
 | Aspect | Detail |
 |---|---|
-| Auth | `api-key: {key}` header on every scripture request |
+| Auth | `api-key: {key}` header on every scripture request [verified] |
 | Plans | **Starter 5,000 requests/month, Pro 150,000, Enterprise negotiated** [verified]. Overage is billed at **$1 per additional 1,000 calls**, and **plans default to *no* overage protection: past the quota the service is disrupted rather than billed** [verified]. Starter carries up to 3 licensed Bibles **non-commercial** plus open-access translations |
 | Catalogue | `GET /v1/bibles` → Bibles with an **opaque** `id` — documented as a 16-digit string plus a publication suffix, e.g. `de4e12af7f28f599-02` [verified] — plus `abbreviation`, `abbreviationLocal`, `name`, `language`, `countries`. **Abbreviations are not documented as unique** across the catalogue, so this design does not assume they are (§APB7) |
 | **Catalogue copyright** | **`copyright` is not on the plain list response.** It is documented on the single-Bible endpoint, and on the list only when **`include-full-details=true`** is sent [verified]. See §APB7 rule 2 — this corrects an assumption that cost nothing here only because the passage response also carries it |
-| Verse | `GET /v1/bibles/{bibleId}/verses/{verseId}` — `JHN.3.16`. **Single verse only** |
+| Verse | `GET /v1/bibles/{bibleId}/verses/{verseId}` — `JHN.3.16`. **Single verse only** [verified] |
 | Passage (range) | `GET /v1/bibles/{bibleId}/passages/{passageId}` where **`passageId` is two full verse IDs joined by `-`** [verified] — `JHN.3.16-JHN.3.18`, `1CO.16.1-2CO.1.23`. A bare chapter id is *not* a passage id. Ranges may cross chapters and books, capped at **200 verses**; past the cap the response's `id` reports the range actually returned [verified] |
-| Chapter | `GET /v1/bibles/{bibleId}/chapters/{chapterId}` — `PSA.23`. **This, not `/passages`, is the route for a chapter-only key.** No chapter reaches the 200-verse cap (the longest, PSA.119, is 176) |
+| Chapter | `GET /v1/bibles/{bibleId}/chapters/{chapterId}` — `PSA.23` [verified]. **This, not `/passages`, is the route for a chapter-only key** — the passage-id grammar is two *verse* ids [verified], so a bare chapter id is not a valid passage id. No chapter reaches the 200-verse cap (the longest, PSA.119, is 176) |
 | Content formats | `content-type=html \| json \| text`, default `html` [verified]. **`json`** returns a structured tree of `para` blocks and nestable `char` runs carrying USX style names — the cleanest source for §ABS22's block/inline model |
 | Formatting flags | `include-notes` (default **false**), `include-titles` (default **true**), `include-chapter-numbers` (default **false**), `include-verse-numbers` (default **true**), `include-verse-spans` (default **false**), `parallels` [verified] |
 | Versification | `use-org-id` (default `false`) is **not** a formatting flag: it selects which numbering the id **in the request** is resolved against. The response carries both `id` and `orgId` either way. §APB13 |
-| Red letter | Content is USX-based; words of Jesus are the char style **`wj`**, deity name `nd`, poetry `q1`–`q4`. Preserved end to end in the `json` tree |
+| Red letter | Content is USX-based; words of Jesus are the char style **`wj`**, deity name `nd`, poetry `q1`–`q4` [verified, styling-scripture tutorial]. Preserved end to end in the `json` tree |
 | Loose reference | `GET /v1/bibles/{bibleId}/search?query=John 3:16` — the `query` parameter is documented as accepting **keywords *or* a passage reference** [verified]. §APB12 |
-| Compliance | `copyright` on the passage response (must be displayed) and, **when `fums-version=3` is on the request**, `meta.fumsToken`. §APB16 |
+| Compliance | `copyright` on the passage response, **which must be displayed** (Terms §7 — §APB19), and, **when `fums-version=3` is on the request**, `meta.fumsToken` [verified]. §APB16 |
 
 **The parameter defaults are why the query string in §APB8 is fully explicit.**
 `include-titles` and `include-verse-numbers` both default to **true** [verified],
@@ -223,15 +223,26 @@ Required by §ABS33 item 8, because this provider has timeout logic and
    ```csharp
    catch (OperationCanceledException) when (timeoutSource.IsCancellationRequested)
    {
-       throw new ApiBibleUnavailableException(
+       throw new ApiBibleUnavailableException(                          // IBibleUnavailableException
            message: "API.Bible did not answer within the configured budget.",
-           innerException: exception);          // IBibleUnavailableException
+           innerException: new TimeoutException(
+               $"No response within {configurations.TimeoutSeconds}s."));
    }
    catch (OperationCanceledException)
    {
        throw;                                   // the caller went away — §ABS13 rule 3
    }
    ```
+
+   **The timeout arm wraps a `TimeoutException`, never the
+   `OperationCanceledException` itself.** The skill permits wrapping a
+   `TimeoutException` as a dependency failure (CP-012) and forbids wrapping an
+   `OperationCanceledException` in any service or dependency exception (CP-013),
+   which is exactly what an earlier draft of this section did. Discarding the
+   caught exception costs nothing: it carries no detail beyond "a linked source
+   fired", and `timeoutSource.IsCancellationRequested` in the filter already
+   established *which* source. §ABS13 rule 3's outcome is unchanged — a provider
+   timeout still reaches the consumer as `IBibleUnavailableException`.
 
    Reversing them makes every provider timeout look like caller cancellation, which
    is the precise failure §ABS13 rule 3 exists to prevent and §ABS38 rule 7 tests
@@ -780,10 +791,21 @@ Two caching requests, both on API.Bible's own common-questions page [verified]:
    says not to.
 2. **"We also recommend that you clear your cache every 14 days or less."**
 
-Rule 2 settles the 14-vs-30 disagreement §APB1 flagged [contested] and §APB17
-rule 4 rules on: **30 days is the binding minimum from Terms §11; 14 days is ABS's
-own recommendation.** They are not in conflict — one is a floor in a contract, the
-other is advice in a FAQ — and a consumer refreshing on 14 days satisfies both.
+**The 14-vs-30 question is not a contest between sources, and §APB1 tagging it
+`[contested]` framed it wrongly.** The two figures are different instruments
+pointing the same way:
+
+- **Terms §11 is contractual and sets a ceiling on staleness:** "check **at least
+  every 30 days**" means the interval between checks must be **no longer than** 30
+  days. It is a maximum, not a minimum — an earlier draft of this paragraph called
+  it a "binding minimum" and a "floor", which inverts it, and then refuted itself
+  one clause later by claiming a 14-day refresh satisfied a floor of 30.
+- **Rule 2 is advisory and stricter:** 14 days or less.
+
+A consumer refreshing every 14 days therefore satisfies both **because 14 is
+stricter than 30**, not because the two were reconciled. Nothing needed settling,
+and rule 2 could not have settled it anyway — it is one party's own guidance, not
+an adjudication.
 
 *An earlier draft of this document withdrew the 500-verse figure as unsourced,
 having looked only at the Terms and the fair-use guide. It is on the
@@ -919,7 +941,7 @@ are not repeated.
    `content-type=json` verse, a red-letter passage from a red-letter-capable
    edition, and a `/search` response for a reference-shaped query.
 7. **Ask ABS** (support@americanbible.org): is there a consecutive-verse cache cap
-   (§APB18)? Which refresh figure governs, 14 or 30 days (§APB17 rule 4)?
+   (§APB18)? Which refresh figure governs, 14 or 30 days (§APB17 rule 5)?
 8. **Ask ABS:** is an undocumented age cut-off applied to stored tokens during log
    processing (§APB21)? Is `&ts=` honoured from a third-party server?
 

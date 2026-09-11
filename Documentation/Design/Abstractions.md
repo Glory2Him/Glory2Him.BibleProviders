@@ -449,6 +449,22 @@ The rule across every package in this solution:
 | **`internal`** | Everything else that does real work: HTTP brokers, foundation services, catalogue holders, content mappers, `ProviderService` |
 | **`private`** | The categorization machinery — `TryCatch` methods, their delegates, and any intermediate exception types a single class owns |
 
+**One exception family spans the whole package, rather than one per layer.** The
+Standard puts a categorization boundary between a foundation service and the
+component above it, so each would carry its own family. These packages do not: a
+provider's six or seven public types (§ABS8) serve the foundation service and the
+public face alike, and the intermediate types between them are `private` (§ABS9
+rule 2).
+
+That is deliberate, and the reason is §ABS7: **the marker interfaces are the entire
+public exception vocabulary.** A consumer classifies by marker and never by
+concrete type, so a second family would add types nobody names, published forever
+(§SOL7 rule 4), to express a boundary that is invisible from outside the assembly.
+The layering itself is unaffected — the broker still cannot be reached from the
+façade (§SOL8) — only the exception taxonomy is flattened. Recorded here in the
+§SOL17 rule 6 style, because an unrecorded divergence from a vendored skill is
+indistinguishable from not having read it.
+
 The test is simple: **if a consumer cannot name it, it is not public.** A consumer
 names the contract, the DTOs, the markers, the reference surface, and (rarely,
 when holding a provider directly) that provider's exception types. It never names
@@ -1096,6 +1112,19 @@ except the markers themselves.
 4. **`ScriptureResult` statuses are a different channel.** `NotFound`,
    `TranslationNotSupported` and `InvalidReference` are *answers* and are returned
    (§ABS6). Nothing in this table is reachable for them.
+5. **`ProviderService` has no dependency category, deliberately.** The Standard's
+   foundation-service shape gives each service validation, dependency and service
+   categorizations; this one has only the first and the last. That is because it has
+   **no dependency to fail** — it resolves a name against an in-process
+   `ImmutableArray` handed to a constructor. There is no I/O, no broker and nothing
+   that can be unavailable, so a dependency category here would be a type that is
+   declared and never thrown, which §ABS8 forbids for provider quota types and
+   should equally forbid here.
+
+   The *providers'* failures are dependency failures, but they are classified one
+   level up, by the abstraction's own `TryCatch` arm 3 (§ABS10) — not by this
+   service, which never sees them. Recorded because a reader comparing this against
+   the skill will otherwise read an omission where there is a decision.
 
 ---
 

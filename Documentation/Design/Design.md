@@ -40,6 +40,22 @@ Number rules within a section too, so a citation can be precise about which one
 it means. A section number is never reused and never renumbered; a section that
 dies is struck through, not deleted.
 
+**The same rule applies to numbered rules inside a section, and it is not
+decoration.** Three lists in these documents — §APB15, §APB17 and §YVN7 — were
+renumbered in place during drafting, and every citation into them silently began
+pointing at a *different rule that still existed*. That is worse than a dangling
+reference: `§APB17 rule 4` resolves, the number is real, it simply means something
+else now, so no validator catches it and no reader doubts it. One of those
+mis-citations sent a developer at the wrong mitigation for the most dangerous
+unknown in the design.
+
+So: **numbered rules are append-only.** A new rule goes at the end of its list,
+never in the middle; a dead rule is struck through in place and keeps its number,
+as §SOL17 rule 2 and rule 6 already demonstrate. The cost is a list that does not
+read in logical order. The benefit is that a citation written today still means
+tomorrow what it meant when it was written, which nothing else in this repository
+guarantees.
+
 **A new area reserves its prefix in the table above before its file is written.**
 Reserved so far: `SOL`, `ABS`, `APB`, `YVN`. A third provider takes the next free
 three-letter token and gets `Documentation/Design/<Provider>.md` (§ABS33).
@@ -438,15 +454,36 @@ The pipeline's shape imposes constraints this design has to live with:
    wrong thing while the package still publishes. **Version the shipped packages
    in lockstep** and treat Abstractions' version as the solution's version. A
    per-package release cadence would need a different workflow, and is not worth
-   building for four packages.
+   building for the five packages that ship — Abstractions, Abstractions.Conformance,
+   ApiBible, ApiBible.Fums and YouVersion (§SOL6).
 
    Releases are gated on a `RELEASES:` PR title prefix plus the `RELEASES`
    label. `PROVIDERS` is the label for the work in these documents.
 
-4. **Semantic versioning.** The contract in Abstractions is a published API. A
-   change to `IBibleProvider`, the marker interfaces, or the
-   `ScriptureResult`/`ScripturePassage`/`ScriptureUsage` shape is a major-version
-   change (§SOL2 rule 7).
+4. **Semantic versioning, `MAJOR.MINOR.PATCH`.** The contract in Abstractions is a
+   published API, and this design says in six places that some change "breaks after
+   publish" without ever saying what the version does about it. It does this:
+
+   | Arm | When | Examples from this design |
+   |---|---|---|
+   | **MAJOR** | anything a consumer compiles against changes incompatibly | a member on `IBibleProvider` (§SOL17 rule 3), a `required` member on a DTO (§ABS39 rule 5), a member on a marker interface (`ProviderConsole`, §ABS7.1), a `ScriptureLookupStatus` or `ScriptureUsageObligation` value removed |
+   | **MINOR** | additive and source-compatible | a new provider package, a new *optional* DTO member, a new configuration property with a default, a new book-name table (§ABS42.7) |
+   | **PATCH** | no surface change | a status-mapping correction, a parsing fix, a document-only change |
+
+   **Adding an enum member is MINOR here and not MAJOR**, deliberately: every enum
+   in this contract has `Unknown = 0` and §ABS34 tells consumers to treat an
+   unrecognised status as unavailable, so a new member cannot silently become
+   `Found`. That defensive default is what buys the additive freedom.
+
+   **The deprecation path when a break is genuinely needed:** mark the old member
+   `[Obsolete]` with a message naming its replacement, ship it that way for one
+   MINOR release alongside the new one, and remove it in the next MAJOR. A break
+   that ships without a release carrying both is a break with no migration window,
+   and this library has no way to warn a consumer at runtime.
+
+   Versions move in lockstep across the shipped packages (rule 3), so a MAJOR in
+   Abstractions is a MAJOR everywhere — which is the strongest argument for closing
+   §SOL17 rule 3 and §ABS39 rule 5 before the first release rather than after.
 
 5. **Publishing hygiene:** SourceLink and symbol packages, so a consumer can step
    into the code while debugging. `--include-symbols` is already on the pack step.

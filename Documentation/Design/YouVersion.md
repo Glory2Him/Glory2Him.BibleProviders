@@ -208,15 +208,26 @@ Required by §ABS33 item 8, because this provider has timeout logic and
    ```csharp
    catch (OperationCanceledException) when (timeoutSource.IsCancellationRequested)
    {
-       throw new YouVersionUnavailableException(
+       throw new YouVersionUnavailableException(                          // IBibleUnavailableException
            message: "YouVersion did not answer within the configured budget.",
-           innerException: exception);          // IBibleUnavailableException
+           innerException: new TimeoutException(
+               $"No response within {configurations.TimeoutSeconds}s."));
    }
    catch (OperationCanceledException)
    {
        throw;                                   // the caller went away — §ABS13 rule 3
    }
    ```
+
+   **The timeout arm wraps a `TimeoutException`, never the
+   `OperationCanceledException` itself.** The skill permits wrapping a
+   `TimeoutException` as a dependency failure (CP-012) and forbids wrapping an
+   `OperationCanceledException` in any service or dependency exception (CP-013),
+   which is exactly what an earlier draft of this section did. Discarding the
+   caught exception costs nothing: it carries no detail beyond "a linked source
+   fired", and `timeoutSource.IsCancellationRequested` in the filter already
+   established *which* source. §ABS13 rule 3's outcome is unchanged — a provider
+   timeout still reaches the consumer as `IBibleUnavailableException`.
 
    Reversing them makes every provider timeout look like caller cancellation, which
    is the precise failure §ABS13 rule 3 exists to prevent and §ABS38 rule 7 tests
@@ -321,12 +332,20 @@ Required by §ABS33 item 8, because this provider has timeout logic and
 2. `GET /bibles/{id}/passages/{usfm}` → `{ id, content, reference }`.
 
    **The passages endpoint is documented on one page and absent from the other**
-   [contested — §YVN1]. It is used in the api-usage guide's own worked example and
-   in independent integrations, so this design treats it as real. But §YVN19 rule 1
-   must confirm it, because the quick reference's silence is equally consistent with
-   it being undocumented-but-working or with it being deprecated. **If it is gone,
-   §YVN9's chapter route becomes the only route** and every shape is served from
-   there.
+   [contested — §YVN1]. It is used in the api-usage guide's own worked example, its
+   path parameter is documented as taking a verse or chapter USFM [verified], and
+   independent integrations rely on it — so this design treats it as real. But
+   §YVN19 rule 1 must confirm it, because the quick reference's silence is equally
+   consistent with it being undocumented-but-working or with it being deprecated.
+
+   **If it is gone, this provider has no way to return scripture at all**, and that
+   is worth stating rather than glossing: the chapter-verses endpoint returns
+   `{id, passage_id, title}` and no text (§YVN9), so it cannot be the fallback — an
+   earlier draft said it could, which was circular, since §YVN9's chapter route *is*
+   `/passages`. The only remaining shape would be whatever endpoint the quick
+   reference intends for content, which this design has not found. **Treat
+   §YVN19 rule 1 as an existential spike for this provider**, not a detail: if
+   `/passages` is gone the design does not degrade, it stops.
 
 3. **Build the passage.** `Usfm` = the response `id` **re-suffixed with the
    resolved translation** — the translation is stripped for the request only, and
@@ -673,8 +692,10 @@ more unknowns than its sibling, and they are load-bearing. Items 1–3 **change 
 gets built**, not merely how it is configured.
 
 1. **Does `/bibles/{id}/passages/{usfm}` still exist?** Documented on the
-   api-usage page, absent from the quick reference [contested — §YVN1]. If it is
-   gone, §YVN9's chapter route is the only route and §YVN8 is rewritten.
+   api-usage page, absent from the quick reference [contested — §YVN1].
+   **Existential, not cosmetic:** it is the only endpoint in this upstream known to
+   return scripture text, so if it is gone §YVN8 is not rewritten — the provider is
+   (§YVN8). Run this spike first.
 2. **Does a fresh app key see KJV (id 1) without accepting an agreement?** Decides
    whether the shipped `DefaultTranslation` works out of the box (§YVN4).
 3. **Does the passages endpoint accept a verse range** (`JHN.3.16-JHN.3.18`)?
@@ -740,9 +761,15 @@ only through `IBibleProvider` (§ABS35 rule 3).
    publish a partial map** (§YVN7 rule 9).
 3. `GetScriptureByReferenceAsync` parses locally then takes the USFM path — assert
    no server-side reference query is ever attempted.
-4. Routing by shape: a chapter key reaches the chapter-verses endpoint, not the
-   passages endpoint; whichever range strategy the spike settles is asserted on
-   **request count** (§YVN9).
+4. Routing by shape, asserted on the **URL** and on **request count**: a chapter
+   key (`PSA.119.KJV`) reaches `/passages/PSA.119` in **one** request, and the
+   chapter-verses endpoint is **not** called — it returns no text (§YVN9 rule 1).
+   Whichever range strategy the spike settles is asserted the same way.
+
+   *This criterion previously required the opposite — that a chapter key reach the
+   chapter-verses endpoint — while citing §YVN9 as its authority. A developer
+   working criterion-first would have built the defect §YVN9 exists to prevent and
+   had a green test proving it.*
 5. Content: `<p></p>` → `NotFound`; footnote-only → `NotFound`; **204 →
    `NotFound`**; a range with one empty verse → `Found` with that id in
    `MissingVerseIds`; **HTML that parses to empty but had a non-empty body triggers
@@ -793,7 +820,7 @@ change what gets built.
 | 1 | **Spikes** | The ten items in §YVN19, including reading the platform terms. Endpoint existence and range support decide item 4's shape; the terms decide whether consumers may store at all | 1–1.5 d |
 | 2 | **Transport & container** | Internal `ServiceCollection`, typed client with `X-YVP-App-Key`, resilience pipeline and budget validation, disposal | 0.5 d |
 | 3 | **Catalogue** | Per-range merge, pagination with the §YVN7 rule 5 detection, the rule 2 parameter fallback, copyright retention, **atomic refresh** | 1–1.5 d |
-| 4 | **Lookup flow** | Shape-based routing across the passages and chapter-verses endpoints, the range strategy the spike settles, AngleSharp HTML→`Blocks`, the `format=text` fallback, content check | 1.5–2 d |
+| 4 | **Lookup flow** | Shape-based routing, all content through `/passages` (§YVN9), the range strategy the spike settles, AngleSharp HTML→`Blocks`, the `format=text` fallback, content check | 1.5–2 d |
 | 5 | **Failure mapping** | §YVN12 and §YVN13, including 204, 406 and the 429 discriminator | 0.5 d |
 | 6 | **Tests** | The three projects in §YVN20 plus the inherited Conformance suite | 1–1.5 d |
 
