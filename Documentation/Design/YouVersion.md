@@ -777,6 +777,82 @@ explicitly contemplated.
 **Term:** two years from the effective date, auto-renewing for successive two-year
 terms, and on termination "no rights or privileges will extend beyond the term".
 
+### YVN14.7 Lockman, read — and the agreements are not a common template (#3)
+
+**Read 2026-09-11: *Lockman Foundation Free Distribution Permission Agreement*,
+listed as "Fast-track Bible License v1", accepted 4 Aug 2026, covering 5 Bibles
+including NASB 2020, NASB 1995, AMP, LBLA and NBLA.** [verified]
+
+**The headline is structural: this is a different document, not a different set of
+figures in the same one.** Biblica's is a ten-page "Content License Agreement"
+organised into numbered Articles; Lockman's is three pages of a "Free Distribution
+Permission Agreement" with no such structure. **The portal labels both
+"Fast-track Bible License · v1" and they share almost nothing.** So the remaining
+seven cannot be assumed to follow either, and §YVN14.5's Biblica findings must not
+be generalised into provider-wide rules.
+
+**What Lockman requires, and most of it is new to this design:**
+
+1. **No third-party advertising, at all.** Display and distribution "must be
+   completely free of charge, without any access charges or general membership fees
+   of any kind, **and the application and website must not have any third-party
+   advertising**". That is stricter than Biblica's free-to-end-users clause
+   (§YVN14.5 rule 3) and lands in the same place as API.Bible's non-commercial
+   definition (§APB20) — which makes §APB20.1's conclusion sharper, not weaker:
+   the restriction is real, it varies per publisher, and nothing in either API
+   exposes it.
+2. **Bulk extraction must be made impractical.** "Access to and display of THE
+   LICENSED WORKS must be in such a way as to make the downloading of a large
+   portion or the entire UNDERLYING WORKS difficult or impractical for use without
+   REQUESTER's website or application." Not a prohibition on caching — a duty to
+   prevent *your users* harvesting the text through you.
+3. **A conspicuous clickable link is mandatory.** "A clickable link to LOCKMAN's web
+   site home page, this copyright notice, and other such notices as LOCKMAN may from
+   time to time designate, must be placed in a conspicuous place." And where the
+   full notice is impractical, the per-verse tag — `NASB 1995`, `AMP`, `NBLA` — "may
+   be used after the verse(s), **and it must link to** http://www.lockman.org".
+
+   **This is the attribution *format* §YVN14.3 recorded as unknown**, at least for
+   this publisher: a notice, a conspicuous link, and a per-verse tag that is itself
+   a link. It is also the clearest justification yet for
+   `TranslationSummary.PublisherUrl` (§ABS44.5).
+4. **An annual usage report.** "REQUESTER shall provide LOCKMAN, on or before the
+   end of February, with an annual report of the number of copies of THE LICENSED
+   WORKS containing THE UNDERLYING WORKS which REQUESTER has distributed the
+   previous calendar year." See §YVN14.8.
+5. Verbatim copyright notices are specified for each of the five editions.
+   Terminates on thirty days' notice from Lockman **or YouVersion**; governed by
+   California law; not sub-licensable or transferable.
+
+### YVN14.8 §YVN15's `NotRequired` is now wrong for at least one publisher (#3)
+
+§YVN15 declares `ScriptureUsage.NotRequired` on every passage from this provider,
+on the grounds that the platform exposes no reporting mechanism and the platform
+terms create no per-display duty. Both remain true. **The publisher agreement
+creates one anyway** — Lockman's annual distribution report (§YVN14.7 rule 4).
+
+It is not a FUMS-shaped obligation and `ReportOnDisplay` would model it badly:
+it is annual, aggregate, per-publisher, sent by the *organisation* rather than
+emitted per view, and it counts distributed copies rather than displays. Nothing
+this library holds would satisfy it, and §SOL2 rule 5 means the library retains
+nothing to count from.
+
+**But `NotRequired` is a positive assertion that nothing is owed (§ABS29), and for
+Lockman-licensed editions that assertion is false.** Three ways out, and this
+design does not yet choose between them:
+
+1. Keep `NotRequired` and treat the annual report as wholly outside the model —
+   a consumer obligation this library neither surfaces nor tracks, documented in
+   §YVN18 and the README.
+2. Introduce a third obligation value meaning *owed, but not per display and not
+   by this library* — honest, and it costs a published enum member (§SOL7 rule 4).
+3. Surface it through `TranslationMetadata` (§ABS45), since the obligation is
+   per publisher and the consumer already configures per translation.
+
+**Decide once the remaining seven agreements are read**, because whether this is
+Lockman's quirk or a common publisher pattern changes the answer. Option 1 is
+defensible for one publisher and indefensible for five.
+
 ### YVN14.6 The footnote finding reopens §ABS39 rule 3 (#3)
 
 **This design suppresses notes everywhere** — §APB8's query string sends
