@@ -900,20 +900,16 @@ are **decisions, not spikes** — no amount of upstream research settles them.
 
 ---
 
-8. **Does either upstream expose a publisher website URL?** (#3) API.Bible Terms
-   §7 requires a hosted copyright page carrying "IP Holder details, and website
-   links", and `Attribution` is a copyright *string* with no URL in it. The
-   per-quotation hyperlink is not the gap — its target is the consumer's own
-   copyright page, which this library cannot know — but the publisher links that go
-   *on* that page have to come from somewhere.
+8. ~~**Does either upstream expose a publisher website URL?**~~ **Settled, and the
+   answer is split** (§ABS44.5). Neither puts one on a passage, so it was never a
+   DTO question. YouVersion's catalogue carries `publisher_url` and a longer
+   `promotional_content`; API.Bible's carries no URL property at all, and its `info`
+   field is a string of publisher information rather than a link — both [verified]
+   against the published schemas.
 
-   API.Bible's Bible resource carries an `info` field described as promo
-   information, gated behind `include-full-details=true`; whether it contains
-   publisher URLs is **[unverified]**. If it does, they fold into
-   `TranslationSummary` (§ABS44) at no extra request. If it does not, building the
-   copyright page stays entirely the consumer's job and nothing in this library
-   changes. **A spike, not a decision** — and cheap, because the catalogue call
-   already exists.
+   `TranslationSummary.PublisherUrl` therefore ships nullable, populated for
+   YouVersion and null for API.Bible — which is the provider whose Terms §7 demands
+   the link. Building that page for API.Bible stays the consumer's job (§APB19).
 
 ---
 

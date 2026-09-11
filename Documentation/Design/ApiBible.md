@@ -308,7 +308,7 @@ single-flight fetch, and a fetch that fails with no usable previous catalogue
 **throws** rather than returning empty (§ABS44.2) — an outage must never read as
 "this provider carries nothing".
 
-Field mapping: `abbreviation` → `Abbreviation`, `name` → `Name`, `language.id` → `Language`, `language.scriptDirection` → `ScriptDirection`, the opaque bibleId → `ProviderEditionId`, and `Attribution` **null unless `include-full-details=true` was sent** (rule 3) — which this design does not send on the hot path, so it is normally null here and filled on the passage instead (§APB11 rule 5).
+Field mapping: `abbreviation` → `Abbreviation`, `name` → `Name`, `language.id` → `Language`, `language.scriptDirection` → `ScriptDirection`, the opaque bibleId → `ProviderEditionId`, `Attribution` **null unless `include-full-details=true` was sent** (rule 3) — normally null here and filled on the passage instead (§APB11 rule 5) — and **`PublisherUrl` always null: no URL property exists on this upstream's Bible or Passage schema** [verified, §ABS44.5].
 
 ---
 
@@ -839,6 +839,14 @@ This provider always populates `Attribution` from the passage response's
 `copyright`, and `Translation` carries the abbreviation the citation needs. A null
 `Attribution` on a licensed edition is a mapping or licensing defect and is logged
 at Warning by the base class (§ABS32).
+
+**Neither requirement's link can be sourced from this upstream, and that is now
+verified rather than assumed.** The Bible schema has no URL property and the passage
+response has none either; `info` is a string of publisher information, not a link
+(§ABS44.5). So `TranslationSummary.PublisherUrl` is always null here, and the
+"website links" requirement 1 asks for must come from the licence paperwork, or be
+looked up against the Digital Bible Library using the `dblId`/`relatedDbl` the
+catalogue does carry — a lead, not a documented route.
 
 **Requirement 2 is the one this library does not fully serve.** `Attribution` is a
 bare string; the required hyperlink needs a target, and nothing in

@@ -57,7 +57,7 @@ Base URL `https://api.youversion.com/v1/` [verified].
 | Access model | **Per-version licence agreements, accepted in the portal.** `GET /v1/bibles` returns only the versions the app key is licensed for — the single biggest operational difference from API.Bible and the source of most support questions (§YVN17) |
 | **`all_available`** | `all_available=true` widens the listing from "enabled for this app key" to the broader platform catalogue [verified]. This is the flag an earlier draft listed as an unknown; it exists |
 | Catalogue | `GET /v1/bibles` → **numeric** ids (e.g. `3034` BSB, `111` NIV, `1` KJV). Scoped by a required language filter (§YVN7). Paginated, `page_size` up to **100** [verified] |
-| Copyright | **Not on the passage response.** It lives on the Bible resource metadata, so the catalogue cache must retain it per version or `Attribution` is unfillable (§YVN7 rule 4) |
+| Copyright | **Not on the passage response.** The Bible resource carries `copyright` (short), `promotional_content` (longer copyright text), **`publisher_url`** — "URL to link to publisher page from the reader's footer" — and `info` [verified]. The catalogue cache must retain them or `Attribution` is unfillable (§YVN7 rule 4) |
 | Passage | `GET /v1/bibles/{bibleId}/passages/{usfm}` — e.g. `/v1/bibles/3034/passages/JHN.3.16` [verified on the api-usage page; absent from the quick reference — §YVN8] |
 | Chapter navigation | `GET /v1/bibles/{id}/books/{book_usfm}/chapters/{n}/verses` [verified] — returns `{id, passage_id, title}` per verse and **no text**; the reference says to use `/passages` for content. §YVN9 |
 | Response | `{ "id": "JHN.3.16", "content": "<p>…</p>", "reference": "John 3:16" }`. Collections wrap as `{ "data": [...], "next_page_token": "…" }` [verified] |
@@ -269,7 +269,11 @@ Required by §ABS33 item 8, because this provider has timeout logic and
    (§YVN19 rule 10). Where it cannot be read, map from the language code against the
    built-in table and fall back to `Unknown` — never to `LeftToRight`.
 
-4. **Retain the copyright text here — for this provider it is mandatory.** It is
+4. **Retain the copyright text here — for this provider it is mandatory**, and
+   retain `publisher_url` and `promotional_content` with it. This catalogue is the
+   only place any of it exists, and `publisher_url` is the one thing either upstream
+   offers toward the copyright-page requirement API.Bible's terms impose
+   (§ABS44.5). It is
    not on the passage response, so if the catalogue does not keep it, `Attribution`
    cannot be populated at all. Contrast §APB7 rule 2, where the passage response
    carries it and catalogue retention is optional.
@@ -329,7 +333,7 @@ single-flight fetch, and a fetch that fails with no usable previous catalogue
 **throws** rather than returning empty (§ABS44.2) — an outage must never read as
 "this provider carries nothing".
 
-Field mapping: `abbreviation` → `Abbreviation`, `name` → `Name`, the matched language range → `Language`, the retained script direction → `ScriptDirection`, the numeric id → `ProviderEditionId`, and the retained copyright → `Attribution` — which **is** populated here, because this catalogue is the only place it exists (rule 4).
+Field mapping: `abbreviation` → `Abbreviation`, `name` → `Name`, the matched language range → `Language`, the retained script direction → `ScriptDirection`, the numeric id → `ProviderEditionId`, the retained copyright → `Attribution`, and `publisher_url` → `PublisherUrl` — both **are** populated here, because this catalogue is the only place either exists (rule 4).
 
 ---
 
@@ -735,6 +739,11 @@ at Warning by the base class (§ABS32).
 the platform terms and would sit in a version's own licence or in the YVP Terms.
 The sibling provider's terms specify a copyright page and a hyperlinked citation
 (§APB19); nothing says YouVersion's are the same.
+
+**This provider has more attribution material than the sibling**, and it is worth
+using: `copyright` for the short notice, `promotional_content` where a fuller form
+is wanted, and `publisher_url` for the link (§ABS44.5). All three are on the
+catalogue and none on the passage, which is why §YVN7 rule 4 retains them.
 
 **What the terms do constrain is the opposite direction.** The YouVersion marks —
 "YouVersion", "YVP", "Life.Church", "The Bible App" — may not be used unless a

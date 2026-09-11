@@ -2103,6 +2103,7 @@ public sealed record TranslationSummary(
     string Language,              // ISO 639-3 (§ABS42.3)
     ScriptDirection ScriptDirection,
     string? Attribution,          // the edition's copyright text, where the catalogue carries it
+    string? PublisherUrl,         // the IP holder's page, where the upstream exposes one — §ABS44.5
     string ProviderEditionId);    // the upstream's own id — opaque, for diagnostics and Usage
 ```
 
@@ -2139,8 +2140,35 @@ nothing", and an outage must never be mistaken for that (§ABS6).
    carries copyright on its list response — API.Bible needs
    `include-full-details=true` for it (§APB7 rule 3), and this design does not send
    that on the hot path. A provider fills it when it has it.
-4. **It does not carry a publisher URL**, because neither upstream is known to
-   expose one. §SOL17 rule 8 is where that question lives.
+4. **`PublisherUrl` is null more often than not**, and §ABS44.5 says which
+   provider supplies it.
+
+### ABS44.5 Publisher links, and why they are on the catalogue and not the passage (#3)
+
+API.Bible Terms §7 requires a hosted copyright page carrying "IP Holder details,
+and website links" (§APB19). Neither upstream puts such a link on a **passage** —
+checked against both schemas [verified] — so it could only ever come from the
+catalogue, which is why `TranslationSummary` is where it belongs rather than
+`ScripturePassage`.
+
+The two upstreams then differ, and the nullable type is carrying that difference
+rather than papering over it:
+
+| Provider | What the catalogue exposes |
+|---|---|
+| **YouVersion** | **`publisher_url`** — "URL to link to publisher page from the reader's footer" — plus `copyright` and `promotional_content`, a longer form of the copyright text [verified] |
+| **API.Bible** | **Nothing.** No URL property exists on the Bible or Passage schema. `info` is a *string* of publisher information, not a link [verified] |
+
+So `PublisherUrl` is populated for YouVersion and **null for API.Bible**, which is
+the provider whose terms demand the link. **A consumer building an API.Bible
+copyright page must source those links itself** — from the licence paperwork, or
+from the Digital Bible Library via the `dblId`/`relatedDbl` the catalogue does
+carry, though nothing documents a URL shape for those and this design does not
+invent one.
+
+That asymmetry is worth keeping visible rather than smoothing: a null here is not
+a gap in the mapping, it is an upstream that does not have the data its own terms
+ask a consumer to display.
 
 ### ABS44.4 The abstraction forwards it (#3)
 
