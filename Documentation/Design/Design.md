@@ -1005,3 +1005,10 @@ In this order, because it is the order a consumer needs it:
    mermaid, which nuget.org does not render.
 4. **Obligations are stated, never summarised away.** If a figure is unestablished,
    say so and say what it restricts — the §YVN14 shape, which is the model.
+
+**This section is enforced rather than hoped for.** `.claude/agents/qa.md` item 12
+makes README currency a standing check on every pull request: a configuration field
+added without a row, an obligation whose figure the design has since corrected, or
+a sample that no longer compiles is BLOCKING, because a consumer who reads only the
+README must not be able to breach a licence by following it. The packaging traps in
+§SOL19.1 are on that checklist too, each of them having already happened here once.

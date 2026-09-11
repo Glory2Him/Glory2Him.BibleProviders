@@ -177,6 +177,46 @@ mocked-boundary blind spot, and reading the tests rather than their names.
 11. **Regression risk.** What existing behaviour could this plausibly have broken,
      and is there a test that would have caught it?
 
+12. **README currency.** `Documentation/Design/Design.md` §SOL19 is the authority
+    on what each README must carry — cite it, do not restate it. Check that the
+    change did not make one of them stale.
+
+    **Which README, for what kind of change:**
+
+    | The change touched | Then this must have changed too |
+    |---|---|
+    | a public type, member or signature | that package's README, if the README shows it |
+    | a configuration field — added, renamed, removed, or its default | that package's README's configuration table. **A new field with no row is a finding** |
+    | an obligation a consumer inherits, or a figure in one | that package's README's compliance section |
+    | the set of shipped packages, or the solution's shape | the root README's package table and diagrams |
+    | a provider's name, or how it is constructed | every README whose sample constructs it |
+
+    **BLOCKING** when a consumer following the README would now be wrong — a sample
+    that no longer compiles, a configuration table missing a required field, or an
+    obligation stated at a figure the design has since corrected. A consumer who
+    reads only the README must not be able to breach a licence by following it.
+    **ADVISORY** for prose that is merely dated.
+
+    **Packaging traps, each of which has already happened here once:**
+
+    - Every shipped project packs **its own** README, never the repository root's.
+      Check the `.csproj` — `PackageReadmeFile` and the `<Content Include>` are two
+      separate things and only one of them being right still ships the wrong file.
+      A new shipped project without its own README is BLOCKING.
+    - **Absolute URLs only in a package README.** nuget.org does not resolve
+      repository-relative paths, so a relative image is a broken banner and a
+      relative link is a 404. The root README is the opposite case and links
+      relatively.
+    - **No mermaid in a package README** — nuget.org does not render it. The root
+      README is the only one that may use it.
+    - **No design section numbers in README prose.** `§ABS45.1` means nothing to
+      someone who has not cloned the repository.
+    - **The banner survives.** A README that lost it is a finding.
+
+    Do not report a README as stale for an internal change a consumer cannot
+    observe. The test is whether anything a consumer compiles against, configures,
+    or is obliged to do has moved — not whether the diff was large.
+
 ## Verifying it yourself
 
 You do not take the developer's word that something renders or that a role is
