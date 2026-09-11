@@ -92,8 +92,27 @@ So a share-to-WhatsApp button:
 | NIV, ESV, NLT, CSB and other licensed | **Not permitted** without the rights holder's express authorisation |
 
 Reinforced elsewhere: **§4.2** forbids sublicensing or distributing content to any
-third party without written approval; **§9.5(d)** forbids providing third-party
-access to the content; **§12** requires DRM restricting printing beyond 100 verses.
+third party without written approval, and **§9.5(d)** forbids providing third-party
+access to it.
+
+**And §12 goes further than permission — it requires prevention.** Read in full at
+§APB26: a consumer "will incorporate industry-standard digital rights management
+… which **restricts end users from copying or distributing** the Licensed Products
+and the Property", and may only use the content "in a secured manner that **does
+not allow the property to be freely copied**".
+
+**That is a different kind of obligation from the rest of this file.** Everywhere
+else the question is whether a consumer *may* do something. Here a consumer must
+**build something to stop its own users doing it** — which makes a share button, a
+copy-verse button, and arguably freely selectable text all problems for licensed
+translations, rather than merely unpermitted features. The duty is
+"commercially reasonable efforts", not perfection (§APB26.2), which is the clause
+to lean on: a web page cannot truly prevent copying and §12 does not pretend
+otherwise.
+
+§12 also caps printing at **100 verses**, restricts use to a **Territory**, and
+caps **device count** — the latter two being parameters fixed at sign-up that
+nothing in this design has ever seen (§APB26.3).
 
 ---
 
@@ -185,7 +204,10 @@ config row was missing is exactly the silent breach this design is built to avoi
 1. **Store freely, refresh deliberately.** Both upstreams permit storage. Build a
    forced-refresh path and a delete path; add a 30-day sweep for API.Bible.
 2. **Default the share button off.** Enable it per translation, from configuration,
-   never from a guess about the copyright string.
+   never from a guess about the copyright string. On API.Bible, for licensed
+   translations, you additionally owe **DRM that prevents users copying or
+   distributing** (§APB26.2) — so the question is not only whether to offer the
+   button but what else must be suppressed alongside it.
 3. **For a share feature, prefer a public-domain translation.** KJV, ASV and WEB
    are shareable on both upstreams, and are the shipped defaults for a reason
    (§APB4, §YVN4).
@@ -211,10 +233,19 @@ config row was missing is exactly the silent breach this design is built to avoi
    published surface.**
 2. **§USE5 is inference, not quotation.** Confirm with YouVersion whether a
    share-out feature is permitted for publisher-licensed translations.
-3. **API.Bible's §12 DRM requirement** — "restricts printing the property more than
-   100 verses" — has not been read in full context and may impose more than a print
-   limit. Read §12 before shipping any export feature.
-4. **Per-translation figures are not recorded here**, only per-provider and
+3. ~~**API.Bible's §12 DRM requirement** has not been read in full.~~ **Read** —
+   §APB26. It imposed considerably more than a print limit: mandatory DRM
+   restricting users from copying or distributing, a Territory restriction, a
+   device-count cap, content confidentiality at a *relative* standard, and immediate
+   breach notification on suspicion.
+
+   **Two things it surfaced are now open in their own right** (§APB26.3): what
+   Territory and what device count were declared at sign-up. Neither is in the API,
+   neither is enforceable by this library, and both bind the consuming application.
+4. **API.Bible Terms §13, "Updates and Removals", has not been read.** §APB17
+   records the removal duties from §10 and §11; whether §13 adds to them is unknown
+   (§APB26.4).
+5. **Per-translation figures are not recorded here**, only per-provider and
    per-publisher ones, because neither upstream exposes a per-translation rights
    class (§USE7). If a consumer builds the classification table anyway, this file is
    where it belongs.

@@ -1,6 +1,6 @@
 # API.Bible provider
 
-**Area prefix:** `APB` · **Sections:** §APB1 – §APB25
+**Area prefix:** `APB` · **Sections:** §APB1 – §APB26
 **Packages:** `Glory2Him.BibleProviders.ApiBible`, `Glory2Him.BibleProviders.ApiBible.Fums`
 **Implements:** the contract in [Abstractions.md](Abstractions.md)
 **Solution overview:** [Design.md](Design.md) · **Sibling provider:** [YouVersion.md](YouVersion.md)
@@ -1154,3 +1154,87 @@ Every item depends on the abstraction items 1–7 (§ABS40).
 | 7 | **Tests** | The four projects in §APB24 plus the inherited Conformance suite | 1–1.5 d |
 
 Provider total ≈ **6.5–9 dev-days**.
+
+---
+
+## APB26. Security and DRM — Terms §12 (#3)
+
+*Appended per the no-renumbering rule. Read it with §APB17 and §USE4.*
+
+§12 is titled **Security**, and an earlier reading of this design cited it only for
+a print limit. It is substantially more than that, and **two of its clauses are
+obligations no other part of this design had reached**. All [verified].
+
+### APB26.1 Securing the key and the content (#3)
+
+1. **Credentials go to no third party.** Maintain the security of the API and "not
+   make available to any third party, any token, key, password or other login
+   credentials". Aligns with §SOL14 rule 5, which keeps the key out of logs, and
+   with YouVersion's equivalent (§YVN14.2 rule 5).
+2. **The content itself is confidential.** "You shall keep API.Bible Content
+   confidential and secure from unauthorized access by using industry-standard
+   organizational and technical safeguards for such data, **and with no less care
+   than you use in connection with securing similar data you store**."
+
+   That last clause is a *relative* standard and bites harder than it reads: a
+   consumer that encrypts its own user data at rest and leaves cached scripture in
+   plaintext has, by the words of the clause, failed it.
+3. **Breach notification is immediate and broad.** Notify `support@api.bible`
+   "immediately" on knowing of **or suspecting** any breach **or potential
+   vulnerability**, then consult, cooperate with investigations, assist with
+   required notices, provide information requested, and "promptly remedy" it.
+   **Suspicion is the trigger, not confirmation.**
+
+### APB26.2 DRM is mandatory, and it must prevent copying (#3)
+
+> "Users may only use content from API.Bible and its services in a secured manner
+> that **does not allow the property to be freely copied**. Users will incorporate
+> industry-standard digital rights management ("DRM") technology into products
+> which **restricts end users from copying or distributing** the Licensed Products
+> and the Property, **restricts printing the property more than 100 verses**,
+> **restricts the Licensed Products to the Territory**, and **does not permit use
+> of a Licensed Product or the Property on more than the number of devices as
+> indicated by the developer upon sign up**."
+
+Four requirements, and the first changes §USE4's conclusion in kind:
+
+1. **Restrict end users from copying or distributing.** §USE4 established that a
+   consumer may not *transmit* licensed content. This goes further: a consumer must
+   actively **prevent its own users** from doing so. A share button, a copy-verse
+   button, and arguably freely selectable text all run against it for licensed
+   translations. **Not permitted** and **must be prevented** are different
+   obligations, and only the second requires building something.
+2. **No printing beyond 100 verses.**
+3. **Restrict to the Territory** — a geographic scope, declared somewhere outside
+   this design. §APB26.3.
+4. **No more than the declared device count** — "as indicated by the developer upon
+   sign up". §APB26.3.
+
+DRM "may contain errors and be subject to attempts to circumvent"; the duty is
+**commercially reasonable efforts**, not perfection. That is the one softening in
+the section, and it is the right one to lean on — a web page cannot truly prevent
+copying, and the clause does not pretend otherwise.
+
+### APB26.3 Two parameters nobody has looked at (#3)
+
+**Territory and device count are configuration this solution has never mentioned**,
+and both were apparently fixed at sign-up:
+
+- **Territory** — the geographic scope the Licensed Products are restricted to.
+  Nothing in the catalogue, the passage response or this design carries it. A
+  consumer serving outside it is in breach, and would have no signal.
+- **Device count** — "the number of devices as indicated by the developer upon sign
+  up". A web application does not have a device count in any natural sense, so what
+  was declared, and what it binds, is unclear.
+
+**Both are [unverified] as to their actual values** and are questions for the
+account holder, not the code: check what was declared at sign-up. Neither is
+enforceable by this library, which stores nothing and serves no users (§SOL2
+rule 5) — but both bind the consuming application.
+
+### APB26.4 What this does not settle (#3)
+
+**§13, "Updates and Removals", has not been read in full.** §APB17 records the
+removal duties from §10 and §11; whether §13 adds to them is unknown. Read it
+before relying on §APB17 as a complete statement of the removal obligations —
+§APB18's history is the reason to check rather than assume.
