@@ -648,6 +648,34 @@ was aimed at the wrong document. **Whoever accepts a version in the portal must
 record what that agreement says about retention**, and the YVP Terms for the Bible
 tool must be located and read.
 
+### YVN14.4 This is a spike, not an integrity matter — and the difference decides what happens next (#3)
+
+**Do not file this alongside §APB20.1.** The two look similar — a contractual
+obligation this library will not enforce — and they are not the same kind of thing.
+
+| | Commercial use (§APB20.1) | Storage here |
+|---|---|---|
+| Is there a determinate answer? | **No.** It depends on each deployment's business model, permanently, and differs per consumer | **Yes.** What a per-version licence says about retention is a fact, the same for everyone using that version |
+| What closes it? | Nothing. Documentation is the **terminal** state | Someone with portal access, once. Documentation is the **interim** state |
+| What is left afterwards? | The consumer's integrity | A **figure** in this section, and then the consumer's integrity |
+
+So the live blocker is **reading**, not honouring. Honouring a retention figure once
+it is known is the same integrity matter as API.Bible's 30 days (§APB17), which this
+library does not enforce either. §ABS33 rule 5 prescribes precisely the current
+state — say the figure is unestablished, name the spike, state the restriction it
+imposes meanwhile — and that is an interim posture with a defined end, not a
+settled position.
+
+**The consequence of never doing it is a product limitation, not a compliance
+posture:** YouVersion stays display-only for good. That is worth someone's twenty
+minutes rather than a constraint absorbed by default.
+
+**The restriction only binds a consumer that wants to cache.** Display-only
+deployments never touch it, and unlike the sibling provider — where a
+5,000/month quota makes caching effectively mandatory (§SOL12) — this upstream
+publishes no quota at all, so display-only is genuinely viable here for longer than
+it would be there.
+
 ### YVN14.2 What the platform terms *do* impose (#1)
 
 All [verified], all inherited by the consuming application, and none of them
