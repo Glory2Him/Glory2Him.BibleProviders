@@ -557,10 +557,16 @@ it regresses.
     step, adds `Tag and Release` and `Publish to NuGet`, and the generated
     `prLinter.yml` omits the template's `setAuthorAsPrAssignee` job.
 
-    **Whichever wins, one of the two has to stop existing.** A repository that
-    hand-edits `.github/workflows` *and* regenerates them from a checked-in
-    generator will silently revert whichever was edited last, and the loser is
-    always the person who did not know the other existed.
+    **Settled by §SOL17 rule 7: the generator wins.** `.github/workflows/*.yml` are
+    build output from `Glory2Him.BibleProviders.Infrastructure`, and the template's
+    hand-maintained versions are gone. The rule that follows is absolute: **edit the
+    generator, never the YAML.** A hand-edit is reverted silently by the next
+    regeneration — no conflict, no warning, and nothing in CI notices.
+
+    What was lost from the template's version, and is worth re-adding to the
+    generator if anyone wants it back: the "Detect What Is Here" step, which let the
+    required check report green on a repository with no projects. It has no purpose
+    now that fourteen projects exist, which is why it was not carried across.
 
 ---
 
@@ -880,20 +886,20 @@ are **decisions, not spikes** — no amount of upstream research settles them.
 
 ---
 
-7. **`INFRA: Project Setup` is in this branch and not on `main`.** `main` is
-   still the bare template — **zero `.csproj` files** — and its history is
-   `Initial commit` → `DOCUMENTATION: Bring The Template Files Up To Date` →
-   `INFRA: Carry The Whole Resources Folder`. The commit that created all fourteen
-   projects, the `.slnx`, the ADotNet generator and the generated workflows was
-   never pushed, so it rides along inside the design PR and makes that PR look like
-   it invents the whole solution.
+7. ~~**`INFRA: Project Setup` is in this branch and not on `main`.**~~
+   **Settled: the scaffold ships with the design.** `main` was still the bare
+   template — zero `.csproj` files — and the commit creating all fourteen projects,
+   the `.slnx`, the ADotNet generator and the generated workflows had never been
+   pushed. Rather than split it out, the first PR lands scaffold and design
+   together and says so in its title. A design document describing fourteen
+   projects that do not exist on `main` was the stranger half of the alternative.
 
-   **This is a process decision, not a design one**, and it needs a human: either
-   the scaffold lands on `main` on its own first and the design PR is re-targeted
-   at what remains, or the PR is accepted as "scaffold + design" and its title and
-   body say so. Nothing in the code settles it. Until it is settled, §SOL7 rule 10's
-   workflow divergence has no correct answer either, because the two questions are
-   the same question.
+   **One consequence is now live rather than hypothetical** — §SOL7 rule 10. The
+   generated workflows have replaced the template's hand-maintained ones, so
+   `Glory2Him.BibleProviders.Infrastructure` is the single source and
+   `.github/workflows/*.yml` are build output. **Never hand-edit them.** Anyone who
+   does will have their change silently reverted by the next person who runs the
+   generator, with no conflict and no warning.
 
 ---
 

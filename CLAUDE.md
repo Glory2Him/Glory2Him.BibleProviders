@@ -97,10 +97,14 @@ list — this section describes it rather than competing with it.
 
 `build.yml` discovers test projects by glob, so name them so a recursive
 `*Tests.Unit*.csproj` or `*Tests.Acceptance*.csproj` match finds them and CI picks
-up a new test project without anyone editing the workflow. It also passes cleanly
-while the repository has no projects at all — the required `Build` check has to
-report something before there is anything to build. The comment at the foot of the
-workflow lists what to add as the repository grows.
+up a new test project without anyone editing the workflow. Integration tests are
+deliberately not discovered — they need live credentials and are a local guard
+only.
+
+**`.github/workflows/*.yml` are build output. Edit
+`Glory2Him.BibleProviders.Infrastructure` and regenerate; never hand-edit the
+YAML** — a hand-edit is reverted silently by the next regeneration, with no
+conflict and no warning. Design §SOL7 rule 10.
 
 ## Worktrees
 
