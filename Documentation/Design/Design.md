@@ -33,7 +33,7 @@ unambiguous with four files side by side:
 
 ```csharp
 // design §ABS6: scripture outcomes return, availability failures throw
-// (§APB14 rule 3)
+// (§APB15 rule 3, §ABS42.5)
 ```
 
 Number rules within a section too, so a citation can be precise about which one
@@ -57,7 +57,7 @@ history. `(needs issue)` is an explicit, greppable flag for design content nobod
 has scheduled yet, and is what the analyst's sweep mode looks for:
 
 ```bash
-grep -rn "^## .*(needs issue)" Documentation/Design/*.md
+grep -rnE "^#{2,3} .*\(needs issue\)" Documentation/Design/*.md
 ```
 
 The two example headings above sit inside a code fence and still match that grep.
@@ -281,15 +281,20 @@ referenced nothing at all and neither could implement `IBibleProvider` as writte
 
 1. `…ApiBible` → `…Abstractions` ✔
 2. `…YouVersion` → `…Abstractions` ✔
-3. `…Abstractions` → `Xeption` and `Microsoft.Extensions.Logging.Abstractions` ✔
-   (§SOL6)
+3. `…Abstractions` → `Microsoft.Extensions.Logging.Abstractions` ✔ (§SOL6).
+   **Not `Xeption`** — §SOL17 rule 6
 
-**What is deliberately *not* referenced yet.** `Microsoft.Extensions.Http` and
-`Microsoft.Extensions.Http.Resilience` are in §SOL6's table and belong to the two
-providers, but no code uses them, so they land with the transport work item
-(§APB25 item 2, §YVN21 item 2) rather than sitting in a `.csproj` ahead of the
-code that justifies them. `AngleSharp` is later still and conditional — §YVN10
-rule 6 may remove the need for it.
+**What is deliberately *not* referenced yet**, and this list is exhaustive so that
+§SOL6's table is never mistaken for a description of the repository:
+`Microsoft.Extensions.Http` and `Microsoft.Extensions.Http.Resilience` land with
+the transport work item (§APB25 item 2, §YVN21 item 2); `WireMock.Net` lands on
+the three acceptance projects with their first test (§ABS35 rule 3); `Xeption`
+lands on a test project with the first test that needs `SameExceptionAs()`
+(§SOL17 rule 6); `AngleSharp` is later still and conditional (§YVN10 rule 6).
+
+**§SOL6's table is the intended end state, not the current one.** Nothing there is
+referenced until code uses it — a package sitting in a `.csproj` ahead of its
+first caller is one nobody remembers the reason for.
 
 **One dependency rule is structural rather than stylistic:**
 `…ApiBible.Fums` references `…Abstractions` but **not** `…ApiBible` (§SOL2 rule 6).
@@ -312,13 +317,13 @@ added.
 
 | Project | References | Why it is justified |
 |---|---|---|
-| `…Abstractions` | `Microsoft.Extensions.Logging.Abstractions` 10.0.12, `Xeption` 2.9.0 — **both referenced** | `ILogger`/`ILogger<T>`/`NullLogger<T>` live in `Microsoft.Extensions.Logging.Abstractions`, and that package is the only sanctioned way to reach them here: `Microsoft.Extensions.Http` also surfaces them transitively, but taking them that way would put an HTTP stack in the contract package. `Xeption` is the exception base The Standard's exception discipline is written against. **Directly, nothing else** — no HTTP, no caching, no JSON framework. But see rule 5: the *transitive* closure is not minimal |
+| `…Abstractions` | `Microsoft.Extensions.Logging.Abstractions` 10.0.12 — **the only reference** | `ILogger`/`ILogger<T>`/`NullLogger<T>` live in `Microsoft.Extensions.Logging.Abstractions`, and that package is the only sanctioned way to reach them here: `Microsoft.Extensions.Http` also surfaces them transitively, but taking them that way would put an HTTP stack in the contract package. The Standard's exception discipline is satisfied by the pattern, not by a base class, so `Xeption` is deliberately absent — rule 5. **Nothing else** — no HTTP, no caching, no JSON framework, and a transitive closure of two |
 | `…Abstractions.Conformance` | `…Abstractions`, `xunit`, `FluentAssertions [7.2.2]` | Ships abstract xUnit classes; the test framework is unavoidably part of its surface. Opt-in, referenced only by test projects |
 | Provider packages | `…Abstractions`, `Microsoft.Extensions.Http`, `Microsoft.Extensions.Http.Resilience` | The typed client and the resilience pipeline are what make §ABS5 rule 8's budget real rather than decorative. `Microsoft.Extensions.DependencyInjection` arrives transitively and is what the internal container is built on |
 | `…YouVersion` | additionally `AngleSharp` | Its upstream returns HTML, and `Blocks` cannot be derived from it by regex. **Conditionally justified** — §YVN10 now has a cheaper source for `Text`, which may reduce this to a `Blocks`-only dependency |
 | `…ApiBible` | no HTML parser | Its upstream returns a JSON tree (`content-type=json`), so `System.Text.Json` from the framework is enough |
 | `…ApiBible.Fums` | `…Abstractions`, `Microsoft.Extensions.Http` — **not** the provider | §SOL2 rule 6 |
-| Test projects | the existing stack plus **`Xeption`** (§SOL17 rule 6): `xunit` 2.9.3, `Moq`, `FluentAssertions [7.2.2]`, `Tynamix.ObjectFiller`, `DeepCloner`, `coverlet.collector` | Already the repository's convention. **`FluentAssertions` is pinned to exactly `[7.2.2]` and cannot be unpinned** — it is the last version under the old licence *and* `Xeption` hard-pins that exact version (rule 5), so the pin is forced, not merely preferred |
+| Test projects | `xunit` 2.9.3, `Moq`, `FluentAssertions [7.2.2]`, `Tynamix.ObjectFiller`, `DeepCloner`, `coverlet.collector`, and **`Xeption`** once a test needs `SameExceptionAs()` (§SOL17 rule 6) | Already the repository's convention. **`FluentAssertions` stays pinned to exactly `[7.2.2]`** — today because it is the last version under the old licence, and again the moment a test project takes `Xeption`, which hard-pins that exact version. Preferred now, forced then; either way do not unpin it |
 | Acceptance test projects | additionally `WireMock.Net` | §ABS35 rule 3 |
 
 **The `Xeption` trap.** The NuGet package id is **`Xeption`** (singular); the
@@ -418,7 +423,7 @@ The pipeline's shape imposes constraints this design has to live with:
 5. **Publishing hygiene:** SourceLink and symbol packages, so a consumer can step
    into the code while debugging. `--include-symbols` is already on the pack step.
 
-### Three release-path rules, each fixed once and easy to undo
+### Release-path rules, each fixed once and easy to undo
 
 All three were live defects when this document was written, and all three are
 fixed. They stay here as **rules** rather than as history, because each was a
@@ -465,6 +470,32 @@ it regresses.
 
    Restore the step only alongside a Windows runner; the generator carries a comment
    saying so.
+
+9. **A `pwsh` loop over test projects must check `$LASTEXITCODE` after every
+   `dotnet test`.** A PowerShell step exits with its *last* command's code, so a
+   loop without the guard reports success whenever the final project passes — a
+   failing project in the middle leaves the required `Build` check green. The
+   generated loops now carry `if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }`.
+
+   This is the same class of defect as rules 7 and 8 and the third instance of it:
+   **a check that cannot fail is not a check.** Rule 7 stopped the acceptance step
+   running at all, rule 8 stopped the job reaching its second step, and this one let
+   it pass while tests failed. All three were invisible because the check was green.
+
+10. **This branch's workflows are generated; `main`'s are hand-maintained
+    template files, and they are not the same.** `main` has no
+    `Glory2Him.BibleProviders.Infrastructure` project — the ADotNet generator and
+    every project in the solution arrive with the unpushed `INFRA: Project Setup`
+    commit that this branch carries (§SOL17 rule 7). Consequences to settle before
+    merge, not after: the generated `build.yml` runs on `ubuntu-latest` where the
+    template's runs on `windows-latest`, drops the template's "Detect What Is Here"
+    step, adds `Tag and Release` and `Publish to NuGet`, and the generated
+    `prLinter.yml` omits the template's `setAuthorAsPrAssignee` job.
+
+    **Whichever wins, one of the two has to stop existing.** A repository that
+    hand-edits `.github/workflows` *and* regenerates them from a checked-in
+    generator will silently revert whichever was edited last, and the loser is
+    always the person who did not know the other existed.
 
 ---
 
@@ -654,11 +685,11 @@ abstraction items.
 
 | Package | Estimate | Detail |
 |---|---|---|
-| Scaffolding gaps (§SOL6) | 0.25 d | **Done:** project references, `Xeption`, `IsPackable=false`, the `pwsh` fix. **Remaining:** `Directory.Build.props` and `TreatWarningsAsErrors` + analyzers |
-| Abstractions | 6.5–9 d | §ABS40 |
+| Scaffolding gaps (§SOL6) | 0.25 d | **Done:** project references, `IsPackable=false`, the `pwsh` fix, the ubuntu long-paths removal. **Remaining:** `Directory.Build.props`, `TreatWarningsAsErrors` + analyzers, and `WireMock.Net` on the three acceptance projects |
+| Abstractions | 8.5–12 d | §ABS40 |
 | API.Bible | 6.5–9 d | §APB25 |
 | YouVersion | 5–7 d | §YVN21 |
-| **Solution total** | **≈ 18.5–25.5 dev-days** | |
+| **Solution total** | **≈ 20.5–28.5 dev-days** | |
 
 **Cross-package sequencing:**
 
@@ -713,16 +744,18 @@ are **decisions, not spikes** — no amount of upstream research settles them.
    and the analyst's criteria are supposed to trace to it. Write it, or accept
    that §SOL1 is doing its job by default.
 
-2. **Four files still point at `Documentation/Design.md`, which no longer
-   exists.** The split in these conventions relocated it to
-   `Documentation/Design/`. Stale references: `CLAUDE.md` ("The design —
-   `Documentation/Design.md` on main is authoritative"), `.claude/agents/architect.md`
-   (twice, including its hard rule), `.claude/agents/qa.md`, and `DEVELOPERS.md`
-   §4/§6 including the sweep command. The architect may not edit outside
-   `Documentation/`, so this is logged here rather than fixed. It is exactly the
-   "a relocated rule goes stale" failure the architect's own prompt warns about,
-   and the sweep command in `DEVELOPERS.md` §6 is the one that actually
-   misbehaves.
+2. ~~**Files still pointing at the deleted `Documentation/Design.md`.**~~
+   **Done.** All 30 references across `CLAUDE.md`, `DEVELOPERS.md`, `README.md`,
+   the three agent prompts and the Mockups README now point at
+   `Documentation/Design/`, and both sweep commands were narrowed to
+   `^## .*(needs issue)` over `Documentation/Design/*.md`. The statements the split
+   made false — the "ships as a stub" language, the "starts as a single file"
+   narrative, and the architect's own path boundary, which now tightens to
+   `Documentation/Design/` exactly as it anticipated — were corrected rather than
+   merely repointed.
+
+   Kept as a numbered rule rather than deleted, because what it records is general
+   and will recur: **a relocated rule goes stale, and nothing validates a citation.**
 
 3. **Where does the consuming application's translation list come from?** Each
    provider's catalogue is private and the only way to learn a translation is
@@ -775,6 +808,23 @@ are **decisions, not spikes** — no amount of upstream research settles them.
    design, not patched quietly — and the argument is that the skill prices a base
    class for an *application*, where a transitive test dependency costs nothing, and
    this is a *published library*, where it is inherited by everyone downstream.
+
+---
+
+7. **`INFRA: Project Setup` is in this branch and not on `main`.** `main` is
+   still the bare template — **zero `.csproj` files** — and its history is
+   `Initial commit` → `DOCUMENTATION: Bring The Template Files Up To Date` →
+   `INFRA: Carry The Whole Resources Folder`. The commit that created all fourteen
+   projects, the `.slnx`, the ADotNet generator and the generated workflows was
+   never pushed, so it rides along inside the design PR and makes that PR look like
+   it invents the whole solution.
+
+   **This is a process decision, not a design one**, and it needs a human: either
+   the scaffold lands on `main` on its own first and the design PR is re-targeted
+   at what remains, or the PR is accepted as "scaffold + design" and its title and
+   body say so. Nothing in the code settles it. Until it is settled, §SOL7 rule 10's
+   workflow divergence has no correct answer either, because the two questions are
+   the same question.
 
 ---
 

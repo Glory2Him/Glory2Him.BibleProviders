@@ -227,7 +227,7 @@ Check, in order:
 1. **Coverage.** Every design section for this feature has an issue behind it:
 
    ```bash
-   grep -rn "^## .*(needs issue)" Documentation/Design/*.md
+   grep -rnE "^#{2,3} .*\(needs issue\)" Documentation/Design/*.md
    ```
 
    A heading for this feature still carrying that tag after the analyst's sweep is

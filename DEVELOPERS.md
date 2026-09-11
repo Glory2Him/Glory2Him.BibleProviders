@@ -452,7 +452,7 @@ and propose issues for them.
 It runs:
 
 ```bash
-grep -rn "^## .*(needs issue)" Documentation/Design/*.md
+grep -rnE "^#{2,3} .*\(needs issue\)" Documentation/Design/*.md
 ```
 
 and for each hit does exactly what it does for a human-described feature — the

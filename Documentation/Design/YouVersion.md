@@ -30,7 +30,7 @@ different APIs:
 | Subject | `api-usage` page | `quick-reference` page | Status |
 |---|---|---|---|
 | Passages endpoint | `GET /bibles/{bibleId}/passages/{passage}` | **not listed at all** | [contested] — §YVN8 |
-| Chapter access | not shown | `GET /bibles/{id}/books/{book_usfm}/chapters/{n}/verses` | [contested] — §YVN9 |
+| Chapter access | not shown | a verses endpoint that carries **no text** | resolved — §YVN9 |
 | Catalogue language filter | `language_ranges` | `language_ranges`, "comma-separated" | vs `language_ranges[]` with literal brackets from practitioner reports — [contested], §YVN7 |
 | Pagination request parameter | `page_token` | **`next_page_token`** | [contested] — §YVN7 |
 | Page size | up to **100** | not stated | [verified] at 100 |
@@ -57,11 +57,11 @@ Base URL `https://api.youversion.com/v1/` [verified].
 | Access model | **Per-version licence agreements, accepted in the portal.** `GET /v1/bibles` returns only the versions the app key is licensed for — the single biggest operational difference from API.Bible and the source of most support questions (§YVN17) |
 | **`all_available`** | `all_available=true` widens the listing from "enabled for this app key" to the broader platform catalogue [verified]. This is the flag an earlier draft listed as an unknown; it exists |
 | Catalogue | `GET /v1/bibles` → **numeric** ids (e.g. `3034` BSB, `111` NIV, `1` KJV). Scoped by a required language filter (§YVN7). Paginated, `page_size` up to **100** [verified] |
-| Copyright | **Not on the passage response.** It lives on the Bible resource metadata, so the catalogue cache must retain it per version or `Attribution` is unfillable (§YVN7 rule 3) |
+| Copyright | **Not on the passage response.** It lives on the Bible resource metadata, so the catalogue cache must retain it per version or `Attribution` is unfillable (§YVN7 rule 4) |
 | Passage | `GET /v1/bibles/{bibleId}/passages/{usfm}` — e.g. `/v1/bibles/3034/passages/JHN.3.16` [verified on the api-usage page; absent from the quick reference — §YVN8] |
-| Chapter / verses | `GET /v1/bibles/{id}/books/{book_usfm}/chapters/{n}/verses` [verified on the quick reference]. §YVN9 |
+| Chapter navigation | `GET /v1/bibles/{id}/books/{book_usfm}/chapters/{n}/verses` [verified] — returns `{id, passage_id, title}` per verse and **no text**; the reference says to use `/passages` for content. §YVN9 |
 | Response | `{ "id": "JHN.3.16", "content": "<p>…</p>", "reference": "John 3:16" }`. Collections wrap as `{ "data": [...], "next_page_token": "…" }` [verified] |
-| **Content format** | `content` is **HTML by default**, and **`format=text` returns plain text** [verified]. §YVN10 — this changes the design |
+| **Content format** | `format` takes `text` or `html`, and **defaults to `text`** [verified]. HTML is the opt-in, not the default. §YVN10 |
 | `reference` | **Localized to the version's language** [verified], and its form is not contractual. §ABS16 rule 2 is why we never use it for `Reference` |
 | Red letter | No documented JSON alternative; whatever red-letter markup exists arrives as spans inside the HTML. The class vocabulary is **[unverified]** and must be confirmed against a licensed red-letter version (§YVN19). Treat as best-effort |
 | Loose reference | **No server-side reference parsing.** The API takes USFM only, so loose references are parsed locally (§ABS19) and this provider does not override `FetchByRawReferenceAsync` |
@@ -93,7 +93,7 @@ public sealed class YouVersionConfigurations
     public string BaseUrl { get; set; } = "https://api.youversion.com/v1/";
     public string DefaultTranslation { get; set; } = "KJV";                // §YVN4
     public IList<string> LanguageRanges { get; set; } = new List<string> { "eng" };  // required upstream; also the parse scope (§ABS42.4)
-    public bool IncludeAllAvailable { get; set; } = false;                 // §YVN7 rule 5
+    public bool IncludeAllAvailable { get; set; } = false;                 // §YVN7 rule 6
     public Dictionary<string, int> TranslationMap { get; set; } = new();   // "NIV" -> 111 override
     public TimeSpan CatalogueCacheDuration { get; set; } = TimeSpan.FromHours(6);
     public int MaxStitchedVerses { get; set; } = 30;                       // §YVN9
@@ -205,7 +205,7 @@ at 2 s (**≤ 4 s** total), overall budget **20 s**, `HttpClient.Timeout` left
    and `ScriptDirection` are `required` (§ABS42.6) and the passage response carries
    neither. The catalogue call is already language-scoped so the code is known from
    the range that matched; **the per-version script direction field is [unverified]**
-   (§YVN19 rule 11). Where it cannot be read, map from the language code against the
+   (§YVN19 rule 10). Where it cannot be read, map from the language code against the
    built-in table and fall back to `Unknown` — never to `LeftToRight`.
 
 4. **Retain the copyright text here — for this provider it is mandatory.** It is
@@ -264,7 +264,7 @@ at 2 s (**≤ 4 s** total), overall budget **20 s**, `HttpClient.Timeout` left
 ## YVN8. Lookup flow (#1)
 
 1. `UsfmReference` (parsed by `BibleProviderBase`, with `DefaultTranslation`
-   already applied) → numeric id via the catalogue, subject to §YVN7 rule 6; miss →
+   already applied) → numeric id via the catalogue, subject to §YVN7 rule 7; miss →
    `TranslationNotSupported`. Reduce to the provider key `JHN.3.16` (translation
    stripped).
 
@@ -311,31 +311,41 @@ at 2 s (**≤ 4 s** total), overall budget **20 s**, `HttpClient.Timeout` left
 ## YVN9. Chapters and ranges — cheaper than assumed (#1)
 
 An earlier reading of this upstream assumed no chapter endpoint existed and that a
-whole chapter would cost one request per verse. **That is wrong.** The quick
-reference documents a chapter-scoped verses endpoint [verified]:
+whole chapter would cost one request per verse. That was wrong — but so was the
+correction that replaced it, and the difference matters.
 
-```
-GET /v1/bibles/{version_id}/books/{book_usfm}/chapters/{chapter_number}/verses
-```
+**The chapter-scoped verses endpoint returns no scripture.**
+`GET /v1/bibles/{version_id}/books/{book_usfm}/chapters/{chapter_number}/verses`
+exists and returns `{id, passage_id, title}` per verse; the reference states
+explicitly that it **"does not include the text content; use the Passages endpoint
+for that"** [verified]. It is a *navigation* endpoint. A design that fetched
+chapters from it would return `Found` with no text, which §YVN11 exists to catch —
+but catching it is not the same as not doing it.
 
-with `book_usfm` the standard three-character code (`MAT`, `JHN`) and
-`chapter_number` an integer. Sibling endpoints list a Bible's books and a book's
-chapters.
-
-1. **A whole chapter is one request**, via this endpoint. Psalm 119 costs one call,
-   not 176. This removes the worst request-cost figure in the design (§SOL12).
-2. **A chapter range is one request per chapter** — two for `PSA.23-PSA.24`.
-3. **A verse range is the open question.** Whether `/passages/{usfm}` accepts
+1. **A whole chapter is still one request — through `/passages`, not through
+   `/verses`.** The passages endpoint takes a USFM `passage_id`, and a bare chapter
+   id (`PSA.119`) is a legal one, so the chapter route is
+   `GET /bibles/{id}/passages/PSA.119`. **[unverified]** — that a bare chapter id is
+   accepted is inference from the USFM grammar, not something the reference states,
+   and §YVN19 rule 3 must confirm it alongside range support. If it is rejected, the
+   chapter-verses endpoint becomes useful after all: call it to enumerate the verse
+   ids, then fetch that span from `/passages` in one request — two calls, still not
+   176.
+2. Psalm 119 costs one call, or two, and not 176. Either way this removes the worst
+   request-cost figure in the design (§SOL12) — the conclusion survives; only the
+   endpoint that delivers it changed.
+3. **A chapter range is one request per chapter** — two for `PSA.23-PSA.24`.
+4. **A verse range is the open question.** Whether `/passages/{usfm}` accepts
    `JHN.3.16-JHN.3.18` is [unverified] (§YVN19 rule 3). If it does, a range is one
    request. If it does not, **fetch the enclosing chapter once and slice** — not one
    request per verse. A three-verse range inside one chapter is one call either way,
    and a cross-chapter range is one call per chapter spanned.
-4. **`MaxStitchedVerses` (default 30) survives as a bound, not as a request
+5. **`MaxStitchedVerses` (default 30) survives as a bound, not as a request
    budget.** With chapter-granular fetching the request count is bounded by chapters
    spanned, not verses requested, so the setting now guards the *size of the result*
    rather than the cost of producing it. Exceeding it sets `IsTruncated`.
-5. Verses returning empty go into `MissingVerseIds`.
-6. **Whatever the spike settles, record it here**, and log at Debug when a lookup
+6. Verses returning empty go into `MissingVerseIds`.
+7. **Whatever the spike settles, record it here**, and log at Debug when a lookup
    costs more than one upstream request so the real cost is visible during tuning
    (§SOL14 rule 2).
 
@@ -343,11 +353,12 @@ chapters.
 
 ## YVN10. Content parsing — and the `format=text` correction (#1)
 
-**`format=text` exists** [verified]: the passages endpoint returns HTML by default
-and plain text when the parameter is sent. An earlier reading of this upstream
-assumed HTML-only and made an HTML parser load-bearing for everything. It is not.
+**The default is `format=text`, and `html` is the opt-in** [verified]. An earlier
+reading of this upstream had this backwards twice over: first assuming HTML-only,
+then assuming HTML-by-default. Neither is right, and the correct default makes the
+plain-text path the cheap one.
 
-The design that follows from the correction:
+The design that follows:
 
 1. **`Text` comes from `format=text`.** It is the upstream's own plain-text
    projection, it needs no tag-stripping, and it is not affected by a markup change.
@@ -358,10 +369,12 @@ The design that follows from the correction:
    discards poetry indentation, section headings and red-letter markup, and those
    are §ABS22's whole point.
 3. **That is two requests for one passage, which is not acceptable by default.**
-   So: **fetch the HTML rendition only** and derive `Text` from it through
+   So: **send `format=html` explicitly and derive `Text` from it** through
    `ScriptureHtmlRenderer` (§ABS23 rule 3), exactly as the sibling provider does —
    with `format=text` held as a **diagnostic and fallback** path rather than the
-   normal one. Specifically:
+   normal one. Sending `format` explicitly rather than relying on the default is
+   the same discipline §APB8 rule 1 applies to API.Bible's flags: a default that is
+   wrong for us is a default we name in the request. Specifically:
    - **Fallback:** when HTML parsing yields empty or whitespace text but the
      response body was non-empty, re-request once with `format=text` before
      concluding `NotFound`. That converts a parser failure — the risk created by rule
@@ -409,6 +422,13 @@ with no content is not a `Found` result under any reading (§ABS16 rule 4).
 ## YVN12. Status mapping — returned (#1)
 
 Per §ABS6: scripture outcomes **return**, availability failures **throw**.
+
+**Status codes are [verified]** from the quick reference's documented list — 200,
+204, 400, 401, 404, 406, 429. **What each one *means* for scripture is ours**, not
+the upstream's: the reference lists codes without per-endpoint semantics, so the
+403 row's reading as an unaccepted per-version licence is inference from the
+access model (§YVN2, §YVN17) and is **[unverified]** until §YVN19 rule 2 exercises
+a real unlicensed version.
 
 | Upstream | Result |
 |---|---|
@@ -537,7 +557,10 @@ imposes.
 This provider declares `ScriptureUsage.NotRequired(ProviderName)` on every passage:
 a **positive assertion that nothing is owed**, not an absence (§ABS29). No FUMS
 equivalent, no per-display reporting mechanism and no tracking token appear in the
-platform's documentation.
+platform's documentation **[verified absence]** — with the caveat that the platform
+terms remain unread (§YVN14), so this is an absence in the *developer* docs and not
+in the agreement. §APB18 is the cautionary precedent: an absence is only as wide as
+the pages actually searched.
 
 That assertion is only as good as the search behind it, so it carries a caveat: if
 the spike or a per-version agreement reveals a reporting obligation, the provider
@@ -552,7 +575,7 @@ as "FUMS".
 
 Version licensing terms typically require displaying the version abbreviation and
 copyright. Because the copyright is **only** on the Bible resource and never on the
-passage response, the catalogue cache must retain it (§YVN7 rule 3); if it does
+passage response, the catalogue cache must retain it (§YVN7 rule 4); if it does
 not, `Attribution` is null on every passage and the consumer is silently
 non-compliant. A null `Attribution` on a licensed edition is a defect and is logged
 at Warning by the base class (§ABS32).
@@ -574,7 +597,7 @@ Three things follow:
 1. The package README must say so, and support guidance should start with "check
    the portal".
 2. `all_available=true` is the diagnostic that separates "exists on the platform
-   but this key is not licensed" from "does not exist" (§YVN7 rule 5) — use it to
+   but this key is not licensed" from "does not exist" (§YVN7 rule 6) — use it to
    *answer the support question*, not as the normal listing.
 3. The Error log on a missing `DefaultTranslation` (§YVN4) exists precisely because
    this trap is otherwise discovered by a user rather than by an operator.
@@ -620,7 +643,7 @@ gets built**, not merely how it is configured.
    whether an `X-RateLimit-*` header set exists (reported informally, not
    documented). 429 + `Retry-After` is already confirmed.
 7. **Is a passage fetchable for a Bible absent from the listing?** Reported to be
-   [unverified]. Decides whether §YVN7 rule 6's `TranslationMap`-is-authoritative
+   [unverified]. Decides whether §YVN7 rule 7's `TranslationMap`-is-authoritative
    rule is a workaround or the correct model.
 8. **What do critical-text omitted verses return — 204, 200-with-empty, or 404?**
    (§YVN11.)
@@ -629,7 +652,7 @@ gets built**, not merely how it is configured.
    open it in a browser. §YVN14 cannot be completed without this, and storage is
    blocked until it is.
 10. **Does the Bible resource expose a script direction** (or a script code we can
-    map from)? §ABS42.6 needs it and §YVN7 rule 3 falls back to a built-in table
+    map from)? §ABS42.6 needs it and §YVN7 rule 4 falls back to a built-in table
     without it. Low cost to check, and it decides whether a Hebrew or Arabic edition
     renders correctly by default.
 11. **Capture fixtures** for the acceptance suite: a two-page catalogue, a passage
@@ -644,7 +667,7 @@ Three projects, per §ABS35's conventions. All three exist.
 
 **`…YouVersion.Tests.Unit`** — no HTTP. Catalogue mapping as a pure function:
 accumulation across pages, merging of multiple `LanguageRanges`, first-range-wins
-behaviour, `TranslationMap` precedence **including the §YVN7 rule 6 case where a
+behaviour, `TranslationMap` precedence **including the §YVN7 rule 7 case where a
 mapped translation is absent from the catalogue**, and copyright retention per
 version. AngleSharp HTML → `Blocks`: recognised classes map, unknown degrade to
 `Paragraph`/`None` with text intact, stray whitespace normalised away. Status and
@@ -662,9 +685,9 @@ only through `IBibleProvider` (§ABS35 rule 3).
    sent as `language_ranges[]` with literal brackets; **a 422 naming the field
    triggers exactly one retry with the bare spelling and a Warning** (§YVN7 rule 2);
    **a second page identical to the first triggers exactly one retry with
-   `next_page_token` and a Warning** (§YVN7 rule 4); **a 503 on the second page
+   `next_page_token` and a Warning** (§YVN7 rule 5); **a 503 on the second page
    discards the partial build, leaves any previous catalogue in place, and does not
-   publish a partial map** (§YVN7 rule 8).
+   publish a partial map** (§YVN7 rule 9).
 3. `GetScriptureByReferenceAsync` parses locally then takes the USFM path — assert
    no server-side reference query is ever attempted.
 4. Routing by shape: a chapter key reaches the chapter-verses endpoint, not the
@@ -719,7 +742,7 @@ change what gets built.
 |---|---|---|---|
 | 1 | **Spikes** | The ten items in §YVN19, including reading the platform terms. Endpoint existence and range support decide item 4's shape; the terms decide whether consumers may store at all | 1–1.5 d |
 | 2 | **Transport & container** | Internal `ServiceCollection`, typed client with `X-YVP-App-Key`, resilience pipeline and budget validation, disposal | 0.5 d |
-| 3 | **Catalogue** | Per-range merge, pagination with the §YVN7 rule 4 detection, the rule 2 parameter fallback, copyright retention, **atomic refresh** | 1–1.5 d |
+| 3 | **Catalogue** | Per-range merge, pagination with the §YVN7 rule 5 detection, the rule 2 parameter fallback, copyright retention, **atomic refresh** | 1–1.5 d |
 | 4 | **Lookup flow** | Shape-based routing across the passages and chapter-verses endpoints, the range strategy the spike settles, AngleSharp HTML→`Blocks`, the `format=text` fallback, content check | 1.5–2 d |
 | 5 | **Failure mapping** | §YVN12 and §YVN13, including 204, 406 and the 429 discriminator | 0.5 d |
 | 6 | **Tests** | The three projects in §YVN20 plus the inherited Conformance suite | 1–1.5 d |

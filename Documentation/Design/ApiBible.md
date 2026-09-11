@@ -97,7 +97,7 @@ public sealed class ApiBibleConfigurations
     public Dictionary<string, string> TranslationMap { get; set; } = new();// "NIV" -> bibleId override
     public bool UseOrgId { get; set; } = false;                            // §APB13 — never flip against stored keys
     public IList<string> ParseLanguages { get; set; } = new List<string> { "eng" };  // §ABS42.4
-    public int? MonthlyRequestAllowance { get; set; } = null;              // §APB15 rule 6; null = unknown
+    public int? MonthlyRequestAllowance { get; set; } = null;              // §APB15 rule 5; null = unknown
     public TimeSpan CatalogueCacheDuration { get; set; } = TimeSpan.FromHours(6);
     public int TimeoutSeconds { get; set; } = 20;                          // overall budget for one lookup
     public int PerAttemptTimeoutSeconds { get; set; } = 5;
@@ -335,6 +335,11 @@ would turn one metered request into several without the caller asking, against a
 
 ## APB11. Mapping the USX JSON tree (#1)
 
+**Everything in this section is [verified]** against the passages guide and the
+styling-scripture tutorial, and the payload below is a real response shape rather
+than an illustration: the node names, `attrs.style`, `attrs.verseId`, `verseCount`
+and `meta.fumsToken` are all as the upstream emits them.
+
 The `json` tree is an array of `para` nodes whose items are verse markers, text
 nodes and nestable `char` nodes:
 
@@ -430,7 +435,7 @@ Per §ABS6: scripture outcomes **return**, availability failures **throw**.
 | 2xx, all requested verses empty | `NotFound` (§APB9) |
 | 404 | `NotFound` |
 | 400 | `InvalidReference`, with the API's message. Documented as "the request was formatted incorrectly" [verified]. Our parser already validated the book code, so a 400 means the id we built is unacceptable to *this* Bible — e.g. a chapter out of range |
-| 403 | `TranslationNotSupported`. Documented as **"you are requesting a Bible that you don't have access to"** [verified] — a *per-Bible* licensing miss, which is an answer rather than an outage. Reachable whenever a `TranslationMap` override names an unlicensed bibleId; log a Warning naming it. **But see §APB15 rule 5 — this mapping carries the single largest risk in the design** |
+| 403 | `TranslationNotSupported`. Documented as **"you are requesting a Bible that you don't have access to"** [verified] — a *per-Bible* licensing miss, which is an answer rather than an outage. Reachable whenever a `TranslationMap` override names an unlicensed bibleId; log a Warning naming it. **But see §APB15 rule 6 — this mapping carries the single largest risk in the design** |
 | catalogue miss (catalogue loaded, abbreviation absent) | `TranslationNotSupported` |
 
 **Contrast 401**, documented as "we couldn't authenticate you" [verified]: the key
@@ -512,7 +517,7 @@ and reads the specific marker, `RetryAfter` and `QuotaResetsOn` off
    better is available, since the documented allowance is monthly [verified]. A
    guessed reset that is roughly right is more useful to a consumer's suspension
    logic than a null, and it is recorded as a guess in the message.
-6. **Inferring quota locally, because the upstream exposes nothing.** Searched and
+5. **Inferring quota locally, because the upstream exposes nothing.** Searched and
    confirmed absent: the error-codes page lists 202/400/401/403/404 and no 429; the
    rate-limiting page names no status code, no `Retry-After` and no headers; and the
    **OpenAPI definition documents only 200, 400, 401, 403 and 404 across every
@@ -552,7 +557,7 @@ and reads the specific marker, `RetryAfter` and `QuotaResetsOn` off
    and rules 3 and 5 stand alone. **Null is the shipped default** — a guessed
    allowance would produce confident wrong answers, which is worse than no answer.
 
-7. **The risk this design cannot yet close** (§SOL16 rule 1): if a disrupted plan
+6. **The risk this design cannot yet close** (§SOL16 rule 1): if a disrupted plan
    is signalled as **403** rather than 429, §APB14 maps it to
    `TranslationNotSupported` — a *returned* status. A consumer would then read an
    exhausted plan as "this provider doesn't carry that translation", fail over
@@ -581,8 +586,8 @@ an error.
 
 FUMS (Fair Use Management System) is ABS's usage reporting. It is a **licence
 condition, not analytics**: ABS licenses most of its translations from publishers
-and must report how much each is read. **Terms §14 makes it mandatory** — any
-webapp must implement FUMS to use API.Bible, unless prohibited by local law
+and must report how much each is read. **The Terms make it mandatory** — any webapp
+must implement FUMS to use API.Bible (§14), unless prohibited by local law (§3)
 [verified].
 
 **How it works.** Send `fums-version=3`; the response carries `meta.fumsToken`.
@@ -668,14 +673,23 @@ every stored usage carries an `IssuedAt` (§ABS29).
 
 ## APB17. Content recency — Terms §11 (#1)
 
-The Terms require that content stored offline be kept up to date with API.Bible,
-and set two figures [verified]:
+The Terms require that content stored offline be kept up to date with API.Bible.
+Four duties, all [verified], and the last two are **removal** duties that an
+earlier draft of this section missed entirely by enumerating only the first two:
 
-1. **Check at least every 30 days for content updates.**
+1. **Check at least every 30 days for content updates** (§11).
 2. **Apply an update as soon as reasonably possible, or within 24 hours of
-   receiving a request** from API.Bible or the IP content owner.
+   receiving a request** from API.Bible or the IP content owner (§11).
+3. **Delete or modify any content you hold when it is deleted or modified in
+   API.Bible** (§11). Refreshing is not enough on its own: a verse or an edition
+   that *disappears* upstream has to disappear downstream too, and a refresh loop
+   that only overwrites what it finds will silently keep serving withdrawn content.
+4. **Remove all content within 72 hours** when an IP licence terminates, when
+   API.Bible suspends you, or when a subscription is terminated or deactivated —
+   **an unpaid plan counts as deactivated** (§10.2) — and within 72 hours of any
+   removal request from API.Bible or an IP Holder (§10.3).
 
-This is contractual and binding. Four consequences:
+This is contractual and binding. Five consequences:
 
 1. **Stored scripture is a refreshable cache, not an archive.** A design that
    persists text indefinitely breaches §11 independently of FUMS.
@@ -687,7 +701,13 @@ This is contractual and binding. Four consequences:
    contract-level consequence; it is repeated here because this is the provider
    whose terms create it, and because it is the obligation most likely to be missed:
    a nightly sweep looks like compliance and is not.
-4. **The two FAQs disagree** — 14 days on scripture.api.bible, 30 on api.bible and
+4. **Storage needs a delete path, not just a refresh path** (duties 3 and 4). A
+   consumer that can only overwrite rows cannot honour either: it cannot drop a
+   verse withdrawn upstream, and it cannot purge everything within 72 hours of a
+   lapsed subscription. **Design the purge before the first row is written** — this
+   is the obligation most likely to be discovered only when it is already breached,
+   because nothing in normal operation exercises it.
+5. **The two FAQs disagree** — 14 days on scripture.api.bible, 30 on api.bible and
    in the Terms [contested]. **The Terms govern at 30.** A consumer may use 14 and
    satisfy both, and that remains the safe recommendation, but this document no
    longer claims 14 is *required*.
@@ -698,18 +718,29 @@ a new one (§APB21).
 
 ---
 
-## APB18. Cache size (#1)
+## APB18. Cache size and cache age (#1)
 
-**No consecutive-verse cache cap is stated in the Terms or the fair-use guide**
-[verified absence]. An earlier draft of this design asserted a 500-verse limit;
-that figure could not be sourced and is withdrawn rather than repeated.
+Two caching requests, both on API.Bible's own common-questions page [verified]:
 
-What *is* documented is the per-request cap: **200 verses** on a passage
-[verified], which bounds any single response this provider produces. A consumer
-storing whole books should raise the question with ABS rather than rely on a
-number this document cannot support (§APB23 rule 7).
+1. **"You can cache data, but we request that you limit it to fewer than 500
+   consecutive verses."** A real limit on how much contiguous scripture a consumer
+   may hold. The per-request 200-verse passage cap [verified] bounds any single
+   response this provider produces, so no one lookup can breach it — but a consumer
+   stitching adjacent passages into a stored book **can**, and this is the rule that
+   says not to.
+2. **"We also recommend that you clear your cache every 14 days or less."**
 
----
+Rule 2 settles the 14-vs-30 disagreement §APB1 flagged [contested] and §APB17
+rule 4 rules on: **30 days is the binding minimum from Terms §11; 14 days is ABS's
+own recommendation.** They are not in conflict — one is a floor in a contract, the
+other is advice in a FAQ — and a consumer refreshing on 14 days satisfies both.
+
+*An earlier draft of this document withdrew the 500-verse figure as unsourced,
+having looked only at the Terms and the fair-use guide. It is on the
+common-questions page, which also carries the plan figures §APB2 already cites —
+so the page was reachable and the withdrawal was an error, not a judgement call.
+Recorded because "we could not source it" is exactly the reasoning that should
+leave a trail when it turns out to be wrong.*
 
 ## APB19. Attribution — Terms §7 (#1)
 
@@ -760,7 +791,8 @@ before configuring one.
 
 ## APB21. Token lifetime (#1)
 
-No expiry rule exists in public form. Verified absent across the FUMS
+No expiry rule exists in public form **[verified absence]** — and unlike §APB18,
+this one was searched exhaustively rather than partially. Verified absent across the FUMS
 documentation generations, the Terms, the OpenAPI spec, both trackers, and ABS's
 official SDK. Two details make the silence load-bearing: **Terms §14 gives
 explicit lifetimes for other FUMS fields and none for the token**, and API.Bible
@@ -851,7 +883,7 @@ Four projects, per §ABS35's conventions. Three exist; `…Fums.Tests.Unit` does
 **`…ApiBible.Tests.Unit`** — no HTTP. Catalogue mapping as a pure function
 including duplicate abbreviations and `TranslationMap` precedence; USX JSON tree →
 `Blocks`; status and exception mapping tables as pure functions, including the 429
-throttle/quota discriminator **and the §APB15 rule 5 catalogue-aware 403 rule**;
+throttle/quota discriminator **and the §APB15 rule 6 catalogue-aware 403 rule**;
 constructor validation (null configurations, empty `ApiKey`, blank
 `DefaultTranslation`, a budget that does not close); `Name` equals `ProviderName`
 and the literal is unchanged.
@@ -878,7 +910,7 @@ only through `IBibleProvider` (§ABS35 rule 3).
    narrower response `id` → `Found` with `IsTruncated` and `RequestedUsfm`; a partial
    range → `MissingVerseIds`; **a 202 with an empty body → `NotFound`, not `Found`**
    (§APB9).
-5. **Quota inference** (§APB15 rule 6): with `MonthlyRequestAllowance` set low,
+5. **Quota inference** (§APB15 rule 5): with `MonthlyRequestAllowance` set low,
    requests past the allowance turn an ambiguous 403 into
    `ApiBibleQuotaExceededException`; the same 403 *under* the allowance stays
    `TranslationNotSupported` for an uncatalogued bibleId. Crossing 80% logs a
@@ -887,7 +919,7 @@ only through `IBibleProvider` (§ABS35 rule 3).
    `MonthlyRequestAllowance` null the discriminator is inert.
 6. Failure mapping: 404 → `NotFound`; 403 on an uncatalogued bibleId →
    `TranslationNotSupported`; **403 on a bibleId the cached catalogue contains →
-   `ApiBibleQuotaExceededException` logged at Error** (§APB15 rule 5); 401 →
+   `ApiBibleQuotaExceededException` logged at Error** (§APB15 rule 6); 401 →
    `ApiBibleAuthorizationException`; 429-short → `ApiBibleRateLimitException` with
    `RetryAfter`; 429-quota → `ApiBibleQuotaExceededException`; 5xx after the retry
    budget → `ApiBibleUnavailableException`. Every one asserted to carry its

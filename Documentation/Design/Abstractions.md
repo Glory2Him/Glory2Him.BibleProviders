@@ -262,7 +262,7 @@ base class from shipped packages without touching a single line of this contract
 a semantic — `IBibleRateLimitException` is an `IBibleDependencyException` by
 derivation, so a consumer handling only the broad case still catches it.
 
-### ABS7.1 The exceptions are the observability, and there are deliberately no counters
+### ABS7.1 The exceptions are the observability, and there are deliberately no counters (#1)
 
 This library exposes **no request counters, no metrics and no telemetry hooks**,
 and that is a decision rather than an omission. Both upstreams already meter usage
@@ -1756,7 +1756,7 @@ Until this section the design implied multilingual support while §ABS19's
 book-name table could not deliver it and §ABS16 pinned display to English. This
 section is the reconciliation.
 
-### ABS42.1 USFM is the language-neutral spine
+### ABS42.1 USFM is the language-neutral spine (#1)
 
 `MRK.3.1` is `MRK.3.1` in every language. Book **codes** are USFM's, not
 English's, so everything downstream of a successful parse — `UsfmReference`,
@@ -1767,7 +1767,7 @@ section. Only two edges are language-sensitive: **reading** a human reference, a
 That is what makes the rest of this cheap. Nothing about storage, routing,
 versification (§ABS17) or the provider contract changes.
 
-### ABS42.2 Parse language and display language are different, and resolve at different times
+### ABS42.2 Parse language and display language are different, and resolve at different times (#1)
 
 The distinction the design was missing:
 
@@ -1781,7 +1781,7 @@ cannot infer its language from the edition. But by the time `Reference` is
 rendered, the edition **is** known — so display can and should follow the
 scripture's own language.
 
-### ABS42.3 ISO 639-3 is the common currency
+### ABS42.3 ISO 639-3 is the common currency (#1)
 
 Both upstreams already speak it: API.Bible documents its catalogue `language`
 filter as an ISO 639-3 three-letter code [verified], and YouVersion's
@@ -1789,7 +1789,7 @@ filter as an ISO 639-3 three-letter code [verified], and YouVersion's
 throughout — configuration, parse scope, and the `Language` field in §ABS42.6 —
 and never invents a parallel scheme or uses two-letter codes.
 
-### ABS42.4 Parsing is scoped to a declared set, never "try every language"
+### ABS42.4 Parsing is scoped to a declared set, never "try every language" (#1)
 
 ```csharp
 public static bool TryParseLoose(string input, string? defaultTranslation,
@@ -1810,7 +1810,7 @@ reviewable, and testable.
 The preference-list shape is deliberately the same as YouVersion's own
 first-range-wins model (§YVN7 rule 1), so a deployment configures one idea, not two.
 
-### ABS42.5 Display renders in the edition's language, and the §ABS16 invariant survives
+### ABS42.5 Display renders in the edition's language, and the §ABS16 invariant survives (#1)
 
 `RenderReference` gains the resolved edition's language:
 
@@ -1836,7 +1836,7 @@ user interface: a Spanish-speaking reader looking at a KJV passage is reading
 A consumer wanting a UI-language label has both `Usfm` and `Language` and can
 render its own.
 
-### ABS42.6 `ScripturePassage` carries the language and its script direction
+### ABS42.6 `ScripturePassage` carries the language and its script direction (#1)
 
 Two additions, both `required` and both sourced from the catalogue:
 
@@ -1860,7 +1860,7 @@ fact's clothing.
 passage (§ABS23), so the default rendition is correct without the consumer doing
 anything.
 
-### ABS42.7 Book-name tables are data, and English is the only one that ships
+### ABS42.7 Book-name tables are data, and English is the only one that ships (#1)
 
 One table per ISO 639-3 code: full names, common abbreviations, and the
 chapter/verse separator convention. English ships in the box. **Additional
@@ -1873,7 +1873,7 @@ does not suggest across books *within* itself. Cross-language collisions cannot
 occur by construction, because §ABS42.4 forbids matching outside the declared
 scope.
 
-### ABS42.8 What this does not do
+### ABS42.8 What this does not do (#1)
 
 - **No translation of scripture text.** Text is served in the edition's language,
   as fetched. This library never translates.

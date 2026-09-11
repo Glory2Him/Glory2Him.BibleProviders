@@ -93,6 +93,7 @@ namespace Glory2Him.BibleProviders.Infrastructure.Services
                                         foreach ($project in $projects) {
                                           Write-Host "Running tests for: $($project.FullName)"
                                           dotnet test $project.FullName --no-build --verbosity normal
+                                          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
                                         }
                                         """
                                 },
@@ -107,6 +108,7 @@ namespace Glory2Him.BibleProviders.Infrastructure.Services
                                         foreach ($project in $projects) {
                                           Write-Host "Running tests for: $($project.FullName)"
                                           dotnet test $project.FullName --no-build --verbosity normal
+                                          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
                                         }
                                         """
                                 }
