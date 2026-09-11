@@ -180,6 +180,7 @@ else {
         }
 
         $results.youVersion = @{
+            languageRangesSpelling = $spelling   # YVN7 rule 2 - the fact this spike exists to settle
             total    = $versions.Count
             hasWebUs = [bool]$web
             versions = @($versions | ForEach-Object { @{ id = $_.id; abbreviation = $_.abbreviation; title = $_.title } })

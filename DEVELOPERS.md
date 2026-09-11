@@ -798,6 +798,15 @@ than mechanism:
 `README.md` has the full setup checklist, including the parts of this that are
 one-off.
 
-Two things will not exist unless someone builds them, here or anywhere:
-**nothing validates design citations**, and **nothing reads the `Model - Effort`
-label to configure a session**.
+One thing will not exist unless someone builds it: **nothing reads the
+`Model - Effort` label to configure a session**.
+
+**Design citations are validated.** Run it before you push a design change:
+
+```
+powershell -ExecutionPolicy Bypass -File .\Documentation\Check-Design.ps1
+```
+
+It checks six things and its header lists, just as plainly, the three it does
+**not** — chiefly whether an obligation in a design section reached the README
+§SOL19.3 assigns it to, which is the class that has caused the most rework here.

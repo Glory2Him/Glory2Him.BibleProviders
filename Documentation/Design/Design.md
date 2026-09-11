@@ -47,9 +47,17 @@ decoration.** Three lists in these documents — §APB15, §APB17 and §YVN7 —
 renumbered in place during drafting, and every citation into them silently began
 pointing at a *different rule that still existed*. That is worse than a dangling
 reference: `§APB17 rule 4` resolves, the number is real, it simply means something
-else now, so no validator catches it and no reader doubts it. One of those
-mis-citations sent a developer at the wrong mitigation for the most dangerous
-unknown in the design.
+else now, and no reader doubts it. One of those mis-citations sent a developer at
+the wrong mitigation for the most dangerous unknown in the design.
+
+~~So no validator catches it.~~ **`Documentation/Check-Design.ps1` now does**, by
+diffing rule *text* against the base ref and failing when a rule that already
+existed changes number. It was written after this class had recurred **four**
+times — §APB15, §APB17, §YVN7 above, then §ABS36 and §YVN18 on the decisions branch.
+**The convention did not stop it; a human sweep did not stop it three times
+running; a diff stops it in under a second.** What the script still cannot see is
+whether an obligation reached the README that §SOL19.3 assigns it to, which is the
+other recurring class.
 
 So: **numbered rules are append-only.** A new rule goes at the end of its list,
 never in the middle; a dead rule is struck through in place and keeps its number,
@@ -101,7 +109,12 @@ time a section is touched.
 the old number still resolve by grep. Two cautions worth inheriting rather than
 rediscovering: resolving is not the same as being right — the annotation says
 nothing about whether the section was the correct one to cite originally; and
-nothing validates citations, so the annotation convention is the whole guarantee.
+**`Documentation/Check-Design.ps1` validates that a cited section and a cited
+*rule* both exist**, so a dangling `§EVN99` or a `§EVN7 rule 44` now fails a gate. (Those two use the
+reserved `EVN` example prefix on purpose — written with a real prefix they would
+fail the very check they describe, which is how this sentence was first drafted.)
+It cannot tell that a citation resolving to a real rule names the *wrong* one —
+for that the `(formerly §X)` annotation convention is still the whole guarantee.
 
 **Provenance tags.** These documents describe two upstreams this repository does
 not control, so a claim's evidence is part of the design:
@@ -888,7 +901,9 @@ are **decisions, not spikes** — no amount of upstream research settles them.
    merely repointed.
 
    Kept as a numbered rule rather than deleted, because what it records is general
-   and will recur: **a relocated rule goes stale, and nothing validates a citation.**
+   and will recur: **a relocated rule goes stale.** ~~and nothing validates a
+   citation.~~ Citations are validated now (`Documentation/Check-Design.ps1`);
+   *relocation* still is not, because a repointed citation resolves.
 
 3. ~~**Where does the consuming application's translation list come from?**~~
    **Settled: `GetTranslationsAsync` on `IBibleProvider`**, async, served from the
@@ -1070,7 +1085,7 @@ In this order, because it is the order a consumer needs it:
 | **Abstractions** | The two-channel rule (§ABS6) — returns for scripture outcomes, throws for availability — and the marker interfaces, because a consumer's `catch` blocks depend on it. The composition-root sample and its three traps (§ABS28) |
 | **ApiBible** | FUMS in full: it is a licence condition, not analytics, and the consumer reports on **display** (§APB16). The content-recency duties, the **24-hour** clock on a written removal request and the **72-hour** clock on termination — they are different events (§APB17 duties 4 and 5). The Starter plan's **1,000 Monthly End Users** ceiling (§APB29.1). The Terms §12 security duties (§APB26.1). The non-commercial definition (§APB20) — broad enough that an ad-supported surface is commercial |
 | **ApiBible.Fums** | That it deliberately does not reference the provider package, and why (§SOL2 rule 6). The browser and server paths, and the four silent browser failures |
-| **YouVersion** | The licence-acceptance trap first, because it is the most common support question and looks identical to a translation that does not exist (§YVN17). That storage is **permitted and encouraged** — express grant, no refresh timer, no usage reporting (§YVN14.9, §YVN14.11) |
+| **YouVersion** | The licence-acceptance trap first, because it is the most common support question and looks identical to a translation that does not exist (§YVN17). That storage is **permitted and encouraged** — express grant, no refresh timer (§YVN14.9, §YVN14.11). **Biblica's 48-hour removal clock** and **Lockman's end-of-February usage report**, because "no timer" is not "no duty" (§YVN14.10 rules 9 and 13). Lockman's **clickable link to lockman.org** and per-verse linking tag, naming all four editions it covers |
 | **Abstractions.Conformance** | How to inherit it — one class, one override (§ABS38) |
 
 ### SOL19.4 Rules (#3)

@@ -116,7 +116,7 @@ A translation you have not accepted behaves exactly like one that does not exist
 `TranslationNotSupported`, with nothing to distinguish the two.
 
 Acceptance is **per publisher**, not per version — one Biblica agreement covers 69
-Bibles including NIV, one Lockman agreement covers NASB and AMP. They live under
+Bibles including NIV, one Lockman agreement covers NASB, AMP, NBLA and LBLA. They live under
 **Platform → Licensing** in the portal, and each row links the agreement itself.
 
 So `TranslationNotSupported` from this provider means *"not available to this app
@@ -139,7 +139,7 @@ endpoint you called. **The API does not tell you which publisher a translation
 belongs to** — the portal groups them, the catalogue does not — so classify them in
 configuration and default anything that leaves your application to *off*.
 
-| | Public Domain &<br/>Creative Commons<br/><sub>361 Bibles</sub> | Biblica<br/><sub>NIV, NIrV — 69</sub> | Lockman<br/><sub>NASB, AMP — 5</sub> | Other publishers<br/><sub>1,051</sub> |
+| | Public Domain &<br/>Creative Commons<br/><sub>361 Bibles</sub> | Biblica<br/><sub>NIV, NIrV — 69</sub> | Lockman<br/><sub>NASB, AMP, NBLA, LBLA — 5</sub> | Other publishers<br/><sub>1,051</sub> |
 |---|:---:|:---:|:---:|:---:|
 | Look it up and display it in your app | ✅ | ✅ | ✅ | ✅ |
 | Store and cache the text | ✅ | ✅ | ✅ | ✅ |
@@ -161,12 +161,12 @@ configuration and default anything that leaves your application to *off*.
 | Reproduce the text word-for-word, unaltered | **required** |
 | Update stored text when the publisher asks | **required** |
 | Remove content within **48 hours** of a written request — Biblica (NIV, NIrV) | **required** |
-| A conspicuous clickable link to lockman.org, plus a per-verse tag that itself links | **required** <sub>NASB, AMP only</sub> |
+| A conspicuous clickable link to lockman.org, plus a per-verse tag that itself links | **required** <sub>NASB, AMP, NBLA, LBLA</sub> |
 | Encrypt against unauthorised onward-supply | **required** |
 | Keep your app key confidential, report its loss | **required** |
-| Report annually to Lockman by end of February | **required** <sub>NASB, AMP only</sub> |
+| Report annually to Lockman by end of February | **required** <sub>NASB, AMP, NBLA, LBLA</sub> |
 
-**Biblica's 48-hour removal clock is the one deadline on this upstream.** There is
+**Biblica's 48-hour removal clock is the one removal deadline on this upstream** — Lockman's end-of-February usage report is the other dated duty. There is
 no periodic sweep to build, but there is a delete path — and for NASB and AMP,
 Lockman requires the attribution to be a *clickable link to lockman.org* and each
 verse tag to link as well, which is stricter than displaying a copyright string.
@@ -263,10 +263,16 @@ prefilled copyright table: it is legal text about third-party intellectual
 property, a NuGet package cannot be corrected in place, and a row that went stale
 two releases ago looks exactly as authoritative as one that did not.
 
-### Usage reporting — none owed
+### Usage reporting — none owed, except Lockman
 
 Every passage carries `Usage.Obligation == NotRequired`: a positive assertion that
-nothing is owed, not an absence. There is no FUMS equivalent here.
+nothing is owed, not an absence. There is no FUMS equivalent here — **no per-display
+reporting on any version**.
+
+**The exception is Lockman**, and it is annual rather than per-display: if you serve
+NASB, AMP, NBLA or LBLA you owe Lockman a usage report **by the end of February**
+each year. That duty is not visible on a passage, so nothing in this package can
+remind you of it.
 
 One narrower duty does exist — "You shall enable and maintain any usage reporting
 mechanisms built into YV IP." The REST API ships none, so there is nothing to keep

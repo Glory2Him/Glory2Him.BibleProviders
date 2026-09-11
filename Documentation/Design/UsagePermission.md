@@ -42,7 +42,7 @@ All [verified] from the Terms and the common-questions page (§APB17, §APB18).
 | How much? | **Fewer than 500 consecutive verses** is requested. The 200-verse cap on one passage keeps a single request inside it; stitching adjacent passages into a stored book does not |
 | Must anything be deleted? | **Yes.** "You must delete or modify any content you have if it is deleted or modified in API.Bible" (§11). Refreshing is not enough — withdrawn content must disappear |
 | On termination? | **72 hours** to remove everything, on licence termination, suspension, or a terminated *or deactivated* subscription. **An unpaid plan counts as deactivated** (§10.2) |
-| On request? | **72 hours**, from ABS or the rights holder (§10.3) |
+| On request? | **24 hours** to delete, on a *written* request from ABS or the rights holder — Terms §13, including where content "gains protected status" (§APB17 duty 5). §10.3's 72 hours governs a *termination* event, not a content request. **Design for 24** |
 | Urgent corrections? | **24 hours** to apply an update once requested (§11) |
 
 **Two of these need a mechanism a refresh loop does not provide** — the deletion
@@ -61,11 +61,14 @@ All [verified] from the nine publisher agreements (§YVN14.5, §YVN14.9).
 | For how long? | **For the term of the agreement.** No staleness ceiling and no refresh cadence |
 | Refresh duty | **Update on request**, not on a timer. Biblica's Section VI obliges updates "as may be requested by LICENSOR"; the common template requires no edits and a duty to *notify* the publisher if text looks wrong |
 | How much? | No storage cap. **But Biblica caps *display* at two chapters or twenty-five verses, whichever is greater, per user at any given time** — a display limit, not a storage one, and the tightest constraint in this design |
+| On removal request? | **Biblica: 48 hours** on written request (§YVN14.10 rule 9). The only removal deadline on this upstream — but a real one, binding 69 Bibles including NIV and NIrV |
 | On termination? | Rights cease. Biblica's term is **two years, auto-renewing**; Lockman's ends on **thirty days' notice** from Lockman *or YouVersion* |
 | Anything else? | Industry-standard **encryption** against unauthorised supply, onward-supply or reproduction; **all footnotes** displayed and accessible (§YVN14.6) |
 
 **So the two upstreams differ in kind.** API.Bible bounds *staleness* and demands
-a timer; YouVersion bounds *the relationship* and demands responsiveness. A
+a timer; YouVersion bounds *the relationship* and demands responsiveness. **Neither
+lets a consumer skip a delete path** — API.Bible owes 24 hours on a written request,
+Biblica 48. A
 consumer serving both needs a forced-refresh path for either, and a 30-day sweep
 for API.Bible only.
 
@@ -341,19 +344,19 @@ the authoritative per-Bible answer is the `copyright` field returned by
 | Translation | Rights | Look&nbsp;up | Display<br/>on a site | **Send on**<br/><sub>email · WhatsApp · SMS</sub> | Print | Commercial |
 |---|---|:---:|:---:|:---:|:---:|:---:|
 | **WEB** — World English Bible | Public domain (dedicated) | ✅ | ✅ | ✅ | ✅ | ⚠️ <sub>plan, not licence — see below</sub> |
-| **WEBBE / WMB** — British and Messianic editions | Public domain (dedicated) | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **BSB** — Berean Standard Bible | Public domain (dedicated) | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **ASV** — American Standard Version 1901 | Public domain (expired) | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **YLT** — Young's Literal Translation 1898 | Public domain (expired) | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **DARBY** — Darby Bible 1890 | Public domain (expired) | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **DRA** — Douay-Rheims, American edition 1899 | Public domain (expired) | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **GNV** — Geneva Bible 1599 | Public domain (expired) | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **WBT** — Webster's Bible 1833 | Public domain (expired) | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **JPS 1917** — Jewish Publication Society | Public domain (expired) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **WEBBE / WMB** — British and Messianic editions | Public domain (dedicated) | ✅ | ✅ | ✅ | ✅ | ⚠️ <sub>plan, not licence — see below</sub> |
+| **BSB** — Berean Standard Bible | Public domain (dedicated) | ✅ | ✅ | ✅ | ✅ | ⚠️ <sub>plan, not licence — see below</sub> |
+| **ASV** — American Standard Version 1901 | Public domain (expired) | ✅ | ✅ | ✅ | ✅ | ⚠️ <sub>plan, not licence — see below</sub> |
+| **YLT** — Young's Literal Translation 1898 | Public domain (expired) | ✅ | ✅ | ✅ | ✅ | ⚠️ <sub>plan, not licence — see below</sub> |
+| **DARBY** — Darby Bible 1890 | Public domain (expired) | ✅ | ✅ | ✅ | ✅ | ⚠️ <sub>plan, not licence — see below</sub> |
+| **DRA** — Douay-Rheims, American edition 1899 | Public domain (expired) | ✅ | ✅ | ✅ | ✅ | ⚠️ <sub>plan, not licence — see below</sub> |
+| **GNV** — Geneva Bible 1599 | Public domain (expired) | ✅ | ✅ | ✅ | ✅ | ⚠️ <sub>plan, not licence — see below</sub> |
+| **WBT** — Webster's Bible 1833 | Public domain (expired) | ✅ | ✅ | ✅ | ✅ | ⚠️ <sub>plan, not licence — see below</sub> |
+| **JPS 1917** — Jewish Publication Society | Public domain (expired) | ✅ | ✅ | ✅ | ✅ | ⚠️ <sub>plan, not licence — see below</sub> |
 | **KJV / KJVA** — King James Version | Public domain **in the US**; **Crown copyright in the UK** | ✅ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
-| **OEB** — Open English Bible | CC0 | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **FBV** — Free Bible Version | **CC BY-SA 4.0** | ✅ | ✅ | ✅ <sub>share-alike follows it</sub> | ✅ | ✅ |
-| **ULB / UST** — unfoldingWord | **CC BY-SA 4.0** | ✅ | ✅ | ✅ <sub>share-alike follows it</sub> | ✅ | ✅ |
+| **OEB** — Open English Bible | CC0 | ✅ | ✅ | ✅ | ✅ | ⚠️ <sub>plan, not licence — see below</sub> |
+| **FBV** — Free Bible Version | **CC BY-SA 4.0** | ✅ | ✅ | ✅ <sub>share-alike follows it</sub> | ✅ | ⚠️ <sub>plan, not licence — see below</sub> |
+| **ULB / UST** — unfoldingWord | **CC BY-SA 4.0** | ✅ | ✅ | ✅ <sub>share-alike follows it</sub> | ✅ | ⚠️ <sub>plan, not licence — see below</sub> |
 | **BBE** — Bible in Basic English 1949 | **[contested]** — treated as PD in the US, disputed in the UK | ✅ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
 | *Any* CC BY-**NC** or CC BY-**ND** edition | Restricted Creative Commons | ✅ | ✅ | ❌ <sub>named exclusion, §9.9(a)</sub> | ⚠️ | ❌ |
 
@@ -561,7 +564,7 @@ public domain.** Full clause and analysis at §APB27; this is the consumer readi
 **Rights in the King James Version in the United Kingdom are vested in the Crown**
 — perpetual letters patent, not an expiring copyright. API.Bible's Terms §9.8
 therefore grants **no licence at all** for the KJV within GB, the Isle of Man,
-Jersey, Guernsey and thirteen named British Overseas Territories, and says so
+Jersey, Guernsey and twelve named British Overseas Territories, and says so
 "**irrespective of** whether your use is Commercial Use or Non-Commercial Use,
 whether any fee is charged, **whether the content is identified as Public
 Domain**, and irrespective of format" [verified].
@@ -618,7 +621,7 @@ strong on opposite ones.**
 | | Store it | Send it on |
 |---|---|---|
 | **API.Bible** | Permitted, **with machinery**: 30-day recency, delete-on-withdrawal, 72-hour purge, 24-hour removal on request (§USE2, §APB28) | **Expressly permitted in writing** for public domain, CC BY and CC BY-SA — §9.9(a) |
-| **YouVersion** | Permitted, **and encouraged**: express "store" grant in the publisher agreements, "Cache responses when possible" in the docs, **no timer, no purge clock, no FUMS** (§USE3, §YVN14.9, §YVN14.11) | **No express permission anywhere.** For publisher content the grant is bounded to "digital display in Your Application" and forecloses it (§USE5). For the public-domain set, the platform grants no rights in the text at all — your right to send comes from the work's own dedication (§USE6.4) |
+| **YouVersion** | Permitted, **and encouraged**: express "store" grant in the publisher agreements, "Cache responses when possible" in the docs, **no refresh timer and no FUMS** — but **Biblica's 48-hour removal clock** still binds, so a delete path is owed (§USE3, §YVN14.9, §YVN14.11) | **No express permission anywhere.** For publisher content the grant is bounded to "digital display in Your Application" and forecloses it (§USE5). For the public-domain set, the platform grants no rights in the text at all — your right to send comes from the work's own dedication (§USE6.4) |
 
 **So the instinct is half right, and the half that is right is the important
 half.** YouVersion is materially better for *storing*. It is **not** better for
@@ -649,7 +652,7 @@ to keep enabled on the REST API.
 **Add the retention machinery to the same ledger.** Emailed content on API.Bible
 must have been no more than 30 days stale when it left (§11), the stored copy
 behind it needs a 30-day sweep and a delete path, and a lapsed or unpaid plan
-obliges removal within 72 hours. YouVersion imposes none of those — its duty is
+obliges removal within 72 hours on termination and **24 hours on a written request**. YouVersion imposes no *timer*, and **Biblica still obliges removal within 48 hours of a written request** — its duty is
 update-on-request (§USE3).
 
 ### USE12.3 What argues the other way (#3)

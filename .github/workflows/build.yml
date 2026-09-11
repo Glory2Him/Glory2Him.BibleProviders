@@ -20,6 +20,12 @@ jobs:
       uses: actions/setup-dotnet@v5
       with:
         dotnet-version: 10.x
+    - name: Check Design Consistency
+      run: >-
+        git fetch --no-tags --depth=1 origin ${{ github.base_ref || 'main' }}
+
+        ./Documentation/Check-Design.ps1 -BaseRef FETCH_HEAD
+      shell: pwsh
     - name: Restore
       run: dotnet restore
     - name: Build

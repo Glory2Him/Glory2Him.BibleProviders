@@ -1197,7 +1197,7 @@ exception mapping tables including 204 → `NotFound` and 406 →
 only through `IBibleProvider` (§ABS35 rule 3).
 
 1. **`X-YVP-App-Key` present on every outbound request, and the key value absent
-   from every log the test captures** (§SOL14 rule 4).
+   from every log the test captures** (§SOL14 rule 5).
 2. Catalogue: a two-page response is exhausted and merged; the language filter is
    sent as `language_ranges[]` with literal brackets; **a 422 naming the field
    triggers exactly one retry with the bare spelling and a Warning** (§YVN7 rule 2);

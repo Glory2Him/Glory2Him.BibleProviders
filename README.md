@@ -169,7 +169,7 @@ served it. Full detail and the clauses behind every mark:
 
 ### YouVersion
 
-| | Public Domain &<br/>Creative Commons<br/><sub>361 Bibles</sub> | Biblica<br/><sub>NIV, NIrV — 69</sub> | Lockman<br/><sub>NASB, AMP — 5</sub> | Other publishers<br/><sub>1,051</sub> |
+| | Public Domain &<br/>Creative Commons<br/><sub>361 Bibles</sub> | Biblica<br/><sub>NIV, NIrV — 69</sub> | Lockman<br/><sub>NASB, AMP, NBLA, LBLA — 5</sub> | Other publishers<br/><sub>1,051</sub> |
 |---|:---:|:---:|:---:|:---:|
 | Look it up and display it in your app | ✅ | ✅ | ✅ | ✅ |
 | Store and cache the text | ✅ | ✅ | ✅ | ✅ |
@@ -216,7 +216,11 @@ is fully permitted for public-domain translations.**
 > bars commercial use on a non-commercial plan, and "API content" includes
 > public-domain content. **A free-Starter app running advertising while serving WEB
 > is in breach** even though WEB is public domain. On YouVersion the position is
-> different again — permitted with a disclosure, except Lockman.
+> different again: permitted with a disclosure for most publishers, **barred for
+> Lockman** (NASB, AMP, NBLA, LBLA — no access charges or membership fees), **per
+> each work's own licence** for the public-domain and Creative Commons set, and
+> **unsourced for Biblica** — this repository could not find a fee clause either
+> way, so re-read that agreement before charging for an NIV application.
 
 **So: for anything that leaves your app, reach for WEB or BSB.** Both are modern,
 dedicated to the public domain by their translators, and carry neither a
@@ -240,11 +244,15 @@ The short version; each provider's README carries the detail and the figures.
   condition, not analytics. One fetch can produce a thousand displays, or none.
 - **Stored scripture is a refreshable cache, not an archive.** API.Bible requires a
   check at least every 30 days, deletion when content is withdrawn upstream, and
-  removal within 72 hours of a request or a lapsed subscription.
+  removal within **24 hours of a written request** (Terms §13) and within 72
+  hours of a lapsed or terminated subscription (Terms §10) — different clocks for
+  different events.
 - **Storing YouVersion scripture is permitted, and the platform encourages it.**
   The publisher agreements grant "store" expressly and the developer docs list
   "Cache responses when possible" first among their best practices. There is **no
-  refresh timer, no purge clock and no usage reporting** on that upstream — the
+  refresh timer and no usage reporting** on that upstream — but **Biblica gives you
+  48 hours to remove content on written request**, and Lockman wants a usage report
+  by the end of February each year, so "no timer" is not "no duty". The
   duty is to update on request. Its platform terms grant no rights in the Bible
   text themselves, so the right comes from the per-version licence you accept in
   their portal.

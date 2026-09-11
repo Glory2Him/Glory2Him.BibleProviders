@@ -1772,11 +1772,21 @@ third-party provider can take the same medicine (§SOL7 rule 3), and carries no
     to NuGet** and §YVN21 enrols the YouVersion provider in it, so the rule as
     written meant a provider that passes the inherited test breaches eight
     publisher agreements, and one that complies fails a test third parties run.
-    **`Notes` never being null still holds** and is covered by rule 10's
-    never-null discipline; the emptiness half is what goes.
+    **`Notes` never being null still holds — as rule 14, not as part of any
+    existing rule.** An earlier draft handed it to rule 10, which governs
+    `ProviderConsole` on a *thrown exception* and is the one rule in this list that
+    expressly sanctions a null (§ABS7.1 rule 3, "Null is a legitimate answer"). The
+    guarantee would have been routed to a rule permitting its opposite.
 13. A configured `TranslationMetadata` entry backfills a `Found` passage whose
     upstream attribution was absent, and does **not** displace one that was present
     (§ABS45.1).
+14. **`Notes` is never null on a `Found` result** — an empty collection where a
+    provider carries no footnotes, never `null`. Split out of the struck rule 12,
+    which also required it to be *empty*; that half is gone because §ABS39 rule 3
+    makes footnotes a precondition of serving YouVersion content. **The surviving
+    half needs its own rule**: `ScripturePassage.Notes` is `init` with a default
+    rather than `required`, so nothing in the type system stops a provider
+    assigning null.
 
 ---
 

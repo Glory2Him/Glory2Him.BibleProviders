@@ -276,9 +276,12 @@ means the same verse everywhere.
 **That guarantee ends the moment you set `DefaultTranslation` on one provider and
 not the other.** Do that and the old hazard returns: the same string can resolve to
 different translations, and in Psalms, Joel and Malachi those editions may number
-verses differently. The abstraction **logs at Warning at construction** when the
-providers it was handed disagree, so at least it is not silent. `Translation` and
-`Usfm` on the result are always the authoritative record of what was fetched.
+verses differently. **Nothing detects that for you** — the abstraction is handed a
+list of `IBibleProvider`, and a provider's default translation is not on that
+interface, so no check is possible without putting a member on the contract to
+power a diagnostic. If you set `DefaultTranslation` on one provider, set it on
+every provider you fail over between. `Translation` and `Usfm` on the result are
+always the authoritative record of what was actually fetched.
 
 ---
 
@@ -307,8 +310,9 @@ Three traps you cannot derive from the types:
 2. **A container disposes only what it creates.** Construct *inside* the factory.
    Registering a pre-built instance leaks every provider's HTTP handler pool.
 3. **Duplicate provider names throw at construction**, not at first use. Providers
-   whose `DefaultTranslation` values *disagree* do not throw, but are logged at
-   Warning — an unqualified reference then means different things per provider.
+   whose `DefaultTranslation` values *disagree* are **not** detected at all — an
+   unqualified reference then quietly means different things per provider. Keep
+   them identical, or qualify every reference at the call site.
 
 Disposing the abstraction disposes the providers it was handed.
 

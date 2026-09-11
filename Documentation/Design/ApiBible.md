@@ -820,7 +820,7 @@ every stored usage carries an `IssuedAt` (§ABS29).
 ## APB17. Content recency — Terms §11 (#1)
 
 The Terms require that content stored offline be kept up to date with API.Bible.
-Four duties, all [verified], and the last two are **removal** duties that an
+Five duties, all [verified], and the last three are **removal** duties that an
 earlier draft of this section missed entirely by enumerating only the first two:
 
 1. **Check at least every 30 days for content updates** (§11).
@@ -1089,7 +1089,7 @@ are not repeated.
    `content-type=json` verse, a red-letter passage from a red-letter-capable
    edition, and a `/search` response for a reference-shaped query.
 7. **Ask ABS** (support@americanbible.org): is there a consecutive-verse cache cap
-   (§APB18)? Which refresh figure governs, 14 or 30 days (§APB17 rule 5)?
+   (§APB18)? Which refresh figure governs, 14 or 30 days (§APB17 consequence 5)?
 8. **Ask ABS:** is an undocumented age cut-off applied to stored tokens during log
    processing (§APB21)? Is `&ts=` honoured from a third-party server?
 
@@ -1153,7 +1153,7 @@ only through `IBibleProvider` (§ABS35 rule 3).
 9. A cancelled token aborts in flight and surfaces `OperationCanceledException`,
    not an exception type; a **provider-side timeout** with the caller's token
    unsignalled surfaces `ApiBibleUnavailableException` (§ABS13 rule 3).
-10. **The API key appears in no captured log** (§SOL14 rule 4).
+10. **The API key appears in no captured log** (§SOL14 rule 5).
 
 **`…ApiBible.Tests.Integrations`** — the live API. Credentials from
 `APIBIBLE_API_KEY` only; every fact guarded so the suite is **skipped, not
@@ -1270,7 +1270,7 @@ rule 5) — but both bind the consuming application.
 ### APB26.4 What this does not settle (#3)
 
 **~~§13, "Updates and Removals", has not been read in full~~ — **read, §APB28**.** §APB17 records the
-removal duties from §10 and §11; whether §13 adds to them is unknown. Read it
+removal duties from §10 and §11; whether §13 adds to them is **now known — it does, §APB28**. Read it
 before relying on §APB17 as a complete statement of the removal obligations —
 §APB18's history is the reason to check rather than assume.
 
@@ -1403,7 +1403,7 @@ Two things §APB17 did not record:
 2. **24 hours on written request, against §10's 72 hours on termination.** They
    are different clocks for different events. ~~§APB17 now carries both.~~ **It did
    not** — §APB17 was never amended and still gave 72 hours for "any removal
-   request", which the packed README then published. **§APB17 duty 6 now carries
+   request", which the packed README then published. **§APB17 duty 5 now carries
    the 24-hour clock**, appended rather than inserted. The tighter one governs a
    content-specific request.
 

@@ -69,7 +69,7 @@ An unqualified reference is a first-class input, and the default silently fills 
 gap — so the shipped value decides whether a freshly-keyed installation works at
 all.
 
-**The World English Bible is in the open-access set**, so it resolves on a new key
+**The World English Bible is in the open-access set** — *unconfirmed against a live key; see the note at the end of this README* — so it resolves on a new key
 without spending one of the three licensed-Bible slots, and it is **public domain
 by dedication**: no licence to accept, no territorial restriction, and it may be
 sent on by email or messaging. Unusually for a default in this library, it is
