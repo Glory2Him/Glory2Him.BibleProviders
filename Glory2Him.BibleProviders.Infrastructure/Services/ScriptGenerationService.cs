@@ -52,11 +52,11 @@ namespace Glory2Him.BibleProviders.Infrastructure.Services
 
                             Steps = new List<GithubTask>
                             {
-                                new GithubTask
-                                {
-                                    Name = "Enable long paths for Git",
-                                    Run = "git config --system core.longpaths true"
-                                },
+                                // No "git config --system core.longpaths" step: core.longpaths is a
+                                // Windows-only Git setting for the MAX_PATH limit, this job runs on
+                                // ubuntu-latest where Git ignores it, and --system cannot write
+                                // /etc/gitconfig without root, so the step failed the build at step 1.
+                                // Restore it only alongside a Windows runner.
 
                                 new CheckoutTaskV5
                                 {

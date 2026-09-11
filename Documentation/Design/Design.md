@@ -418,11 +418,12 @@ The pipeline's shape imposes constraints this design has to live with:
 5. **Publishing hygiene:** SourceLink and symbol packages, so a consumer can step
    into the code while debugging. `--include-symbols` is already on the pack step.
 
-### Two packaging rules, each fixed once and easy to undo
+### Three release-path rules, each fixed once and easy to undo
 
-Both were live defects when this document was written. Both are fixed. They stay
-here as **rules** rather than as history, because each was a single missing line
-that nothing in the build will complain about if it goes missing again.
+All three were live defects when this document was written, and all three are
+fixed. They stay here as **rules** rather than as history, because each was a
+single line — present or absent — that nothing in the build will complain about if
+it regresses.
 
 6. **Every project that does not ship carries `<IsPackable>false</IsPackable>`.**
    `dotnet pack` at solution scope packs every packable project, and the push step
@@ -448,6 +449,22 @@ that nothing in the build will complain about if it goes missing again.
    **The fix belongs in the generator, and the YAML is regenerated from it**
    (§SOL7 preamble). A hand-edit to `build.yml` would be silently reverted by the
    next person who runs the tool.
+
+8. **No step assumes a Windows runner while `RunsOn` is `UbuntuLatest`.** The
+   generated build began with `git config --system core.longpaths true`, which
+   failed the job at its first step: `core.longpaths` is a Windows-only Git setting
+   for the `MAX_PATH` limit, Git on Linux ignores it, and `--system` cannot write
+   `/etc/gitconfig` without root.
+
+   **It had never fired before.** The `Build` workflow had never run on any branch —
+   `main` had only ever run `Labels` — so a workflow that could not reach its second
+   step sat green-by-absence in the repository from the day it was generated. That is
+   the more useful lesson than the fix: **a required check that has never executed is
+   not a passing check**, and the first PR to trigger one is doing the repository a
+   favour rather than breaking it.
+
+   Restore the step only alongside a Windows runner; the generator carries a comment
+   saying so.
 
 ---
 
