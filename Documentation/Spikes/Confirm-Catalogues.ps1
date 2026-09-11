@@ -117,11 +117,32 @@ if (-not $env:YOUVERSION_APP_KEY) {
     $results.youVersion = @{ skipped = $true }
 }
 else {
-    $uri = "https://api.youversion.com/v1/bibles?language_ranges=$Language"
+    # YVN7 rule 2: send the bracketed spelling first; on a 422 naming the field,
+    # retry once with the bare spelling and say so. Two upstream pages disagree.
+    $headers = @{ 'X-YVP-App-Key' = $env:YOUVERSION_APP_KEY }
+    $spelling = 'language_ranges[]'
     try {
-        $response = Invoke-RestMethod -Uri $uri -Headers @{ 'X-YVP-App-Key' = $env:YOUVERSION_APP_KEY } -Method Get
+        try {
+            $uri = "https://api.youversion.com/v1/bibles?language_ranges%5B%5D=$Language"
+            $response = Invoke-RestMethod -Uri $uri -Headers $headers -Method Get
+        }
+        catch {
+            $code = $null
+            if ($_.Exception.Response) { $code = [int]$_.Exception.Response.StatusCode }
+            if ($code -ne 422) { throw }
+            Write-Host 'Bracketed language_ranges[] returned 422 - retrying bare spelling (YVN7 rule 2).' -ForegroundColor Yellow
+            $spelling = 'language_ranges'
+            $uri = "https://api.youversion.com/v1/bibles?language_ranges=$Language"
+            $response = Invoke-RestMethod -Uri $uri -Headers $headers -Method Get
+        }
+        Write-Host ("Catalogue accepted the '{0}' spelling - record this against YVN7 rule 2." -f $spelling) -ForegroundColor Cyan
         $versions = @($response.data)
         Write-Host ("{0} versions visible to this key in '{1}'." -f $versions.Count, $Language)
+        if ($versions.Count -eq 0) {
+            Write-Host 'An empty list is a 200, not an error: it usually means this key has' -ForegroundColor Yellow
+            Write-Host 'accepted no agreement in the portal (YVN17), which is itself the answer' -ForegroundColor Yellow
+            Write-Host 'to YVN19 rule 2 for a fresh key.' -ForegroundColor Yellow
+        }
         if ($response.next_page_token) {
             Write-Host 'More pages exist - this is page one only (YVN7).' -ForegroundColor DarkGray
         }
@@ -147,7 +168,13 @@ else {
             Write-Host 'a key that has accepted one does not prove a fresh key would see it.' -ForegroundColor DarkGray
         }
         else {
-            Write-Host 'YVN19 rule 2 closes NO for this key: WEBUS (206) is not visible.' -ForegroundColor Red
+            if ($response.next_page_token) {
+                Write-Host 'INCONCLUSIVE: 206 is absent from page one and more pages exist.' -ForegroundColor Yellow
+                Write-Host 'Page through next_page_token before recording a NO.' -ForegroundColor Yellow
+            }
+            else {
+                Write-Host 'YVN19 rule 2 closes NO for this key: WEBUS (206) is not visible.' -ForegroundColor Red
+            }
             Write-Host 'ABS20.2 rule 2 is then load-bearing - this deployment must set' -ForegroundColor DarkGray
             Write-Host 'DefaultTranslation explicitly, and YVN4 needs revisiting.' -ForegroundColor DarkGray
         }
@@ -160,8 +187,8 @@ else {
     }
     catch {
         Write-Host ("Request failed: {0}" -f $_.Exception.Message) -ForegroundColor Red
-        Write-Host 'A 401 means the app key is rejected. An empty list usually means no' -ForegroundColor DarkGray
-        Write-Host 'agreement has been accepted in the portal (YVN17).' -ForegroundColor DarkGray
+        Write-Host 'A 401 means the app key is rejected; a 422 that survived the retry means' -ForegroundColor DarkGray
+        Write-Host 'neither language_ranges spelling was accepted (YVN7 rule 2).' -ForegroundColor DarkGray
         $results.youVersion = @{ error = $_.Exception.Message }
     }
 }

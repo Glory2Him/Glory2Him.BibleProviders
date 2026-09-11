@@ -1,6 +1,6 @@
 # API.Bible provider
 
-**Area prefix:** `APB` · **Sections:** §APB1 – §APB26
+**Area prefix:** `APB` · **Sections:** §APB1 – §APB29
 **Packages:** `Glory2Him.BibleProviders.ApiBible`, `Glory2Him.BibleProviders.ApiBible.Fums`
 **Implements:** the contract in [Abstractions.md](Abstractions.md)
 **Solution overview:** [Design.md](Design.md) · **Sibling provider:** [YouVersion.md](YouVersion.md)
@@ -163,7 +163,7 @@ serve**, and this repository's own developer sits inside the Restricted Territor
 and absent from a fresh key's catalogue.
 
 A deployment holding a licence sets `DefaultTranslation` explicitly. **The shipped
-constant is now a *safe and recommended* default** — the distinction §SOL19 rule 3
+constant is now a *safe and recommended* default** — the distinction §SOL19.2 item 3
 asks every README to draw, and the first shipped default in this design where the
 two coincide.
 
@@ -834,6 +834,15 @@ earlier draft of this section missed entirely by enumerating only the first two:
    API.Bible suspends you, or when a subscription is terminated or deactivated —
    **an unpaid plan counts as deactivated** (§10.2) — and within 72 hours of any
    removal request from API.Bible or an IP Holder (§10.3).
+5. **Delete within 24 hours of a written removal request** — Terms §13, appended
+   here because §APB28.2 wrongly claimed this list already carried it. §13 is the
+   *content-specific* clock and it is tighter than duty 4's: "in any case within
+   twenty four (24) hours after a written request to do so by API.Bible, or by an
+   IP Holder with regard to their API.Bible Content", and it triggers on content
+   that is deleted, suspended, withheld, modified **or "gains protected status"**.
+   Duty 4's 72 hours governs *termination* — a lapsed licence, a suspended or
+   deactivated plan. **A consumer served a written request owes 24 hours, not 72**,
+   and the packed README said 72 for "any removal request" until this was corrected.
 
 This is contractual and binding. Five consequences:
 
@@ -853,6 +862,7 @@ This is contractual and binding. Five consequences:
    lapsed subscription. **Design the purge before the first row is written** — this
    is the obligation most likely to be discovered only when it is already breached,
    because nothing in normal operation exercises it.
+
 5. **The two FAQs disagree** — 14 days on scripture.api.bible, 30 on api.bible and
    in the Terms [contested]. **The Terms govern at 30.** A consumer may use 14 and
    satisfy both, and that remains the safe recommendation, but this document no
@@ -1259,7 +1269,7 @@ rule 5) — but both bind the consuming application.
 
 ### APB26.4 What this does not settle (#3)
 
-**§13, "Updates and Removals", has not been read in full.** §APB17 records the
+**~~§13, "Updates and Removals", has not been read in full~~ — **read, §APB28**.** §APB17 records the
 removal duties from §10 and §11; whether §13 adds to them is unknown. Read it
 before relying on §APB17 as a complete statement of the removal obligations —
 §APB18's history is the reason to check rather than assume.
@@ -1391,8 +1401,11 @@ Two things §APB17 did not record:
    dedication, a territorial ruling. **So the delete path is owed even by a
    consumer that stores only public-domain translations** (§USE6.2).
 2. **24 hours on written request, against §10's 72 hours on termination.** They
-   are different clocks for different events and §APB17 now carries both. The
-   tighter one governs a content-specific request.
+   are different clocks for different events. ~~§APB17 now carries both.~~ **It did
+   not** — §APB17 was never amended and still gave 72 hours for "any removal
+   request", which the packed README then published. **§APB17 duty 6 now carries
+   the 24-hour clock**, appended rather than inserted. The tighter one governs a
+   content-specific request.
 
 ### APB28.3 §4.4 The metadata review duty (#3)
 

@@ -77,7 +77,7 @@ sent on by email or messaging. Unusually for a default in this library, it is
 
 **It replaced `KJV`, and the reason matters if you are upgrading.** API.Bible
 grants **no licence for the King James Version** in the United Kingdom, the Isle of
-Man, Jersey, Guernsey or thirteen British Overseas Territories — "irrespective of
+Man, Jersey, Guernsey or twelve British Overseas Territories — "irrespective of
 whether your use is Commercial Use or Non-Commercial Use … **whether the content
 is identified as Public Domain**, and irrespective of format" (Terms §9.8) — and
 separately bars transmitting it anywhere (§9.9(b)(i)). **The duty follows your
@@ -102,7 +102,7 @@ anything that leaves your application to *off*.
 | **Share the text outside your app**<br/><sub>WhatsApp, X, email, SMS</sub> | ✅ | ❌ | ❌ <sub>unless the rights holder authorises</sub> |
 | Share a *reference* + link instead | ✅ | ✅ | ✅ |
 | Print more than 100 verses | ❌ | ❌ | ❌ |
-| Use commercially | ✅ | ❌ | ❌ <sub>on the free Starter tier</sub> |
+| Use commercially | ⚠️ <sub>your plan</sub> | ❌ | ❌ <sub>licence *and* plan</sub> |
 | Let users copy or redistribute freely | ✅ <sub>§12's DRM binds "the Property"; §2 excludes public domain from it</sub> | ❌ | ❌ <sub>DRM required</sub> |
 
 ### Which public-domain translations may be sent on
@@ -112,17 +112,17 @@ is fully permitted for public-domain translations, with one important exception.
 
 | Translation | Rights | Display | **Send on**<br/><sub>email · WhatsApp · SMS</sub> | Print | Commercial |
 |---|---|:---:|:---:|:---:|:---:|
-| **WEB** — World English Bible | Public domain (dedicated) | ✅ | ✅ | ✅ | ✅ |
-| **BSB** — Berean Standard Bible | Public domain (dedicated) | ✅ | ✅ | ✅ | ✅ |
-| **ASV** — American Standard Version | Public domain | ✅ | ✅ | ✅ | ✅ |
-| **YLT**, **DARBY**, **DRA**, **GNV**, **WBT** | Public domain | ✅ | ✅ | ✅ | ✅ |
-| **FBV**, **ULB/UST** | CC BY-SA 4.0 | ✅ | ✅ <sub>share-alike follows it</sub> | ✅ | ✅ |
+| **WEB** — World English Bible | Public domain (dedicated) | ✅ | ✅ | ✅ | ⚠️ <sub>your plan, not the licence</sub> |
+| **BSB** — Berean Standard Bible | Public domain (dedicated) | ✅ | ✅ | ✅ | ⚠️ <sub>your plan, not the licence</sub> |
+| **ASV** — American Standard Version | Public domain | ✅ | ✅ | ✅ | ⚠️ <sub>your plan, not the licence</sub> |
+| **YLT**, **DARBY**, **DRA**, **GNV**, **WBT** | Public domain | ✅ | ✅ | ✅ | ⚠️ <sub>your plan, not the licence</sub> |
+| **FBV**, **ULB/UST** | CC BY-SA 4.0 | ✅ | ✅ <sub>share-alike follows it</sub> | ✅ | ⚠️ <sub>your plan, not the licence</sub> |
 | **KJV** | Public domain in the US · **Crown copyright in the UK** | ⚠️ | ❌ | ⚠️ | ⚠️ |
 | Any CC BY-**NC** / **ND** edition | Restricted CC | ✅ | ❌ | ⚠️ | ❌ |
 
 **⚠️ The King James Version is the exception to all of it.** Terms §9.8 grants **no
 licence** for the KJV within the United Kingdom, the Isle of Man, Jersey, Guernsey
-or thirteen British Overseas Territories — "irrespective of whether your use is
+or twelve British Overseas Territories — "irrespective of whether your use is
 Commercial Use or Non-Commercial Use … **whether the content is identified as
 Public Domain**, and irrespective of format". §9.9(b)(i) separately bars
 transmitting it anywhere. **The duty follows your reader's location, not yours**,
@@ -131,6 +131,15 @@ and this package cannot know it.
 Derived translations are expressly out of scope: NKJV, ESV, NASB, RSV, NRSV, MEV
 and **ASV** are named as *not* being the Authorized Version. **For a UK or
 Commonwealth audience, or for any share feature, use WEB or BSB.**
+
+> **⚠️ Commercial use is your *plan*, not the translation.** Terms §9.2: "If your
+> Services are designated as 'non-commercial,' you shall not make Commercial Use of
+> the API content" — and "API content" is defined to include public-domain content.
+> The dashboard states it as **"Commercial Use — Allowed on Pro Plans"**. So **a
+> free-Starter application that runs advertising while serving WEB is in breach**,
+> even though WEB is public domain and is this package's default. "Commercial" is
+> broad: advertising, in-app promotions, sponsorship, freemium and paid access all
+> count.
 
 **Public domain does not switch the Terms off.** Even for WEB you still owe FUMS
 reporting, the 30-day recency check on anything stored, and the deletion duties —
@@ -163,9 +172,11 @@ The third is triggered by **suspicion**, not confirmation.
 | Report usage on display — FUMS | **required** |
 | Refresh stored text at least every 30 days | **required** |
 | Delete content withdrawn upstream | **required** |
-| Purge everything within 72 hours of a request or a lapsed plan | **required** |
+| Delete content within **24 hours** of a written removal request (Terms §13) | **required** |
+| Purge everything within **72 hours** of a terminated or deactivated plan (Terms §10) | **required** |
+| Stay within your plan's **Monthly End Users** ceiling — 1,000 on Starter | **required** |
 | Keep fewer than 500 consecutive verses cached | requested |
-| DRM restricting copying, printing, territory and device count | **required** |
+| DRM restricting copying, printing, territory and device count | **required** <sub>licensed and NC/ND content only — §12's DRM binds "the Property", and §2 excludes public domain from it; §9.9(c) disapplies §12 for permitted transmission</sub> |
 
 Detail and the clauses behind every mark:
 [Compliance](#compliance) below.
@@ -234,9 +245,13 @@ Their terms make stored content a **refreshable cache, not an archive**:
 3. **Delete or modify content when it is deleted or modified upstream.** Refreshing
    is not enough: a verse or edition that disappears upstream must disappear from
    your store too.
-4. **Remove everything within 72 hours** when a licence terminates, when ABS
+4. **Two removal clocks, and they are not the same event.** A **written removal
+   request** — from ABS or an IP Holder, including when content "gains protected
+   status" — gives you **24 hours** (Terms §13). **Termination** gives you 72 hours:
+   when a licence terminates, when ABS
    suspends you, or when a subscription is terminated or deactivated — **an unpaid
-   plan counts as deactivated** — and within 72 hours of any removal request.
+   plan counts as deactivated** (Terms §10). **Do not use the 72-hour figure for a
+   request** — an earlier version of this README did, and it is 48 hours late.
 
 **Rules 3 and 4 mean you need a delete path, not just a refresh path.** Design it
 before you write the first row; nothing in normal operation exercises it.

@@ -20,7 +20,8 @@ platform is free.
    looks identical to a translation that does not exist. See
    [the licence trap](#the-licence-acceptance-trap).
 2. **Storing scripture is permitted here, and the platform encourages it** — no
-   refresh timer, no purge clock, no usage reporting. See
+   refresh timer and no usage reporting — but **Biblica gives you 48 hours to
+   remove content on written request**, so you still need a delete path. See
    [Storage](#storage--permitted-and-encouraged).
 
 ---
@@ -159,9 +160,16 @@ configuration and default anything that leaves your application to *off*.
 | Display the attribution | **required** |
 | Reproduce the text word-for-word, unaltered | **required** |
 | Update stored text when the publisher asks | **required** |
+| Remove content within **48 hours** of a written request — Biblica (NIV, NIrV) | **required** |
+| A conspicuous clickable link to lockman.org, plus a per-verse tag that itself links | **required** <sub>NASB, AMP only</sub> |
 | Encrypt against unauthorised onward-supply | **required** |
 | Keep your app key confidential, report its loss | **required** |
 | Report annually to Lockman by end of February | **required** <sub>NASB, AMP only</sub> |
+
+**Biblica's 48-hour removal clock is the one deadline on this upstream.** There is
+no periodic sweep to build, but there is a delete path — and for NASB and AMP,
+Lockman requires the attribution to be a *clickable link to lockman.org* and each
+verse tag to link as well, which is stricter than displaying a copyright string.
 
 **There is no refresh timer here** — unlike API.Bible, the duty is to update on
 request rather than on a cycle. You still need a forced-refresh path.

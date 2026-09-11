@@ -31,7 +31,7 @@ than hypothetical.
 
 **Numbered, prefixed, flat.** Every section carries an area prefix and a flat
 number that never restarts — `§ABS1`, `§ABS2`, `§APB1` — so a bare citation stays
-unambiguous with four files side by side:
+unambiguous with five files side by side:
 
 ```csharp
 // design §ABS6: scripture outcomes return, availability failures throw
@@ -1068,7 +1068,7 @@ In this order, because it is the order a consumer needs it:
 | Package | What its README must carry beyond §SOL19.2 |
 |---|---|
 | **Abstractions** | The two-channel rule (§ABS6) — returns for scripture outcomes, throws for availability — and the marker interfaces, because a consumer's `catch` blocks depend on it. The composition-root sample and its three traps (§ABS28) |
-| **ApiBible** | FUMS in full: it is a licence condition, not analytics, and the consumer reports on **display** (§APB16). The content-recency and 72-hour removal duties (§APB17). The non-commercial definition (§APB20) — broad enough that an ad-supported surface is commercial |
+| **ApiBible** | FUMS in full: it is a licence condition, not analytics, and the consumer reports on **display** (§APB16). The content-recency duties, the **24-hour** clock on a written removal request and the **72-hour** clock on termination — they are different events (§APB17 duties 4 and 5). The Starter plan's **1,000 Monthly End Users** ceiling (§APB29.1). The Terms §12 security duties (§APB26.1). The non-commercial definition (§APB20) — broad enough that an ad-supported surface is commercial |
 | **ApiBible.Fums** | That it deliberately does not reference the provider package, and why (§SOL2 rule 6). The browser and server paths, and the four silent browser failures |
 | **YouVersion** | The licence-acceptance trap first, because it is the most common support question and looks identical to a translation that does not exist (§YVN17). That storage is **permitted and encouraged** — express grant, no refresh timer, no usage reporting (§YVN14.9, §YVN14.11) |
 | **Abstractions.Conformance** | How to inherit it — one class, one override (§ABS38) |

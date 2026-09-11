@@ -905,25 +905,49 @@ key can see `WEBUS` without accepting an agreement in the portal is **[unverifie
 working. Removing rule 2 to make rule 3 absolute would turn an open question into
 an outage.
 
-### ABS20.3 Divergent defaults are now detectable, and are reported (#3)
+### ABS20.3 Divergent defaults are a documented risk, not a detectable one (#3)
 
 A consumer *may* still configure two providers with different defaults, and the
 original hazard returns in full when they do: the same string fetched from two
 providers, in Psalms, Joel or Malachi, can return **differently numbered verses**
 (§ABS17).
 
-**So `BibleAbstractionProvider` compares the composed providers' defaults at
-construction and logs at Warning when they disagree**, naming both. It does not
-throw — the configuration is legal and occasionally deliberate — but it is no
-longer silent, which is the standard §SOL14 rule 3 sets for a compliance-shaped
-mistake that produces no error.
+> ~~**So `BibleAbstractionProvider` compares the composed providers' defaults at
+> construction and logs at Warning when they disagree**, naming both…~~
+> **Withdrawn. The rule specified a mechanism the published contract cannot
+> provide**, and it was published twice in the packed Abstractions README as fact
+> before anyone checked.
 
-This joins the duplicate-provider-name check as the second thing the abstraction
-validates at construction rather than at first use (§ABS24).
+**It cannot be built as written, and the reasons are each deliberate:**
 
-**This does not make the abstraction smart.** It compares two strings it was
-handed and writes a log line. It still resolves by name and nothing else, still
-never picks a provider, never retries and never inspects a result (§SOL2).
+| What the check needs | Why it is not there |
+|---|---|
+| A provider's default translation | `IBibleProvider` declares `Name`, the two lookups and `GetTranslationsAsync` (§ABS4). `DefaultTranslation` is `protected` on `BibleProviderBase` (§ABS12), and `BibleAbstractionProvider` is `sealed`, not derived |
+| Provider configuration | §ABS5 rule 1 forbids the abstraction from seeing it, which is why the default is passed to the parser as a plain `string` (§ABS20) |
+| A logger | §ABS25's sole constructor is `BibleAbstractionProvider(IEnumerable<IBibleProvider>)` — it takes no `ILogger` |
+
+**The decision: the rule goes, the interface does not grow.** Adding
+`string DefaultTranslation { get; }` to `IBibleProvider` would put a member on the
+published contract that exists only to power a diagnostic, would breach §ABS5
+rule 1's separation, and would oblige every future provider to surface a
+configuration value the contract otherwise has no interest in. **That is a large,
+permanent cost for a warning about a configuration the consumer chose on purpose.**
+
+**What protects a consumer instead, in order of effect:**
+
+1. **§ABS20.1 removes the cause.** Both providers ship the same constant, so
+   divergence no longer happens by default — only by a deliberate edit.
+2. **Each provider already logs at Error** when its *own* configured default is
+   absent from its catalogue (§APB4, §YVN4), which is the failure that actually
+   strands a deployment.
+3. **The Abstractions README states the risk** where a consumer composing providers
+   will read it.
+
+**This is the second time on this branch that a rule was written for the
+abstraction which the abstraction cannot perform.** The first was §ABS20's original
+"keep the providers' defaults identical" advice. The pattern to resist is
+assigning work to the one component in this design that is deliberately incapable
+of it: it resolves by name and nothing else (§SOL2).
 
 ---
 
@@ -1741,7 +1765,15 @@ third-party provider can take the same medicine (§SOL7 rule 3), and carries no
 11. `GetTranslationsAsync` returns the same result twice without a second upstream
     request, every entry's `Abbreviation` round-trips through `UsfmReference`, and a
     cold-cache upstream failure **throws** rather than returning empty (§ABS44.2).
-12. `Notes` is empty on every `Found` result and never null (§ABS39 rule 3).
+12. ~~`Notes` is empty on every `Found` result and never null (§ABS39 rule 3).~~
+    **Struck.** §ABS39 rule 3 was reopened later on this branch — "footnote support
+    is a precondition of serving YouVersion content, not a later nicety", covering
+    1,120 licensed Bibles under eight agreements (§YVN14.6). This package **ships
+    to NuGet** and §YVN21 enrols the YouVersion provider in it, so the rule as
+    written meant a provider that passes the inherited test breaches eight
+    publisher agreements, and one that complies fails a test third parties run.
+    **`Notes` never being null still holds** and is covered by rule 10's
+    never-null discipline; the emptiness half is what goes.
 13. A configured `TranslationMetadata` entry backfills a `Found` passage whose
     upstream attribution was absent, and does **not** displace one that was present
     (§ABS45.1).

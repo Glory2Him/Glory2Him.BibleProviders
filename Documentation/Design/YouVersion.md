@@ -1094,24 +1094,24 @@ there is no token to carry and no report to send. What a consumer does inherit:
    content and sublicensing it to users online *and offline*. There is no fixed
    refresh cadence — the duty is to update on the publisher's request, so you need a
    forced-refresh path but not a timer.
-3. **Footnotes must be displayed** (§YVN14.6) for all but the public-domain set.
+3. **`TranslationNotSupported` is ambiguous here** — unlicensed, or outside the
+   configured language ranges. Surface the configured `LanguageRanges` in
+   diagnostics so the ambiguity is resolvable.
+4. **Footnotes must be displayed** (§YVN14.6) for all but the public-domain set.
    Not optional, and not satisfiable by a link — "accessible to the end-user".
-4. **Biblica caps display at two chapters or twenty-five verses per user at any
+5. **Biblica caps display at two chapters or twenty-five verses per user at any
    given time**, whichever is greater (§YVN14.10 rule 8). Per user, per moment.
-5. **Lockman requires a conspicuous clickable link**, a per-verse tag that itself
+6. **Lockman requires a conspicuous clickable link**, a per-verse tag that itself
    links, no third-party advertising anywhere in your application, and **an annual
    report by end of February** of copies distributed (§YVN14.10 rules 10–13). This
    library surfaces none of that — it is yours.
-6. **No AI-personalised content**, and no printing (§YVN14.10 rules 5–6).
-7. **Scripture must be reproduced word-for-word and unaltered** (§YVN14.2 rule 1).
+7. **No AI-personalised content**, and no printing (§YVN14.10 rules 5–6).
+8. **Scripture must be reproduced word-for-word and unaltered** (§YVN14.2 rule 1).
    Anything a consumer does between `Text` and the screen — normalising quotes,
    collapsing whitespace, truncating with an ellipsis — is its own risk to assess.
-8. **Commercial use is permitted with a disclosure** (§YVN14.2 rule 4), which is
+9. **Commercial use is permitted with a disclosure** (§YVN14.2 rule 4), which is
    not true of API.Bible's licensed editions (§APB20). Do not assume one upstream's
    commercial position applies to the other.
-9. **`TranslationNotSupported` is ambiguous here** — unlicensed, or outside the
-   configured language ranges. Surface the configured `LanguageRanges` in
-   diagnostics so the ambiguity is resolvable.
 
 ---
 
@@ -1263,7 +1263,7 @@ change what gets built.
 
 | # | Item | Contents | Est. |
 |---|---|---|---|
-| 1 | **Spikes** | The ten items in §YVN19, including reading the platform terms. Endpoint existence and range support decide item 4's shape; the terms decide whether consumers may store at all | 1–1.5 d |
+| 1 | **Spikes** | The eleven items in §YVN19, including reading the platform terms. Endpoint existence and range support decide item 4's shape; the terms decided that consumers may store (§YVN14.9) | 1–1.5 d |
 | 2 | **Transport & container** | Internal `ServiceCollection`, typed client with `X-YVP-App-Key`, resilience pipeline and budget validation, disposal | 0.5 d |
 | 3 | **Catalogue** | Per-range merge, pagination with the §YVN7 rule 5 detection, the rule 2 parameter fallback, copyright retention, **atomic refresh**, and the §YVN7.1 projection | 1–1.75 d |
 | 4 | **Lookup flow** | Shape-based routing, all content through `/passages` (§YVN9), the range strategy the spike settles, AngleSharp HTML→`Blocks`, the `format=text` fallback, content check | 1.5–2 d |

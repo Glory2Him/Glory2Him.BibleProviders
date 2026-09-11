@@ -1,6 +1,6 @@
 # Usage permission — what may be stored, and what may be passed on
 
-**Area prefix:** `USE` · **Sections:** §USE1 – §USE10
+**Area prefix:** `USE` · **Sections:** §USE1 – §USE12
 **Solution overview:** [Design.md](Design.md) · **Providers:** [ApiBible.md](ApiBible.md) · [YouVersion.md](YouVersion.md)
 
 Conventions, heading tags and provenance tags: [Design.md](Design.md), "Conventions".
@@ -231,7 +231,7 @@ two do.
    §14 says it exists so ABS can "communicate the value of API-accessible
    Scripture texts back to copyright holders and publishers", and §3 requires it
    of "any webapp … unless otherwise prohibited by law". Nothing conditions it on
-   the rights class of what was fetched. §APB14's position is unchanged by this
+   the rights class of what was fetched. §APB16's position is unchanged by this
    section.
 2. **The 30-day recency duty survives transmission.** §11 closes with: "For
    content transmitted through Electronic Correspondence as defined in Section
@@ -340,7 +340,7 @@ the authoritative per-Bible answer is the `copyright` field returned by
 
 | Translation | Rights | Look&nbsp;up | Display<br/>on a site | **Send on**<br/><sub>email · WhatsApp · SMS</sub> | Print | Commercial |
 |---|---|:---:|:---:|:---:|:---:|:---:|
-| **WEB** — World English Bible | Public domain (dedicated) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **WEB** — World English Bible | Public domain (dedicated) | ✅ | ✅ | ✅ | ✅ | ⚠️ <sub>plan, not licence — see below</sub> |
 | **WEBBE / WMB** — British and Messianic editions | Public domain (dedicated) | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **BSB** — Berean Standard Bible | Public domain (dedicated) | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **ASV** — American Standard Version 1901 | Public domain (expired) | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -356,6 +356,20 @@ the authoritative per-Bible answer is the `copyright` field returned by
 | **ULB / UST** — unfoldingWord | **CC BY-SA 4.0** | ✅ | ✅ | ✅ <sub>share-alike follows it</sub> | ✅ | ✅ |
 | **BBE** — Bible in Basic English 1949 | **[contested]** — treated as PD in the US, disputed in the UK | ✅ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
 | *Any* CC BY-**NC** or CC BY-**ND** edition | Restricted Creative Commons | ✅ | ✅ | ❌ <sub>named exclusion, §9.9(a)</sub> | ⚠️ | ❌ |
+
+**The Commercial column is ⚠️ for every row, including the public-domain ones, and
+that is the single most likely thing on this page to be misread.** Copyright does
+not restrain commercial use of a public-domain work — but **§9.2 does**, and it is
+a *plan* term rather than a copyright one: "If your Services are designated as
+'non-commercial,' you shall not make Commercial Use of the API content", where API
+Content includes public domain (§USE6.2). API.Bible's own dashboard states it as
+**"Commercial Use — Allowed on Pro Plans"** [verified, §APB29.3].
+
+**So a free-Starter consumer serving WEB with advertising on the page is in
+breach**, notwithstanding that WEB is public domain and is the shipped default.
+The rights class decides what the *rights holder* permits; the plan decides what
+*ABS* permits. This row is the clearest case in this document of the two being
+different questions.
 
 Beyond English the same reasoning reaches the major expired-copyright editions —
 **Reina-Valera 1909** (Spanish), **Luther 1912** (German), **Louis Segond 1910**
@@ -615,7 +629,7 @@ anything down.
 
 **The strongest reason is one the caching line does not mention.**
 
-API.Bible requires FUMS reporting **per display, not per fetch** (§APB14), and it
+API.Bible requires FUMS reporting **per display, not per fetch** (§APB16), and it
 is owed on public-domain content too (§USE6.2). A stored-then-emailed verse is
 exactly where that obligation becomes awkward:
 

@@ -109,19 +109,28 @@ try
     ScriptureResult result = await bibleProvider.GetScriptureByUsfmAsync(
         providerName, "JHN.3.16.NIV", cancellationToken);
 }
-catch (Exception exception) when (exception is IBibleQuotaExceededException quota)
-{
-    // Stop asking this provider until quota.QuotaResetsOn. Retrying spends an
-    // allowance that is already gone.
-}
 catch (Exception exception) when (exception is IBibleDependencyException)
 {
-    // Any other unavailability — try the next provider.
+    // Through the abstraction every availability failure arrives WRAPPED, carrying
+    // only the broad marker. The specific one is on InnerException — unwrap it, or
+    // a quota catch compiles, never fires, and nothing warns you.
+    if (exception.InnerException is IBibleQuotaExceededException quota)
+    {
+        // Stop asking this provider until quota.QuotaResetsOn. Retrying spends an
+        // allowance that is already gone.
+    }
+
+    // Anything else — try the next provider.
 }
 ```
 
 Consumers catch **marker interfaces**, never concrete exception types. That is what
 lets your failover handle a provider you hold no reference to.
+
+**Catching the specific marker directly only works on a provider you called as
+`IBibleProvider`.** Through the abstraction it is wrapped, so a
+`when (exception is IBibleQuotaExceededException)` clause compiles and silently
+never matches — and on API.Bible an exhausted quota is an outage, not a slowdown.
 
 ---
 
@@ -155,7 +164,7 @@ served it. Full detail and the clauses behind every mark:
 | **Share the text outside your app**<br/><sub>WhatsApp, X, email, SMS</sub> | ✅ | ❌ | ❌ <sub>unless the rights holder authorises</sub> |
 | Share a *reference* + link instead | ✅ | ✅ | ✅ |
 | Print more than 100 verses | ❌ | ❌ | ❌ |
-| Use commercially | ✅ | ❌ | ❌ <sub>on the free Starter tier</sub> |
+| Use commercially | ⚠️ <sub>your plan</sub> | ❌ | ❌ <sub>licence *and* plan</sub> |
 | Let users copy or redistribute freely | ✅ <sub>DRM binds "the Property"; public domain is excluded from it</sub> | ❌ | ❌ <sub>DRM required</sub> |
 
 ### YouVersion
@@ -168,7 +177,7 @@ served it. Full detail and the clauses behind every mark:
 | **Share the text outside your app** | ⚠️ <sub>per work's own licence</sub> | ❌ | ❌ | ❌ |
 | Share a *reference* + link instead | ✅ | ✅ | ✅ | ✅ |
 | Print it | ❌ | ❌ | ❌ | ❌ |
-| Use commercially | ⚠️ <sub>per work's own licence</sub> | ❓ <sub>unsourced — see below</sub> | ❌ <sub>no access or membership fees</sub> | ✅ <sub>with disclosure</sub> |
+| Use commercially | ⚠️ <sub>per work's own licence</sub> | ❓ <sub>unsourced — no fee clause found; re-read Biblica's agreement before charging</sub> | ❌ <sub>no access or membership fees</sub> | ✅ <sub>with disclosure</sub> |
 | Run third-party advertising | ⚠️ | ⚠️ | ❌ | ⚠️ |
 | Display more than 2 chapters / 25 verses at once | ✅ | ❌ | ✅ | ✅ |
 | Hide the footnotes | ✅ | ❌ | ❌ | ❌ |
@@ -185,23 +194,29 @@ is fully permitted for public-domain translations.**
 
 | Translation | Rights | Display | **Send on**<br/><sub>email · WhatsApp · SMS</sub> | Print | Commercial |
 |---|---|:---:|:---:|:---:|:---:|
-| **WEB** — World English Bible | Public domain (dedicated) | ✅ | ✅ | ✅ | ✅ |
-| **BSB** — Berean Standard Bible | Public domain (dedicated) | ✅ | ✅ | ✅ | ✅ |
-| **ASV** — American Standard Version | Public domain | ✅ | ✅ | ✅ | ✅ |
-| **YLT**, **DARBY**, **DRA**, **GNV**, **WBT**, **JPS 1917** | Public domain | ✅ | ✅ | ✅ | ✅ |
-| **OEB** — Open English Bible | CC0 | ✅ | ✅ | ✅ | ✅ |
-| **FBV**, **ULB/UST** | CC BY-SA 4.0 | ✅ | ✅ <sub>share-alike follows it</sub> | ✅ | ✅ |
+| **WEB** — World English Bible | Public domain (dedicated) | ✅ | ✅ | ✅ | ⚠️ <sub>your plan, not the licence</sub> |
+| **BSB** — Berean Standard Bible | Public domain (dedicated) | ✅ | ✅ | ✅ | ⚠️ <sub>your plan, not the licence</sub> |
+| **ASV** — American Standard Version | Public domain | ✅ | ✅ | ✅ | ⚠️ <sub>your plan, not the licence</sub> |
+| **YLT**, **DARBY**, **DRA**, **GNV**, **WBT**, **JPS 1917** | Public domain | ✅ | ✅ | ✅ | ⚠️ <sub>your plan, not the licence</sub> |
+| **OEB** — Open English Bible | CC0 | ✅ | ✅ | ✅ | ⚠️ <sub>your plan, not the licence</sub> |
+| **FBV**, **ULB/UST** | CC BY-SA 4.0 | ✅ | ✅ <sub>share-alike follows it</sub> | ✅ | ⚠️ <sub>your plan, not the licence</sub> |
 | **KJV** | Public domain in the US · **Crown copyright in the UK** | ⚠️ | ❌ | ⚠️ | ⚠️ |
 | Any CC BY-**NC** / **ND** edition | Restricted CC | ✅ | ❌ | ⚠️ | ❌ |
 
 > **⚠️ The King James Version is the exception to all of it.** API.Bible grants
 > **no licence** for the KJV within the United Kingdom, the Isle of Man, Jersey,
-> Guernsey or thirteen British Overseas Territories — "irrespective of whether your
+> Guernsey or twelve British Overseas Territories — "irrespective of whether your
 > use is Commercial Use or Non-Commercial Use … **whether the content is identified
 > as Public Domain**, and irrespective of format" (Terms §9.8) — and separately
 > bars transmitting it anywhere (§9.9(b)(i)). **The duty follows your reader's
 > location, not yours.** NKJV, ESV, NASB, RSV, NRSV, MEV and **ASV** are expressly
 > *not* covered by it.
+
+> **⚠️ Commercial use is your API.Bible *plan*, not the translation.** Terms §9.2
+> bars commercial use on a non-commercial plan, and "API content" includes
+> public-domain content. **A free-Starter app running advertising while serving WEB
+> is in breach** even though WEB is public domain. On YouVersion the position is
+> different again — permitted with a disclosure, except Lockman.
 
 **So: for anything that leaves your app, reach for WEB or BSB.** Both are modern,
 dedicated to the public domain by their translators, and carry neither a
