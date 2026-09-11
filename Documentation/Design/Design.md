@@ -799,7 +799,7 @@ can still change what gets built.
 | 1 | Does API.Bible signal an exhausted plan as 429, 403, or something else? | §APB15 | A 403 is currently mapped to `TranslationNotSupported`, which is *returned*. An exhausted plan arriving as 403 would be read as "this translation isn't here", and a consumer would fail over silently and permanently instead of suspending the provider. **The most dangerous unknown in this design** |
 | 2 | YouVersion: `language_ranges[]` with brackets, or `language_ranges` comma-separated? | §YVN7 | Two upstream pages disagree [contested]. Wrong answer ⇒ 422 on every catalogue call ⇒ every lookup fails |
 | 3 | YouVersion: `page_token` or `next_page_token` as the request parameter? | §YVN7 | Two upstream pages disagree [contested]. Wrong answer ⇒ silent single-page catalogue ⇒ licensed translations report as unsupported |
-| 4 | YouVersion platform terms — still unread | §YVN14 | Blocks persistence entirely |
+| 4 | ~~YouVersion platform terms unread~~ — **read**; they grant no rights in the Bible text, so the retention question moves to the per-version licence and the per-Tool YVP Terms | §YVN14.1 | Still blocks persistence, but the document to read has changed |
 | 5 | Do critical-text omitted verses return 200-with-empty, 204, or 404? | §APB9, §YVN11 | Decides whether the content check is a safety net or the primary mechanism |
 | 6 | Is a YouVersion passage fetchable for a Bible absent from the catalogue? | §YVN7 | If yes, a catalogue miss is not a sound basis for `TranslationNotSupported` |
 

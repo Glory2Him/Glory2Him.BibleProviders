@@ -587,47 +587,120 @@ concept, and here the honest answer is "not yet known", not "none".
 
 ---
 
-## YVN14. Terms — unread, and blocking for storage (#1)
+## YVN14. Terms — read, and they move the blocker rather than lifting it (#1)
 
-**The platform terms are published at https://platform.youversion.com/terms and
-have not been read and recorded here.** The page is client-rendered and returns no
-content to a fetch; it must be opened in a browser. This section is therefore a
-placeholder with a restriction attached, which is what §ABS33 rule 5 requires
-where a figure cannot yet be established — an unstated figure is never an absent
-obligation.
+**Read in a browser on 2026-09-11; the published version is dated 17 August 2026**
+[verified]. The page is client-rendered and returns nothing to a fetch, which is
+why it stayed unread for so long.
 
-Consequences, stated plainly rather than glossed:
+**The headline is not what this section expected.** It assumed the platform terms
+were the instrument governing stored scripture, and that reading them would settle
+a retention figure. They are not, and it does not:
 
-1. **Do not persist scripture obtained from this provider until those clauses are
-   recorded here.** The API.Bible obligations do not transfer — different licensor,
-   different agreement — and an unread rule is not an absent one.
-2. The spike (§YVN19 rule 9) must read the terms and record the actual figures
-   here: whether a refresh cycle, a caching cap, an attribution form or a
-   commercial-use restriction applies.
-3. Until then, treat results from this provider as **display-time only**.
+> "This Agreement is limited to the YV IP. We are not providing You rights in
+> biblical works or works other than YV IP, which You must obtain from their
+> respective owners and licensors."
 
-**One piece of indirect evidence, recorded as evidence and not as permission:**
-YouVersion ships first-party SDKs that maintain a local cache of fetched scripture
-[verified]. That makes a blanket prohibition on caching unlikely. It does not tell
-us the retention period, the attribution form, or the commercial terms, and it is
-not a licence. Rule 1 stands until the terms are read.
+**The platform terms grant no rights in the Bible text at all.** "YV IP" is the
+platform and the developer tools — the API, the SDKs — and scripture is explicitly
+outside it. So the terms contain no retention clause, no refresh cadence and no
+consecutive-verse cap **because they are not the agreement that would carry one**
+[verified absence, and now a meaningful one].
 
-The per-version licence agreements accepted in the portal are themselves
-contractual, and may carry publisher-specific conditions beyond the platform
-terms. Whoever accepts a version's agreement should record any obligation it
-imposes.
+### YVN14.1 Where the storage question actually lives (#1)
 
----
+Two instruments, neither of them this one:
+
+1. **The per-version licence agreements** accepted in the portal (§YVN17). These
+   are with the publishers, and the terms say YouVersion passes the developer's own
+   details to them to check eligibility — "those third parties require that we
+   collect from You and share with them certain personally identifiable information
+   ('Developer PII') to ensure that You meet and maintain the standards by the
+   third-party license".
+2. **"YVP Terms"** — per-Tool terms published in the platform, incorporated by
+   reference, and which **override this agreement where they conflict**: "in the
+   event of a conflict among the terms of this Agreement and the YVP Terms, the YVP
+   Terms shall govern for the Tool to which they apply."
+
+**So rule 1 of the old version of this section stands, for a better reason.** Do
+not persist scripture from this provider yet — not because a figure is unread, but
+because the agreement that would set one has not been identified. What changed is
+what closes it: reading the platform terms was never going to, and §YVN19 rule 9
+was aimed at the wrong document. **Whoever accepts a version in the portal must
+record what that agreement says about retention**, and the YVP Terms for the Bible
+tool must be located and read.
+
+### YVN14.2 What the platform terms *do* impose (#1)
+
+All [verified], all inherited by the consuming application, and none of them
+previously in this design:
+
+1. **Scripture must be reproduced verbatim.** The AI clause permits retrieving and
+   displaying scripture "provided that the biblical text is reproduced
+   word-for-word and is 100% accurate to, and unaltered from, the licensed source
+   text". **This binds §YVN10 and §ABS23 directly**: the renderer regenerates
+   `Text` from `Blocks` and strips markup, and that pipeline must not alter a
+   character of the scripture itself. Whitespace normalisation (§YVN10 rule 4) is
+   the place to be careful — trimming the upstream's stray whitespace is fine;
+   "tidying" punctuation or quotation marks is not.
+2. **Two AI prohibitions that reach the product, not the library.** The Tools may
+   not be used with AI for open-ended chat with a user — verbatim scripture
+   retrieval is the stated exception — and may not be used to train, develop,
+   refine or improve any AI technology. Anything beyond that needs YouVersion's
+   prior written approval.
+3. **Built-in usage reporting must be left enabled:** "You shall enable and
+   maintain any usage reporting mechanisms built into YV IP." See §YVN15 — it does
+   not create a per-display obligation, but it does forbid disabling one.
+4. **Commercial use is permitted, with a disclosure.** If the application charges a
+   fee, it "will conspicuously and explicitly advise Users that the YouVersion Bible
+   App is provided at no cost to the User." **Markedly more permissive than
+   API.Bible's Terms §9.3** (§APB20), which bars advertising, freemium and
+   sponsorship outright on its non-commercial tier. The two upstreams are not
+   interchangeable on this point, and an application that is commercial may be able
+   to serve YouVersion editions while being unable to serve API.Bible's licensed
+   ones.
+5. **The app key is confidential and a loss is notifiable.** It may not be shared
+   with any third party, and YouVersion must be told if it is "lost, stolen, or
+   misused". §SOL2 rule 6 and §SOL14 rule 5 already keep it out of logs; the
+   notification duty is new and belongs to whoever operates the deployment.
+6. **The YouVersion marks may not be used** — "YouVersion", "YVP", "Life.Church",
+   "The Bible App" — unless a Tool's YVP Terms allow it. This constrains §YVN16:
+   attribution must name the *version* and its copyright holder, not brand the
+   feature as YouVersion's.
+7. **Termination is 30 days either way, or immediate for breach**, after which the
+   licence ceases. Note this covers the *tools*, not the text; the text is the
+   per-version agreement's problem (§YVN14.1).
+8. Governing law is Oklahoma, with a class-action waiver.
+
+### YVN14.3 What they still do not say (#1)
+
+No retention period, no refresh cadence, no caching cap, and no attribution
+*format* — and after §APB18, "absent" is a claim this design makes carefully. Here
+it is a sound absence for items that would live in a different agreement
+(§YVN14.1), and an open question for attribution format, which could plausibly sit
+in the YVP Terms.
 
 ## YVN15. Usage reporting — none found (#1)
 
 This provider declares `ScriptureUsage.NotRequired(ProviderName)` on every passage:
 a **positive assertion that nothing is owed**, not an absence (§ABS29). No FUMS
 equivalent, no per-display reporting mechanism and no tracking token appear in the
-platform's documentation **[verified absence]** — with the caveat that the platform
-terms remain unread (§YVN14), so this is an absence in the *developer* docs and not
-in the agreement. §APB18 is the cautionary precedent: an absence is only as wide as
-the pages actually searched.
+platform's documentation **[verified absence]**, and the platform terms — now read
+(§YVN14) — create no per-display reporting duty either.
+
+**They do create a narrower one, and `NotRequired` survives it:** "You shall enable
+and maintain any usage reporting mechanisms built into YV IP" [verified]. That is a
+duty **not to disable** reporting that a tool ships with, not a duty to report. The
+REST API this provider uses ships none — no token, no beacon, no callback — so
+there is nothing to keep enabled and nothing for the provider to carry.
+
+**Two consequences worth stating.** First, the assertion is now positive on
+evidence rather than on absence of evidence: the agreement was read and does not
+ask for per-display reporting. Second, it is **scoped to the REST API**. The
+YouVersion *SDKs* are a different Tool with their own YVP Terms (§YVN14.1), and if
+one of those embeds a reporting mechanism, clause 3 binds whoever ships it. A
+consumer swapping this provider for an SDK inherits a duty this provider does
+not.
 
 That assertion is only as good as the search behind it, so it carries a caveat: if
 the spike or a per-version agreement reveals a reporting obligation, the provider
@@ -647,9 +720,17 @@ not, `Attribution` is null on every passage and the consumer is silently
 non-compliant. A null `Attribution` on a licensed edition is a defect and is logged
 at Warning by the base class (§ABS32).
 
-**The required *form* of attribution is unknown here** — §YVN14 rule 2. The
-sibling provider's terms specify a copyright page and a hyperlinked citation
-(§APB19); nothing says YouVersion's are the same, and nothing says they are not.
+**The required *form* of attribution is still unknown** (§YVN14.3) — it is not in
+the platform terms and would sit in a version's own licence or in the YVP Terms.
+The sibling provider's terms specify a copyright page and a hyperlinked citation
+(§APB19); nothing says YouVersion's are the same.
+
+**What the terms do constrain is the opposite direction.** The YouVersion marks —
+"YouVersion", "YVP", "Life.Church", "The Bible App" — may not be used unless a
+Tool's YVP Terms allow it (§YVN14.2 rule 6). So attribution names **the version and
+its copyright holder**, and a UI must not label the feature as YouVersion's or imply
+partnership. That is a restriction on attribution, not a specification of it, and
+the two should not be confused.
 
 ---
 
@@ -677,9 +758,17 @@ Nothing in this provider requires the consumer to do anything at display time �
 there is no token to carry and no report to send. What a consumer does inherit:
 
 1. **Attribution** must be displayed (§YVN16).
-2. **Storage is not yet sanctioned** (§YVN14). Until the terms are recorded, use
-   results for display and do not persist them.
-3. **`TranslationNotSupported` is ambiguous here** — unlicensed, or outside the
+2. **Storage is still not sanctioned** (§YVN14), though the reason has changed:
+   the platform terms grant no rights in the Bible text at all, so the retention
+   question lives in the per-version licence and the per-Tool YVP Terms (§YVN14.1).
+   Display-time only until one of those is read.
+3. **Scripture must be reproduced word-for-word and unaltered** (§YVN14.2 rule 1).
+   Anything a consumer does between `Text` and the screen — normalising quotes,
+   collapsing whitespace, truncating with an ellipsis — is its own risk to assess.
+4. **Commercial use is permitted with a disclosure** (§YVN14.2 rule 4), which is
+   not true of API.Bible's licensed editions (§APB20). Do not assume one upstream's
+   commercial position applies to the other.
+5. **`TranslationNotSupported` is ambiguous here** — unlicensed, or outside the
    configured language ranges. Surface the configured `LanguageRanges` in
    diagnostics so the ambiguity is resolvable.
 
@@ -718,10 +807,12 @@ gets built**, not merely how it is configured.
    rule is a workaround or the correct model.
 8. **What do critical-text omitted verses return — 204, 200-with-empty, or 404?**
    (§YVN11.)
-9. **Read and record the platform terms** — retention, caching, refresh cadence,
-   attribution form, commercial-use restrictions. The page is client-rendered, so
-   open it in a browser. §YVN14 cannot be completed without this, and storage is
-   blocked until it is.
+9. ~~**Read and record the platform terms.**~~ **Done** — §YVN14. It did not
+   unblock storage, because the platform terms explicitly grant no rights in the
+   Bible text. **The spike was aimed at the wrong document**, and its replacement is:
+   **locate and read the YVP Terms for the Bible tool, and record what a per-version
+   licence agreement says about retention** (§YVN14.1). That is what storage is
+   actually blocked on. It needs portal access, not a browser.
 10. **Does the Bible resource expose a script direction** (or a script code we can
     map from)? §ABS42.6 needs it and §YVN7 rule 4 falls back to a built-in table
     without it. Low cost to check, and it decides whether a Hebrew or Arabic edition

@@ -930,6 +930,16 @@ is kept in `ProviderMetadata` for debugging, never for rendering.
    without merging a five-verse red-letter speech renders as five spans.
 3. `Text` is regenerated too: drop `SectionHeading` blocks entirely, drop markup,
    join blocks with `"\n"`.
+
+   **The scripture itself passes through unaltered, character for character.**
+   Dropping markup and headings is structural; touching the words is not. Do not
+   normalise quotation marks, collapse internal punctuation, expand or contract
+   abbreviations, or "fix" spelling — a 17th-century edition is meant to read like
+   one. YouVersion's terms make this contractual for that provider, requiring text
+   "reproduced word-for-word and 100% accurate to, and unaltered from, the licensed
+   source text" [verified, §YVN14.2 rule 1], and no publisher licence is likely to
+   be looser. Trimming whitespace an upstream left around a run is the one
+   permitted liberty, because it is markup residue rather than text.
 4. **Verse numbers never appear in either** — a consumer wanting numbered output
    renders its own from `Blocks` using each segment's `Verse`.
 5. Scripture text is HTML-escaped on the way in. It comes from an upstream, and an
