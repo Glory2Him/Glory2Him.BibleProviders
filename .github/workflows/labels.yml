@@ -21,9 +21,15 @@ jobs:
         script: |
           const fs = require('fs');
 
-          // A repository created from the template does not always run workflows on its
-          // very first commit. If the labels are missing, run this workflow by hand once:
-          // Actions -> Labels -> Run workflow.
+          // GitHub runs NO workflows on the commit that "Use this template" creates.
+          // Verified on a real repository, not assumed: zero runs, either workflow. So
+          // this must be run by hand once on a new repository — Actions -> Labels -> Run
+          // workflow — after which the push trigger above keeps it in step.
+          //
+          // A new repository in this org is not empty of labels, though. Around twenty of
+          // the base category labels arrive with it because the org has default labels
+          // configured, seeded from the same set as this manifest. Expect most of the run
+          // to report "created" and a handful to be already correct.
           const manifest = JSON.parse(fs.readFileSync('.github/labels.json', 'utf8'));
 
           const existing = await github.paginate(github.rest.issues.listLabelsForRepo, {

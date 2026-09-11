@@ -8,6 +8,14 @@ Work through this, then **delete this whole section**. Everything here is
 something the template cannot do for you — GitHub copies files, not settings,
 and no file can know what this repository is for.
 
+**First — run the label sync**
+
+GitHub runs **no workflows at all** on the commit that "Use this template" creates.
+Nothing fires. Until you do this by hand, this repository has no label set and the
+PR linter, the analyst and the status lifecycle all have nothing to work with.
+
+- [ ] Actions → Labels → Run workflow.
+
 **Read first**
 
 - [ ] `DEVELOPERS.md` — how work moves from an idea to merged code here, and how to
@@ -42,11 +50,13 @@ and no file can know what this repository is for.
 
 **CI**
 
-- [ ] Check Issues → Labels. If the org label set is not there, the sync did not fire
-      on the first commit: Actions → Labels → Run workflow.
-- [ ] Delete GitHub's stock labels (`bug`, `duplicate`, `enhancement`, `good first
-      issue`, `help wanted`, `invalid`, `question`, `wontfix`) if you do not want
-      them. The sync never deletes, so they stay until you remove them.
+- [ ] Check Issues → Labels shows the full set. Around twenty base category labels
+      arrive with any new repository in this org — it has default labels configured —
+      so the sync reports most of its work as created and a handful as already
+      correct. `documentation` is renamed to `DOCUMENTATION`.
+- [ ] Delete GitHub's other stock labels (`bug`, `duplicate`, `enhancement`, `good
+      first issue`, `help wanted`, `invalid`, `question`, `wontfix`) if you do not
+      want them. The sync never deletes, so they stay until you remove them.
 - [ ] Trim the `design: <area>` labels to the areas this repository will actually
       have. All five reserved areas ship in `labels.json` and the sync creates
       them; it never deletes, so dropping one means editing the manifest *and*
@@ -116,9 +126,11 @@ and the description must link an issue with `Closes #<n>`. Both are enforced by 
 
 ## 📜 License
 
-Licensed under the Glory 2 Him Software License (G2HSL). See [LICENSE.txt](LICENSE.txt)
-for the full text, and [G2HSL.md](https://github.com/Glory2Him/Glory2Him/blob/main/G2HSL.md)
-for the canonical copy.
+Licensed under the Glory 2 Him Software License (G2HSL). Two files, deliberately:
+[LICENSE.txt](LICENSE.txt) is this repository's copy — the licence with the
+repository's own name and copyright line on top — and [G2HSL.md](G2HSL.md) is the
+licence on its own, unmodified. The canonical copy lives at
+[Glory2Him/Glory2Him](https://github.com/Glory2Him/Glory2Him/blob/main/G2HSL.md).
 
 **FREE TO USE TO HELP SHARE THE GOSPEL**
 
