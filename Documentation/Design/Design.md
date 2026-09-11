@@ -193,6 +193,34 @@ forgotten.
    seed. The consuming application stores; §SOL11 says what shape to store, and
    the upstreams' retention rules (§APB17, §YVN14) bound how long.
 
+   **Stated as an invariant, because every compliance question in this design
+   turns on it: no package here ever caches, stores or writes scripture
+   anywhere.** A `ScripturePassage` exists for the lifetime of the call and
+   whatever reference the caller keeps. There is no passage cache, no disk write,
+   no de-duplication store, and no configuration that turns one on.
+
+   **The one thing a provider does hold is its catalogue** — abbreviation → upstream
+   id, plus name, language, script direction, copyright and publisher URL — in
+   memory, per provider instance, for `CatalogueCacheDuration` (6 hours by default),
+   never written to disk. That is edition *metadata*, not scripture, and it is
+   refreshed far inside any retention window either upstream sets.
+
+   Three consequences worth being explicit about:
+
+   - **This library is never a party to a retention obligation.** §APB17's 30-day
+     refresh, its delete-on-withdrawal and 72-hour removal duties, and §YVN14's
+     unresolved storage question all bind **the consumer**, and only once the
+     consumer chooses to persist. Nothing in this solution can breach them, because
+     nothing in it retains anything to breach them with.
+   - **A display-only consumer inherits none of them.** That is why §YVN14 blocks
+     persistence without blocking the provider: YouVersion is fully usable today for
+     anything that fetches and renders. The unresolved question costs a consumer a
+     cache, not a capability.
+   - **The obligations that remain unconditional are the display-time ones** —
+     attribution (§ABS32), usage reporting where owed (§ABS30), and verbatim
+     reproduction (§ABS23 rule 3). Those bind whether or not anything is stored,
+     which is exactly why they are `required` members rather than guidance.
+
 6. **Security boundary.** Not identity — **credentials**. Three rules:
    - An API key or app key reaches exactly one assembly: the provider package
      that owns it, via its configuration POCO. It is never static, never

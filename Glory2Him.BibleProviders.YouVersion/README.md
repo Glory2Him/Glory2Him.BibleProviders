@@ -134,6 +134,10 @@ The retention question lives in two places instead, and neither is this one:
 Until one of those is read and recorded, treat results from this provider as
 **display-time only**.
 
+**This restricts you, not this package.** Nothing here stores scripture — a
+passage lives for the call and no longer — so the provider itself is fully usable
+today. The unresolved question costs you a cache, not a capability.
+
 **To be clear about what this is and is not:** nothing anyone has read forbids
 caching. The restriction exists because the permission is unestablished, not
 because a refusal was found — and YouVersion's own SDKs cache scripture locally,

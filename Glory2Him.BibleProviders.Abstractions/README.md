@@ -177,6 +177,18 @@ value is provably a bug rather than an absence. **If you drop it at mapping time
 every later display is unreportable — with no error and no symptom until the rights
 holder asks.**
 
+### This library stores nothing
+
+**No package here caches, stores or writes scripture anywhere.** A passage exists
+for the lifetime of the call and whatever reference you keep. The only thing a
+provider holds is its catalogue — abbreviation to upstream id, plus names,
+languages and copyright — in memory, for six hours by default, never on disk.
+
+So every retention obligation below is **yours, and only once you choose to
+persist**. A display-only application inherits none of them. What it does inherit
+regardless are the display-time duties: attribution, usage reporting where it is
+owed, and reproducing the text unaltered.
+
 ### Store the right things
 
 - **`Text` is the canonical stored value** — searchable and safe everywhere.

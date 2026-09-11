@@ -46,7 +46,7 @@ if (result.IsFound)
 
 | Not done here | Where it belongs |
 |---|---|
-| Passage caching, persistence, retention | The consuming application. §ABS31 states the contractual limits it must meet |
+| Passage caching, persistence, retention | The consuming application. §ABS31 states the contractual limits it must meet. **No package here ever caches, stores or writes scripture anywhere** (§SOL2 rule 5) — a passage lives for the call and no longer, so this library is never a party to a retention obligation |
 | Usage reporting (e.g. FUMS `trackView`) | The consuming application, at render time. This library surfaces the obligation and the token (§ABS29), and never reports, because reporting needs the viewer's device and session identity and a fetch has no viewer |
 | Cross-provider fallback | The consuming application's orchestration layer. §ABS34 gives the decision table and a worked loop |
 | Cross-edition versification mapping | Out of scope entirely (§ABS17) |
