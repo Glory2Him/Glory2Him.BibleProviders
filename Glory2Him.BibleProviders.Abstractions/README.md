@@ -148,6 +148,29 @@ recoverable from `Text` later.
 
 ---
 
+## What can I do with the scripture?
+
+**That depends on the provider and the translation, not on this package.** This
+contract carries the obligations (`Usage`, `Attribution`, `ScriptDirection`) and
+performs none of them.
+
+The short version, and both provider READMEs carry the full table:
+
+| | |
+|---|:---:|
+| Display it in your application | ✅ always |
+| Store and cache it | ✅ both providers |
+| **Share the text outside your application** | ❌ **except public-domain and permissively-licensed translations** |
+| Share a *reference* and a link instead | ✅ always |
+| Print it | ❌ mostly |
+
+**Neither upstream exposes a rights class**, so a share feature must classify
+translations from configuration and default to *not shareable*. See
+[ApiBible](https://www.nuget.org/packages/Glory2Him.BibleProviders.ApiBible) and
+[YouVersion](https://www.nuget.org/packages/Glory2Him.BibleProviders.YouVersion).
+
+---
+
 ## What you must do to comply
 
 **These are obligations on your application, not on this library.** The figures

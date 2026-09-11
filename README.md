@@ -140,6 +140,50 @@ it. Reference a provider where you compose the application.
 
 ---
 
+## ⚖️ What can I do with these providers
+
+Permissions vary by the **rights class** of a translation, not by which provider
+served it. Full detail and the clauses behind every mark:
+[UsagePermission.md](Documentation/Design/UsagePermission.md).
+
+### API.Bible
+
+| | Public domain<br/>CC BY · CC BY-SA | CC BY-**NC**<br/>CC BY-**ND** | Licensed<br/>NIV · ESV · NLT |
+|---|:---:|:---:|:---:|
+| Look it up and display it in your app | ✅ | ✅ | ✅ |
+| Store and cache the text | ✅ | ✅ | ✅ |
+| **Share the text outside your app**<br/><sub>WhatsApp, X, email, SMS</sub> | ✅ | ❌ | ❌ <sub>unless the rights holder authorises</sub> |
+| Share a *reference* + link instead | ✅ | ✅ | ✅ |
+| Print more than 100 verses | ❌ | ❌ | ❌ |
+| Use commercially | ✅ | ❌ | ❌ <sub>on the free Starter tier</sub> |
+| Let users copy or redistribute freely | ❌ <sub>DRM required</sub> | ❌ | ❌ |
+
+### YouVersion
+
+| | Public Domain &<br/>Creative Commons<br/><sub>361 Bibles</sub> | Biblica<br/><sub>NIV, NIrV — 69</sub> | Lockman<br/><sub>NASB, AMP — 5</sub> | Other publishers<br/><sub>1,050</sub> |
+|---|:---:|:---:|:---:|:---:|
+| Look it up and display it in your app | ✅ | ✅ | ✅ | ✅ |
+| Store and cache the text | ✅ | ✅ | ✅ | ✅ |
+| Use it offline | ✅ | ✅ | ✅ | ✅ |
+| **Share the text outside your app** | ⚠️ <sub>per work's own licence</sub> | ❌ | ❌ | ❌ |
+| Share a *reference* + link instead | ✅ | ✅ | ✅ | ✅ |
+| Print it | ❌ | ❌ | ❌ | ❌ |
+| Use commercially | ⚠️ <sub>per work's own licence</sub> | ❌ <sub>free to end users</sub> | ❌ <sub>free to end users</sub> | ✅ <sub>with disclosure</sub> |
+| Run third-party advertising | ⚠️ | ⚠️ | ❌ | ⚠️ |
+| Display more than 2 chapters / 25 verses at once | ✅ | ❌ | ✅ | ✅ |
+| Hide the footnotes | ✅ | ❌ | ❌ | ❌ |
+| Use it to personalise content with AI | ❌ | ❌ | ❌ | ❌ |
+
+**Neither API tells you which class a translation is in** — there is no rights
+field on either catalogue. If you build a share button, classify translations in
+**configuration** and default to *not shareable*.
+
+**The safe default for anything that leaves your app is a public-domain
+translation.** KJV, ASV and WEB are shareable on both upstreams, which is part of
+why KJV is the shipped default.
+
+---
+
 ## ⚖️ Before you ship
 
 Both upstreams impose obligations on **your** application, not on this library.

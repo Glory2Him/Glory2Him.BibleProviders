@@ -1,6 +1,6 @@
 # Usage permission — what may be stored, and what may be passed on
 
-**Area prefix:** `USE` · **Sections:** §USE1 – §USE9
+**Area prefix:** `USE` · **Sections:** §USE1 – §USE10
 **Solution overview:** [Design.md](Design.md) · **Providers:** [ApiBible.md](ApiBible.md) · [YouVersion.md](YouVersion.md)
 
 Conventions, heading tags and provenance tags: [Design.md](Design.md), "Conventions".
@@ -219,6 +219,30 @@ config row was missing is exactly the silent breach this design is built to avoi
 6. **Ask, where it matters.** §9.9(a) permits transmission the rights holder
    "expressly authorized". That authorisation is obtainable — it is simply not the
    default.
+
+---
+
+## USE10. The comparison tables are derived from this file (#3)
+
+The root README and both provider READMEs carry a **capability table** — rights
+class down the columns, permission down the rows, ticks and crosses — so a reader
+choosing a translation can see what they get without reading a licence.
+
+**Those tables are a rendering of §USE1 to §USE6 and carry no facts of their own.**
+Three rules follow, and §SOL19.4 rule 2 is the reason:
+
+1. **Change this file first.** A tick that disagrees with a section here is a
+   defect in the table, not a new finding.
+2. **A tick is a permission, never an obligation.** Obligations go in a separate
+   table below it — "required" rather than "✅" — because a reader scanning ticks
+   for what they *get* will misread a tick that means what they *owe*.
+3. **⚠️ means "depends on the individual work"**, and is used only where this file
+   cannot resolve it — chiefly the public-domain and Creative Commons sets, where
+   each work carries its own licence (§USE6).
+
+**The provider READMEs are trimmed to their own provider**, and neither mentions
+the other's rights classes. A consumer of one package should not have to reason
+about an upstream they are not using.
 
 ---
 

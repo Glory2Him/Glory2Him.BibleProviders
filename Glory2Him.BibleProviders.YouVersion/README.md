@@ -113,6 +113,43 @@ actually read, turning a clean `TranslationNotSupported` into a 403 per lookup.
 
 ---
 
+## What can I do with YouVersion content
+
+Permissions vary by the **publisher** whose licence you accepted, not by the
+endpoint you called. **The API does not tell you which publisher a translation
+belongs to** — the portal groups them, the catalogue does not — so classify them in
+configuration and default anything that leaves your application to *off*.
+
+| | Public Domain &<br/>Creative Commons<br/><sub>361 Bibles</sub> | Biblica<br/><sub>NIV, NIrV — 69</sub> | Lockman<br/><sub>NASB, AMP — 5</sub> | Other publishers<br/><sub>1,050</sub> |
+|---|:---:|:---:|:---:|:---:|
+| Look it up and display it in your app | ✅ | ✅ | ✅ | ✅ |
+| Store and cache the text | ✅ | ✅ | ✅ | ✅ |
+| Use it offline | ✅ | ✅ | ✅ | ✅ |
+| **Share the text outside your app** | ⚠️ <sub>per work's own licence</sub> | ❌ | ❌ | ❌ |
+| Share a *reference* + link instead | ✅ | ✅ | ✅ | ✅ |
+| Print it | ❌ | ❌ | ❌ | ❌ |
+| Use commercially | ⚠️ <sub>per work's own licence</sub> | ❌ <sub>free to end users</sub> | ❌ <sub>free to end users</sub> | ✅ <sub>with disclosure</sub> |
+| Run third-party advertising | ⚠️ | ⚠️ | ❌ | ⚠️ |
+| Display more than 2 chapters / 25 verses at once | ✅ | ❌ | ✅ | ✅ |
+| Hide the footnotes | ✅ | ❌ | ❌ | ❌ |
+| Use it to personalise content with AI | ❌ | ❌ | ❌ | ❌ |
+
+**And whatever the publisher, all of these apply:**
+
+| | |
+|---|:---:|
+| Display the attribution | **required** |
+| Reproduce the text word-for-word, unaltered | **required** |
+| Update stored text when the publisher asks | **required** |
+| Encrypt against unauthorised onward-supply | **required** |
+| Keep your app key confidential, report its loss | **required** |
+| Report annually to Lockman by end of February | **required** <sub>NASB, AMP only</sub> |
+
+**There is no refresh timer here** — unlike API.Bible, the duty is to update on
+request rather than on a cycle. You still need a forced-refresh path.
+
+---
+
 ## Compliance
 
 ### Storage — not yet sanctioned

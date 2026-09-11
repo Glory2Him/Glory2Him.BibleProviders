@@ -76,6 +76,40 @@ licensed, non-commercial-only, and absent from a fresh key's catalogue. Set
 
 ---
 
+## What can I do with API.Bible content
+
+Permissions vary by the **rights class** of a translation, not by the endpoint you
+called. **The API does not tell you which class a translation is in** — there is no
+rights field on the catalogue — so classify them in configuration and default
+anything that leaves your application to *off*.
+
+| | Public domain<br/>CC BY · CC BY-SA | CC BY-**NC**<br/>CC BY-**ND** | Licensed<br/>NIV · ESV · NLT |
+|---|:---:|:---:|:---:|
+| Look it up and display it in your app | ✅ | ✅ | ✅ |
+| Store and cache the text | ✅ | ✅ | ✅ |
+| **Share the text outside your app**<br/><sub>WhatsApp, X, email, SMS</sub> | ✅ | ❌ | ❌ <sub>unless the rights holder authorises</sub> |
+| Share a *reference* + link instead | ✅ | ✅ | ✅ |
+| Print more than 100 verses | ❌ | ❌ | ❌ |
+| Use commercially | ✅ | ❌ | ❌ <sub>on the free Starter tier</sub> |
+| Let users copy or redistribute freely | ❌ <sub>DRM required</sub> | ❌ | ❌ |
+
+**And whatever the class, all of these apply:**
+
+| | |
+|---|:---:|
+| Display the attribution | **required** |
+| Report usage on display — FUMS | **required** |
+| Refresh stored text at least every 30 days | **required** |
+| Delete content withdrawn upstream | **required** |
+| Purge everything within 72 hours of a request or a lapsed plan | **required** |
+| Keep fewer than 500 consecutive verses cached | requested |
+| DRM restricting copying, printing, territory and device count | **required** |
+
+Detail and the clauses behind every mark:
+[Compliance](#compliance) below.
+
+---
+
 ## Compliance
 
 **Everything in this section is an obligation on your application.** This package
