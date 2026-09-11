@@ -2289,7 +2289,7 @@ design does not, because:
    `KJV → "Public Domain"` is stable and correct, which lends unearned credibility
    to the `NIV` row next to it that went stale two releases ago.
 
-**What ships instead: a sample configuration block in each provider's README**,
-carrying the common editions, clearly dated and clearly the consumer's to own.
-Same head start, no staleness baked into a binary, and the consumer has actually
-read the notice they are displaying.
+**What ships instead: a sample configuration block in each provider's README**
+(§SOL19.2 item 4), carrying the common editions, clearly dated and clearly the
+consumer's to own. Same head start, no staleness baked into a binary, and the
+consumer has actually read the notice they are displaying.

@@ -1,6 +1,6 @@
 # Design — Bible Providers
 
-**Area prefix:** `SOL` · **Sections:** §SOL1 – §SOL18
+**Area prefix:** `SOL` · **Sections:** §SOL1 – §SOL19
 
 How this system is built: package boundaries, layer placement, the provider
 contract, and the decisions that belong to no single package. `INTENT.md` says
@@ -382,7 +382,9 @@ not resolve.
    own `using` block, per `the-standard-csharp-directives`. Code samples in these
    documents omit them for brevity; real files do not.
 3. `<GeneratePackageOnBuild>true</GeneratePackageOnBuild>`, `Version 0.1.0.0`,
-   G2HSL licence, icon and README packed from the repository root.
+   G2HSL licence and icon packed from the repository root — but **each package's
+   `PackageReadmeFile` must point at its own README**, not the repository's
+   (§SOL19.1).
 4. `<NoWarn>CS1998,CS8632</NoWarn>` on libraries. CS1998 (async without await) is
    expected in this codebase — broker methods and `TryCatch` shapes produce it
    routinely.
@@ -756,11 +758,12 @@ abstraction items.
 
 | Package | Estimate | Detail |
 |---|---|---|
+| Package READMEs (§SOL19) | 1–1.5 d | Five consumer-facing READMEs plus the `PackageReadmeFile` repoint. Priced for the obligation sections, which have to be right rather than brief |
 | Scaffolding gaps (§SOL6) | 0.25 d | **Done:** project references, `IsPackable=false`, the `pwsh` fix, the ubuntu long-paths removal. **Remaining:** `Directory.Build.props`, `TreatWarningsAsErrors` + analyzers, and `WireMock.Net` on the three acceptance projects |
 | Abstractions | 8.5–12 d | §ABS40 |
 | API.Bible | 6.5–9 d | §APB25 |
 | YouVersion | 5–7 d | §YVN21 |
-| **Solution total** | **≈ 20.5–28.5 dev-days** | |
+| **Solution total** | **≈ 22.5–31 dev-days** | |
 
 **Cross-package sequencing:**
 
@@ -922,3 +925,71 @@ are **decisions, not spikes** — no amount of upstream research settles them.
   https://github.com/Copenhagen-Alliance/versification-specification
 - Upstream documentation for each provider is listed in that provider's document
   (§APB1, §YVN1).
+
+---
+
+## SOL19. What ships inside each package (#3)
+
+A consumer meets this solution through a NuGet page and a `README`, not through
+`Documentation/Design/`. The design documents are for whoever *builds* the
+providers; they are long, they cite each other by prefixed section, and they are
+not shipped. **This section specifies what a consumer gets instead.**
+
+### SOL19.1 The defect this section starts from (#3)
+
+**All three shipped packages currently set `<PackageReadmeFile>README.md</PackageReadmeFile>`
+pointing at the repository root README**, which is the template's setup checklist —
+it opens `# {{REPOSITORY_NAME}}` and "After creating this repository". That is what
+a consumer would see on nuget.org for `Glory2Him.BibleProviders.ApiBible`.
+
+Three places in this design already say "the package README" as though one exists:
+§ABS45.3 (the sample configuration), §YVN17 (the licence-acceptance trap), and
+§SOL6's shipping list. **None of them is currently true.** Every shipped package
+needs its own README, and the `PackageReadmeFile` must point at it.
+
+### SOL19.2 What every package README contains (#3)
+
+In this order, because it is the order a consumer needs it:
+
+1. **One paragraph on what the package is**, and which of the five it is — a
+   consumer arriving from a search result does not know the solution's shape.
+2. **The minimum working example.** Construct the configuration, construct the
+   provider, one lookup, read `Text` and `Attribution`. It must compile as written.
+3. **Every configuration field**, with which are mandatory, what each defaults to,
+   and — for anything with a shipped default that is a *safe* choice rather than a
+   *recommended* one — which is which. `DefaultTranslation` is the example that
+   bites: KJV is safe on a fresh key and is not a recommendation (§APB4, §YVN4).
+4. **The `TranslationMetadata` sample block** (§ABS45.3), dated, with a sentence
+   saying it is the consumer's to own and verify. This is the one piece of
+   documentation this design deliberately ships *instead of* code.
+5. **The obligations the consumer inherits**, in plain terms and with figures, or
+   the explicit statement that a figure is unestablished and what that restricts
+   (§ABS33 item 5). A consumer who reads only the README must not be able to breach
+   a licence by following it.
+6. **The traps, at the point they bite** — not in an appendix. The licence-
+   acceptance trap for YouVersion (§YVN17), the FUMS display obligation for
+   API.Bible (§APB16).
+7. **A link to the design**, for anyone who wants the reasoning rather than the
+   instructions.
+
+### SOL19.3 Per package (#3)
+
+| Package | What its README must carry beyond §SOL19.2 |
+|---|---|
+| **Abstractions** | The two-channel rule (§ABS6) — returns for scripture outcomes, throws for availability — and the marker interfaces, because a consumer's `catch` blocks depend on it. The composition-root sample and its three traps (§ABS28) |
+| **ApiBible** | FUMS in full: it is a licence condition, not analytics, and the consumer reports on **display** (§APB16). The content-recency and 72-hour removal duties (§APB17). The non-commercial definition (§APB20) — broad enough that an ad-supported surface is commercial |
+| **ApiBible.Fums** | That it deliberately does not reference the provider package, and why (§SOL2 rule 6). The browser and server paths, and the four silent browser failures |
+| **YouVersion** | The licence-acceptance trap first, because it is the most common support question and looks identical to a translation that does not exist (§YVN17). That storage is **not yet sanctioned** (§YVN14) |
+| **Abstractions.Conformance** | How to inherit it — one class, one override (§ABS38) |
+
+### SOL19.4 Rules (#3)
+
+1. **XML documentation comments on every public member**, since that is what a
+   consumer's IDE shows and most of them will never open a README.
+2. **A README says what a consumer must do. The design says why.** Duplicating the
+   reasoning guarantees the two drift, and the README is the copy that ships frozen
+   inside a package version.
+3. **No section numbers in README prose.** `§ABS45.1` means nothing to someone who
+   has not cloned the repository. Link to the design once, at the end.
+4. **Obligations are stated, never summarised away.** If a figure is unestablished,
+   say so and say what it restricts — the §YVN14 shape, which is the model.

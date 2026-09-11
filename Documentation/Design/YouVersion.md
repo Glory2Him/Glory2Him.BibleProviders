@@ -765,8 +765,9 @@ identical to a translation that does not exist.
 
 Three things follow:
 
-1. The package README must say so, and support guidance should start with "check
-   the portal".
+1. The package README must say so **first**, not in an appendix — §SOL19.3 makes it
+   that README's opening item — and support guidance should start with "check the
+   portal".
 2. `all_available=true` is the diagnostic that separates "exists on the platform
    but this key is not licensed" from "does not exist" (§YVN7 rule 6) — use it to
    *answer the support question*, not as the normal listing.
