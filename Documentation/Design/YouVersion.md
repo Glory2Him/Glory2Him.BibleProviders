@@ -93,6 +93,7 @@ public sealed class YouVersionConfigurations
     public string BaseUrl { get; set; } = "https://api.youversion.com/v1/";
     public string DefaultTranslation { get; set; } = "KJV";                // §YVN4
     public IList<string> LanguageRanges { get; set; } = new List<string> { "eng" };  // required upstream; also the parse scope (§ABS42.4)
+    public IList<TranslationMetadata> TranslationMetadata { get; set; } = new List<TranslationMetadata>();  // §ABS45
     public bool IncludeAllAvailable { get; set; } = false;                 // §YVN7 rule 6
     public Dictionary<string, int> TranslationMap { get; set; } = new();   // "NIV" -> 111 override
     public TimeSpan CatalogueCacheDuration { get; set; } = TimeSpan.FromHours(6);
@@ -107,8 +108,9 @@ Plain POCO plus optional logger, per §ABS5 rule 1.
 
 1. **Validates eagerly and throws on construction:** non-empty `AppKey`, non-blank
    `DefaultTranslation`, **non-empty `LanguageRanges`** (the upstream rejects the
-   catalogue call without it), parseable `BaseUrl`, and the timeout budget
-   inequality (§YVN6).
+   catalogue call without it), parseable `BaseUrl`, **no duplicate `Abbreviation`
+   in `TranslationMetadata`** (§ABS45.1 rule 4), and the timeout budget inequality
+   (§YVN6).
 2. The **logger is optional and defaults to `null`**, replaced internally with
    `NullLogger<T>.Instance`.
 3. **`LanguageRanges` does double duty**: it scopes the catalogue call upstream
@@ -368,7 +370,8 @@ Field mapping: `abbreviation` → `Abbreviation`, `name` → `Name`, the matched
    response → `ProviderReference` **verbatim**.
    `Usage = ScriptureUsage.NotRequired(ProviderName)` (§YVN15).
 
-   From the **cached catalogue entry** (§YVN7 rules 3–4): copyright →
+   From the **cached catalogue entry** (§YVN7 rules 3–4), then merged with
+   `TranslationMetadata` (§ABS45.1): copyright →
    `Attribution`, language code → `Language`, script direction → `ScriptDirection`,
    falling back to `Unknown` rather than `LeftToRight` where the upstream does not
    supply it (§ABS42.6). `Reference` comes from

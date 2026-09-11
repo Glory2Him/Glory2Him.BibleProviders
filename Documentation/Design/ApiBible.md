@@ -97,6 +97,7 @@ public sealed class ApiBibleConfigurations
     public Dictionary<string, string> TranslationMap { get; set; } = new();// "NIV" -> bibleId override
     public bool UseOrgId { get; set; } = false;                            // §APB13 — never flip against stored keys
     public IList<string> ParseLanguages { get; set; } = new List<string> { "eng" };  // §ABS42.4
+    public IList<TranslationMetadata> TranslationMetadata { get; set; } = new List<TranslationMetadata>();  // §ABS45
     public int? MonthlyRequestAllowance { get; set; } = null;              // §APB15 rule 5; null = unknown
     public TimeSpan CatalogueCacheDuration { get; set; } = TimeSpan.FromHours(6);
     public int TimeoutSeconds { get; set; } = 20;                          // overall budget for one lookup
@@ -110,7 +111,8 @@ default to the base, which owns `Name`, per §ABS5 rule 1 and §ABS14.
 
 1. **Validates eagerly and throws on construction:** non-empty `ApiKey`,
    non-blank `DefaultTranslation`, parseable `BaseUrl`, **non-empty
-   `ParseLanguages` with every entry a known book-name table**, and the timeout
+   `ParseLanguages` with every entry a known book-name table**, **no duplicate
+   `Abbreviation` in `TranslationMetadata`** (§ABS45.1 rule 4), and the timeout
    budget inequality in §APB6. A composition root should force construction at startup so
    a bad key fails the host rather than the first user request (§ABS28 trap 1).
 2. **The logger is optional and defaults to `null`** — replaced internally with
@@ -308,7 +310,7 @@ single-flight fetch, and a fetch that fails with no usable previous catalogue
 **throws** rather than returning empty (§ABS44.2) — an outage must never read as
 "this provider carries nothing".
 
-Field mapping: `abbreviation` → `Abbreviation`, `name` → `Name`, `language.id` → `Language`, `language.scriptDirection` → `ScriptDirection`, the opaque bibleId → `ProviderEditionId`, `Attribution` **null unless `include-full-details=true` was sent** (rule 3) — normally null here and filled on the passage instead (§APB11 rule 5) — and **`PublisherUrl` always null: no URL property exists on this upstream's Bible or Passage schema** [verified, §ABS44.5].
+Field mapping: `abbreviation` → `Abbreviation`, `name` → `Name`, `language.id` → `Language`, `language.scriptDirection` → `ScriptDirection`, the opaque bibleId → `ProviderEditionId`, `Attribution` **null unless `include-full-details=true` was sent** (rule 3) — normally null here and filled on the passage instead (§APB11 rule 5) — and **`PublisherUrl` null from the upstream — no URL property exists on either schema** [verified, §ABS44.5] — then **merged with `TranslationMetadata`** (§ABS45.1), which is how it becomes non-null here at all.
 
 ---
 
@@ -444,6 +446,10 @@ nodes and nestable `char` nodes:
    `language.id` → `Language`, `language.scriptDirection` → `ScriptDirection`
    (§ABS42.6). `Reference` comes from `RenderReference(usfmReference, Language)` —
    the two-argument form, rendered in the edition's own language (§ABS42.5).
+
+   Then **merge with `TranslationMetadata`** (§ABS45.1): the upstream's `copyright`
+   wins where present, and a blank one falls through to config — which is what stops
+   a missing copyright reaching the consumer as a null `Attribution` (§ABS32).
 
    From the renderer: `ScriptureMarkup.Generated(ProviderName, "ScriptureHtmlRenderer")`
    → `Markup` when `Html` was produced, `ScriptureMarkup.None(ProviderName)` when it
@@ -847,6 +853,12 @@ response has none either; `info` is a string of publisher information, not a lin
 "website links" requirement 1 asks for must come from the licence paperwork, or be
 looked up against the Digital Bible Library using the `dblId`/`relatedDbl` the
 catalogue does carry — a lead, not a documented route.
+
+**§ABS45 closes requirement 1 as far as this library can.** `TranslationMetadata`
+lets a deployment supply the publisher links this upstream does not expose, and the
+merge puts them on both `TranslationSummary` and the passage. What it cannot do is
+invent them — a deployment that configures nothing still gets nulls, and §ABS32's
+Warning is how it finds out.
 
 **Requirement 2 is the one this library does not fully serve.** `Attribution` is a
 bare string; the required hyperlink needs a target, and nothing in

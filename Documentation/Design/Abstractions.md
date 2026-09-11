@@ -1,6 +1,6 @@
 # Abstractions — the provider contract
 
-**Area prefix:** `ABS` · **Sections:** §ABS1 – §ABS44
+**Area prefix:** `ABS` · **Sections:** §ABS1 – §ABS45
 **Package:** `Glory2Him.BibleProviders.Abstractions`
 **Solution overview:** [Design.md](Design.md) · **Providers:** [ApiBible.md](ApiBible.md) · [YouVersion.md](YouVersion.md)
 
@@ -1359,7 +1359,14 @@ because both conditions are otherwise silent.
 
 **`Attribution` is a string, and at least one upstream wants more than a string.**
 API.Bible's terms require a linked copyright page and a per-quotation citation
-(§APB19). Whether the DTO grows an `AttributionUrl` is §ABS39 rule 5.
+(§APB19). The link lives on `TranslationSummary.PublisherUrl` rather than on the
+passage, because no upstream puts one on a passage (§ABS44.5).
+
+**A null `Attribution` now has a remedy, which it did not when this section was
+written.** `TranslationMetadata` (§ABS45) lets a deployment supply the copyright
+text the upstream omitted, merged per field. The Warning still fires when both are
+empty — and that is the point of it: it is how a consumer learns which translation
+needs a config entry, rather than a defect with nowhere to go.
 
 ---
 
@@ -1590,13 +1597,19 @@ No HTTP anywhere.
 8. **`ScriptureUsageTests`** — `ToStorageString`/`TryParse` round-trip for all four
    obligations, never null or empty including `NotRequired`, survives a token
    containing the delimiter, carries no endpoint.
-9. **`ScriptureMarkupTests`** (§ABS43) — `ToStorageString`/`TryParse` round-trip
+9. **`TranslationMetadataMergeTests`** (§ABS45) — the merge as a pure function:
+   per-field, so an entry supplying only `PublisherUrl` leaves a live `Attribution`
+   intact; upstream wins where present; **null, empty and whitespace upstream values
+   all fall through to config** (rule 3); matching is case-insensitive on
+   `Abbreviation`; an unmatched abbreviation changes nothing; and a duplicate
+   abbreviation throws at construction rather than last-one-wins (rule 4).
+10. **`ScriptureMarkupTests`** (§ABS43) — `ToStorageString`/`TryParse` round-trip
    for all four trust levels; never null or empty including `None`; a
    default-constructed or field-missing value reads as `Unknown` and
    `IsSafeToRender` is false; `Generated` requires a non-null `GeneratedBy`; a blank
    or unparseable stored value parses to `Unknown` rather than throwing or
    defaulting to safe.
-10. **`ScriptureHtmlRendererTests`** — golden tests: `q1` vs `q2` indent surviving,
+11. **`ScriptureHtmlRendererTests`** — golden tests: `q1` vs `q2` indent surviving,
    a `wj` run containing `add` rendering as `<span class="wj it">`, a speech
    crossing a verse boundary rendering as one span, a merged-verse label
    round-tripping, `SectionHeading` omitted from `Text` but present in `Html`,
@@ -1648,6 +1661,9 @@ third-party provider can take the same medicine (§SOL7 rule 3), and carries no
     request, every entry's `Abbreviation` round-trips through `UsfmReference`, and a
     cold-cache upstream failure **throws** rather than returning empty (§ABS44.2).
 12. `Notes` is empty on every `Found` result and never null (§ABS39 rule 3).
+13. A configured `TranslationMetadata` entry backfills a `Found` passage whose
+    upstream attribution was absent, and does **not** displace one that was present
+    (§ABS45.1).
 
 ---
 
@@ -1705,8 +1721,9 @@ every item there depends on items 1–7 here.
 | 9 | **Reference surface** (§ABS41) | `BibleReference` over items 2–3 — cheap, it is a facade. Then `Suggest`, `ReferenceSuggestion`, the confidence floor, and the invariant tests in §ABS36 item 3 including the one-character collision fixture. **Priced for the tests, not the matcher:** edit distance over the existing abbreviation table is an afternoon; proving `Jos` never becomes James is the work | 1–1.5 d |
 | 10 | **Language scoping** (§ABS42) | Per-language table format, the ISO 639-3 scope parameter threaded through `BibleReference`/`RenderReference`, the `Language` + `ScriptDirection` DTO fields, `dir="rtl"` in the renderer, and a second shipped table used purely to prove the format is real. **The English table alone does not prove the design** — build it with two | 1–1.5 d |
 | 11 | **Translation discovery** (§ABS44) | `TranslationSummary`, `GetTranslationsAsync` on the interface, the base class and the abstraction, projected from each provider's existing catalogue holder. Cheap because the cache already exists; the tests are the cold-cache-throws and no-second-request cases | 0.5 d |
+| 12 | **Metadata merge** (§ABS45) | `TranslationMetadata`, the per-field merge as a pure function, applied to both the summary and the passage, plus the duplicate-abbreviation validation. Small, and the tests are the whole of it | 0.5 d |
 
-Abstraction total ≈ **9–12.5 dev-days**. Sequencing that matters: 2 and 3 before
+Abstraction total ≈ **9.5–13 dev-days**. Sequencing that matters: 2 and 3 before
 6; 5 before 6 and before any provider; 4 is independent of 5–6 and can run in
 parallel. **Item 9 splits:** the `BibleReference` facade lands with items 2–3 and
 `BibleProviderBase` routes its parse through it (§ABS41), so that half is not
@@ -2178,3 +2195,101 @@ does **not** merge across providers: two providers may carry the same abbreviati
 for different editions, and silently unioning them would produce a list no single
 provider can serve. Merging, if an application wants it, is an orchestration
 concern (§SOL10).
+
+---
+
+## ABS45. Translation metadata and the config backfill (#3)
+
+*Appended per the no-renumbering rule. Read it with §ABS44 and §ABS32.*
+
+§ABS44.5 established that the upstreams disagree about what metadata they carry,
+and that the provider whose terms demand a publisher link is the one that exposes
+none. This section closes that with a **merge**: whatever the upstream supplies
+wins, and configuration fills the rest, so a consumer gets a complete record from
+either provider.
+
+```csharp
+// Glory2Him.BibleProviders.Abstractions — PUBLIC
+public sealed record TranslationMetadata
+{
+    public required string Abbreviation { get; init; }   // the key; matches TranslationMap's
+    public string? Name { get; init; }
+    public string? Attribution { get; init; }
+    public string? PublisherUrl { get; init; }
+    public string? Language { get; init; }               // ISO 639-3
+    public ScriptDirection? ScriptDirection { get; init; }
+}
+```
+
+Each provider's configuration POCO gains
+`IList<TranslationMetadata> TranslationMetadata { get; set; } = new List<TranslationMetadata>();`
+— **a property on each POCO, not a shared base type**, because §ABS5 rule 1 keeps
+the configuration objects plain and unrelated. The *merge* is shared; the
+*configuration* is not.
+
+### ABS45.1 The merge rule (#3)
+
+**Field-level, upstream-wins-where-present, config-fills-the-rest.**
+
+1. Merge **per field, not per object.** A config entry supplying only
+   `PublisherUrl` fills exactly that and leaves everything else to the upstream. A
+   whole-object fallback would mean one missing URL discarded a live copyright
+   string.
+2. **Upstream wins where it returned a value**, because that value is current and
+   config is a snapshot someone typed. This is the opposite precedence to
+   `TranslationMap` (§APB7 rule 1), and deliberately so: `TranslationMap` overrides
+   *identity* — which edition to fetch, where the consumer knows better than an
+   ambiguous abbreviation — while this overrides *description*, where the publisher
+   is the authority and staleness is the risk.
+3. **A blank upstream value counts as absent.** Null, empty and whitespace all
+   fall through to config; §ABS32 exists because a null `Attribution` is a
+   compliance event, and treating `""` as "the upstream said so" would preserve the
+   defect this section removes.
+4. **Matching is by `Abbreviation`, case-insensitively**, the same key
+   `TranslationMap` uses. A duplicate abbreviation in the collection is a
+   configuration error and **throws at construction**, alongside the other eager
+   validation (§ABS5 rule 1) — last-one-wins would silently pick a copyright notice.
+5. **It applies to both surfaces**: `TranslationSummary` (§ABS44) and
+   `ScripturePassage.Attribution`. A passage whose upstream copyright was missing is
+   backfilled from the same entry, which is the point.
+6. **The merge is the foundation service's**, applied once where the passage and
+   the summary are built (§SOL2 rule 2). Not the broker, not the façade.
+
+### ABS45.2 What it fixes, per provider (#3)
+
+| | Upstream supplies | Config typically supplies |
+|---|---|---|
+| **API.Bible** | `Attribution` on every passage | `PublisherUrl` — always null upstream (§ABS44.5) |
+| **YouVersion** | `Attribution`, `PublisherUrl`, `promotional_content` | usually nothing |
+
+So the asymmetry stops reaching the consumer: both providers can now yield a
+`TranslationSummary` and a `ScripturePassage` carrying everything Terms §7 asks a
+consumer to display (§APB19).
+
+**`Attribution` stays `required` and stays nullable** (§ABS16). This section makes
+null *avoidable*, not impossible — a translation with no upstream copyright and no
+config entry still returns null, and §ABS32's Warning still fires. That is correct:
+the warning is how a consumer discovers it needs a config entry.
+
+### ABS45.3 No copyright data ships in the package (#3)
+
+**Deliberate, and the strongest rule in this section.** It would be easy to ship a
+prefilled table so consumers get publisher links with no configuration, and this
+design does not, because:
+
+1. **It is legal text about third-party IP we do not own.** A stale copyright
+   notice presented as authoritative is the consumer's breach, caused by us.
+2. **A NuGet package cannot be corrected in place.** Fixing a publisher's amended
+   notice would need a release, and consumers pick releases up whenever they pick
+   them up — with versions moving in lockstep across five packages (§SOL7 rule 3).
+3. **It contradicts the refresh obligation.** API.Bible Terms §11 requires stored
+   content be checked at least every 30 days (§APB17); a table compiled into a
+   binary is the opposite of a refreshable cache.
+4. **Getting it right for public-domain editions makes it worse, not better.**
+   `KJV → "Public Domain"` is stable and correct, which lends unearned credibility
+   to the `NIV` row next to it that went stale two releases ago.
+
+**What ships instead: a sample configuration block in each provider's README**,
+carrying the common editions, clearly dated and clearly the consumer's to own.
+Same head start, no staleness baked into a binary, and the consumer has actually
+read the notice they are displaying.
