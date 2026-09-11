@@ -92,7 +92,8 @@ public sealed class YouVersionConfigurations
 {
     public string AppKey { get; set; } = string.Empty;                     // required — header X-YVP-App-Key
     public string BaseUrl { get; set; } = "https://api.youversion.com/v1/";
-    public string DefaultTranslation { get; set; } = "WEB";                // §YVN4
+    public string DefaultTranslation { get; set; }
+        = ScriptureDefaults.Translation;                                   // "WEB" — §YVN4, §ABS20.1
     public IList<string> LanguageRanges { get; set; } = new List<string> { "eng" };  // required upstream; also the parse scope (§ABS42.4)
     public IList<TranslationMetadata> TranslationMetadata { get; set; } = new List<TranslationMetadata>();  // §ABS45
     public bool IncludeAllAvailable { get; set; } = false;                 // §YVN7 rule 6
@@ -128,7 +129,8 @@ Plain POCO plus optional logger, per §ABS5 rule 1.
 
 ## YVN4. Why the default translation is WEB, and the abbreviation trap (#1)
 
-**The shipped default is `WEB`, matching §APB4.** ~~KJV, version id `1`.~~
+**The shipped default is `WEB`, matching §APB4** — both take it from
+`ScriptureDefaults.Translation`, which is where the value now lives (§ABS20.1). ~~KJV, version id `1`.~~
 **Changed** for the reason §APB27 gives — the KJV is territorially restricted, and
 although §9.8 is an API.Bible term that does not bind this upstream, the Crown's
 rights in the Authorized Version are a fact of UK law rather than of either

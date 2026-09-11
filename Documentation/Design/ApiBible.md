@@ -93,7 +93,8 @@ public sealed class ApiBibleConfigurations
 {
     public string ApiKey { get; set; } = string.Empty;                     // required
     public string BaseUrl { get; set; } = "https://rest.api.bible/v1/";
-    public string DefaultTranslation { get; set; } = "WEB";                // §APB4
+    public string DefaultTranslation { get; set; }
+        = ScriptureDefaults.Translation;                                   // "WEB" — §APB4, §ABS20.1
     /// <summary>Abbreviation -> bibleId override. NOTE: the licensed Bibles on a Starter
     /// plan are NON-COMMERCIAL ONLY, and "commercial" includes advertising, sponsorship
     /// and freemium — see the package README before mapping one. §APB20</summary>
@@ -139,7 +140,9 @@ An unqualified reference is a first-class input (§ABS20), and the default is wh
 silently fills the gap — so the shipped value decides whether a freshly-keyed
 installation works at all.
 
-**The shipped default is `WEB`, the World English Bible.** ~~KJV.~~ **Changed**,
+**The shipped default is `WEB`, the World English Bible**, taken from
+`ScriptureDefaults.Translation` so that one constant serves both providers
+(§ABS20.1). ~~KJV.~~ **Changed**,
 and §APB27 is the reason: Terms §9.8 grants **no licence for the KJV within the
 United Kingdom and fifteen other named territories**, *irrespective of its
 public-domain status*, and §9.9(b)(i) bars transmitting it anywhere. **A shipped

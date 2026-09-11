@@ -838,12 +838,92 @@ public static bool TryParse(string input, string? defaultTranslation, out UsfmRe
 protected BibleProviderBase(string name, string defaultTranslation, ILogger? logger = null);
 ```
 
-**Consequence to state plainly:** each provider applies *its own* default, so the
+~~**Consequence to state plainly:** each provider applies *its own* default, so the
 same unqualified input can resolve to different translations from different
-providers — and a consumer's fallback loop calls two providers with the same
-string. `ScripturePassage.Translation` and `Usfm` are the authoritative record of
-what was fetched, never the input. A consumer that fails over should qualify the
-reference at the call site, or keep the providers' defaults identical (§ABS34).
+providers…~~ **Closed by §ABS20.1.** The hazard was real and the mitigation offered
+was advice — "keep the providers' defaults identical" — which is the kind of
+instruction a consumer discovers they ignored after a reader reports the wrong
+verse numbering. The contract now supplies the identical default itself.
+
+**What survives unchanged:** `ScripturePassage.Translation` and `Usfm` are the
+authoritative record of what was fetched, **never the input** (§ABS34).
+
+### ABS20.1 The default is `WEB`, and it belongs to the contract (#3)
+
+**An unqualified reference resolves to the World English Bible, whichever provider
+answers.** The value is a constant in this package, not a literal repeated in each
+provider's configuration:
+
+```csharp
+public static class ScriptureDefaults
+{
+    /// <summary>The translation an unqualified reference resolves to when nothing
+    /// else specifies one. Public domain, transmissible, and territorially
+    /// unrestricted — §APB27, §USE6.6.</summary>
+    public const string Translation = "WEB";
+}
+```
+
+Each provider's `DefaultTranslation` initialises from it (§APB4, §YVN4), and
+`TryParse` falls back to it when handed a null `defaultTranslation`. **So there is
+one place the value lives**, and the previous arrangement — two independently
+typed `"WEB"` string literals in two configuration classes — cannot drift apart in
+a release where someone changes one.
+
+**Why this is a contract concern and not a provider one.** §ABS5 rule 1 keeps
+Abstractions from seeing provider *configuration*, and this does not breach it: a
+`const string` is not configuration, nothing reads it at runtime from a provider,
+and the parameter is still passed in as a plain `string`. What changed is where the
+*shipped* value comes from.
+
+**Why `WEB` and not `KJV`.** §APB27: the King James Version is unlicensed in the
+United Kingdom and fifteen other territories under API.Bible's terms irrespective
+of its public-domain status, and may not be transmitted anywhere. A value that
+fills a gap silently, for every consumer who never thought about it, has to be the
+safest available option rather than the most recognisable one.
+
+### ABS20.2 Precedence, stated once (#3)
+
+**Three sources can supply a translation. They rank, and the ranking is not
+negotiable:**
+
+| | Source | Wins over |
+|---|---|---|
+| 1 | **The reference itself** — `JHN.3.16.NIV`, `"John 3:16 NIV"`, `"1 Cor 13 (ESV)"` | everything |
+| 2 | **The provider's configured `DefaultTranslation`** | the constant |
+| 3 | **`ScriptureDefaults.Translation`** (`WEB`) | nothing |
+
+**Rule 2 exists because rule 3 must not be able to break a working deployment.** A
+consumer holding an NIV licence who sets `DefaultTranslation = "NIV"` gets NIV, and
+a hard-coded `WEB` that overrode them would make the configuration field dead
+weight. "Defaults to WEB" means *in the absence of any other instruction* — which
+is what a default is.
+
+**And rule 2 is the escape hatch for a live risk.** Whether a fresh YouVersion app
+key can see `WEBUS` without accepting an agreement in the portal is **[unverified]**
+(§YVN19 rule 2). If it cannot, that deployment sets `DefaultTranslation` and keeps
+working. Removing rule 2 to make rule 3 absolute would turn an open question into
+an outage.
+
+### ABS20.3 Divergent defaults are now detectable, and are reported (#3)
+
+A consumer *may* still configure two providers with different defaults, and the
+original hazard returns in full when they do: the same string fetched from two
+providers, in Psalms, Joel or Malachi, can return **differently numbered verses**
+(§ABS17).
+
+**So `BibleAbstractionProvider` compares the composed providers' defaults at
+construction and logs at Warning when they disagree**, naming both. It does not
+throw — the configuration is legal and occasionally deliberate — but it is no
+longer silent, which is the standard §SOL14 rule 3 sets for a compliance-shaped
+mistake that produces no error.
+
+This joins the duplicate-provider-name check as the second thing the abstraction
+validates at construction rather than at first use (§ABS24).
+
+**This does not make the abstraction smart.** It compares two strings it was
+handed and writes a log line. It still resolves by name and nothing else, still
+never picks a provider, never retries and never inspects a result (§SOL2).
 
 ---
 

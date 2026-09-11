@@ -37,8 +37,18 @@ if (result.IsFound)
 ```
 
 Both lookup forms are accepted. A translation-qualified USFM key —
-`JHN.3.16.NIV`, `JHN.3.16-JHN.3.18.ESV`, `PSA.23.KJV` — or a loose human
+`JHN.3.16.NIV`, `JHN.3.16-JHN.3.18.ESV`, `PSA.23.WEB` — or a loose human
 reference, `"John 3:16 NIV"`, `"1 Cor 13:4-7 (ESV)"`, `"Jude 5"`.
+
+**Leave the translation off and you get the World English Bible.** `"John 3:16"`
+parses to `JHN.3.16.WEB`, from either provider, because
+`ScriptureDefaults.Translation` is `"WEB"` and both providers default to it. WEB is
+public domain, may be sent on outside your app, and carries no territorial
+restriction — the safest thing to resolve to when nobody said.
+
+Precedence, highest first: **the translation in the reference**, then **that
+provider's configured `DefaultTranslation`**, then **`ScriptureDefaults.Translation`**.
+So configuring a licensed translation still works exactly as you would expect.
 
 ---
 
@@ -258,10 +268,17 @@ availability failure, because those are exceptions.
 | `IBibleUnavailableException` | exception | Try the next. Transient |
 | `OperationCanceledException` | exception | **Let it bubble.** The caller went away |
 
-**One constraint binds any such policy:** qualify the reference with a translation
-before you start. Each provider applies its *own* default to an unqualified
-reference, so the same string can resolve to different translations — and in
-Psalms, Joel and Malachi those editions may number it differently.
+**Unqualified references are safe to fail over with.** `"John 3:16"` resolves to
+the **World English Bible** whichever provider answers — both ship
+`ScriptureDefaults.Translation` (`"WEB"`) as their default, so the same string
+means the same verse everywhere.
+
+**That guarantee ends the moment you set `DefaultTranslation` on one provider and
+not the other.** Do that and the old hazard returns: the same string can resolve to
+different translations, and in Psalms, Joel and Malachi those editions may number
+verses differently. The abstraction **logs at Warning at construction** when the
+providers it was handed disagree, so at least it is not silent. `Translation` and
+`Usfm` on the result are always the authoritative record of what was fetched.
 
 ---
 
@@ -289,7 +306,9 @@ Three traps you cannot derive from the types:
    touches scripture. A 500 instead of a boot failure.
 2. **A container disposes only what it creates.** Construct *inside* the factory.
    Registering a pre-built instance leaks every provider's HTTP handler pool.
-3. **Duplicate provider names throw at construction**, not at first use.
+3. **Duplicate provider names throw at construction**, not at first use. Providers
+   whose `DefaultTranslation` values *disagree* do not throw, but are logged at
+   Warning — an unqualified reference then means different things per provider.
 
 Disposing the abstraction disposes the providers it was handed.
 
