@@ -1686,20 +1686,19 @@ third-party provider can take the same medicine (§SOL7 rule 3), and carries no
    Turning `include-notes` on without that pass would turn omitted verses into
    `Found` results carrying nothing but a footnote.
 4. **A third provider** — §SOL17 rule 5.
-5. **Does `ScripturePassage` need an `AttributionUrl`?** API.Bible's terms
-   [verified] require a per-quotation citation hyperlinked to full copyright
-   information, and `Attribution` is a bare string with no link (§APB19). Either the
-   consumer holds that mapping itself, or the DTO grows a nullable
-   `AttributionUrl`. **Decide with §SOL17 rule 3** — both are additions to a
-   published DTO and should land in the same release.
+5. ~~**Does `ScripturePassage` need an `AttributionUrl`?**~~ **Settled: no.** The
+   per-quotation hyperlink API.Bible's terms require points at the *consumer's own*
+   copyright page, which this library cannot know, and neither upstream puts a URL
+   on a passage at all (§ABS44.5). The publisher links that page needs ride on
+   `TranslationSummary.PublisherUrl` instead — populated for YouVersion, null for
+   API.Bible, and fillable either way from `TranslationMetadata` (§ABS45).
 
-   **The cluster is now five, and that is the point.** `Language`,
-   `ScriptDirection` (§ABS42.6) and `Markup` (§ABS43) landed during design;
-   `AttributionUrl` and `KnownTranslations` are still open. Every one is a
-   `required` member or an interface member, so every one is a breaking change
-   *after* the first publish and free *before* it (§SOL2 rule 7). **Close the
-   remaining two before the first `RELEASES:` PR**, or accept a major version to
-   add a nullable string later.
+   **The published-surface cluster is now closed.** `Language`, `ScriptDirection`
+   (§ABS42.6), `Markup` (§ABS43), `Notes` (rule 3), `GetTranslationsAsync` (§ABS44)
+   and `TranslationMetadata` (§ABS45) all landed during design — every one a
+   `required` member or an interface member, and therefore free now and a major
+   version after the first publish (§SOL7 rule 4). **Nothing in this cluster is
+   still open**, which is what the first `RELEASES:` PR was waiting on.
 
 ---
 
