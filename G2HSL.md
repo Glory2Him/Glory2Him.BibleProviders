@@ -1,11 +1,7 @@
-﻿Glory2Him.BibleProviders
+﻿# Glory 2 Him Software License (G2HSL)
+Version 1.0
+© [2025] [GLORY 2 HIM]   
 
-Copyright (c) 2025 Glory 2 Him. All rights reserved.
-
----
-Material in this repository is made available under the following terms:
-  1. Code is licensed under the G2HSL v1.0 license, reproduced below. 
-     The text of the license can be found here: https://github.com/Glory2Him/Glory2Him/blob/main/G2HSL.md
 ---
 
 ## 0. Ethical Use Condition
