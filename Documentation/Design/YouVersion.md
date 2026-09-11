@@ -320,6 +320,17 @@ Required by §ABS33 item 8, because this provider has timeout logic and
    lookup as an availability exception. Publishing a partial map would silently turn
    licensed translations into `TranslationNotSupported`.
 
+
+### YVN7.1 Serving `GetTranslationsAsync` (#3)
+
+§ABS44 is a **projection of this cache**, not a second one and not a second call.
+Once warm it is a map over the holder above; on a cold cache it triggers the same
+single-flight fetch, and a fetch that fails with no usable previous catalogue
+**throws** rather than returning empty (§ABS44.2) — an outage must never read as
+"this provider carries nothing".
+
+Field mapping: `abbreviation` → `Abbreviation`, `name` → `Name`, the matched language range → `Language`, the retained script direction → `ScriptDirection`, the numeric id → `ProviderEditionId`, and the retained copyright → `Attribution` — which **is** populated here, because this catalogue is the only place it exists (rule 4).
+
 ---
 
 ## YVN8. Lookup flow (#1)
@@ -910,7 +921,7 @@ change what gets built.
 |---|---|---|---|
 | 1 | **Spikes** | The ten items in §YVN19, including reading the platform terms. Endpoint existence and range support decide item 4's shape; the terms decide whether consumers may store at all | 1–1.5 d |
 | 2 | **Transport & container** | Internal `ServiceCollection`, typed client with `X-YVP-App-Key`, resilience pipeline and budget validation, disposal | 0.5 d |
-| 3 | **Catalogue** | Per-range merge, pagination with the §YVN7 rule 5 detection, the rule 2 parameter fallback, copyright retention, **atomic refresh** | 1–1.5 d |
+| 3 | **Catalogue** | Per-range merge, pagination with the §YVN7 rule 5 detection, the rule 2 parameter fallback, copyright retention, **atomic refresh**, and the §YVN7.1 projection | 1–1.75 d |
 | 4 | **Lookup flow** | Shape-based routing, all content through `/passages` (§YVN9), the range strategy the spike settles, AngleSharp HTML→`Blocks`, the `format=text` fallback, content check | 1.5–2 d |
 | 5 | **Failure mapping** | §YVN12 and §YVN13, including 204, 406 and the 429 discriminator | 0.5 d |
 | 6 | **Tests** | The three projects in §YVN20 plus the inherited Conformance suite | 1–1.5 d |

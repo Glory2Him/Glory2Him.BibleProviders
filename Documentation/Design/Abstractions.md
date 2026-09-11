@@ -1,6 +1,6 @@
 # Abstractions — the provider contract
 
-**Area prefix:** `ABS` · **Sections:** §ABS1 – §ABS43
+**Area prefix:** `ABS` · **Sections:** §ABS1 – §ABS44
 **Package:** `Glory2Him.BibleProviders.Abstractions`
 **Solution overview:** [Design.md](Design.md) · **Providers:** [ApiBible.md](ApiBible.md) · [YouVersion.md](YouVersion.md)
 
@@ -96,6 +96,11 @@ public interface IBibleProvider : IDisposable
 
     /// <summary>Lookup by loose human reference: "John 3:16 NIV", "1 Jn 1:9 (ESV)", "Rom 8:28".</summary>
     Task<ScriptureResult> GetScriptureByReferenceAsync(string reference, CancellationToken cancellationToken = default);
+
+    /// <summary>What this provider's catalogue currently carries. Served from the cached catalogue,
+    /// so it costs an upstream request only on a cold cache. A snapshot, never a guarantee — §ABS44.</summary>
+    Task<IReadOnlyCollection<TranslationSummary>> GetTranslationsAsync(
+        CancellationToken cancellationToken = default);
 }
 ```
 
@@ -142,8 +147,13 @@ public interface IBibleProvider : IDisposable
 
 4. **No pre-flight "do you support translation X" method.** Availability is
    subscription-driven and changes without a redeploy; a provider attempts the
-   lookup and answers `TranslationNotSupported`. See §SOL17 rule 3 for the open
-   question this leaves.
+   lookup and answers `TranslationNotSupported`.
+
+   **`GetTranslationsAsync` is not that method, and the distinction is the whole of
+   §ABS44.** It reports what the catalogue *said*, for populating a list; it does
+   not answer "will this succeed". A caller that branches on its result instead of
+   attempting the lookup has reintroduced exactly the pre-flight check this rule
+   forbids, and will be wrong the first time a subscription changes underneath it.
 
 5. **Two channels, and they do not overlap** — §ABS6.
 
@@ -683,6 +693,10 @@ public sealed class ScripturePassage
     public string? RequestedUsfm { get; init; }                    // the caller's key when it differs from Usfm
     public IReadOnlyList<string> MissingVerseIds { get; init; } = Array.Empty<string>();
 
+    /// <summary>Footnotes and cross-references. Reserved and always empty today — providers
+    /// request notes suppressed. Populating it later is additive, not breaking. §ABS22</summary>
+    public IReadOnlyList<ScriptureNote> Notes { get; init; } = Array.Empty<ScriptureNote>();
+
     /// <summary>Diagnostics only — rawJson/rawHtml. Nothing a consumer is obliged to act on may live
     /// here; that is how usage tokens get lost.</summary>
     public IReadOnlyDictionary<string, string> ProviderMetadata { get; init; }
@@ -891,6 +905,15 @@ public sealed record ScriptureSegment(
     ScriptureStyle Style,     // inline only, and genuinely combinable
     string? Verse);           // "16", "3-4", "1a"; null in headings
 
+/// <summary>Reserved (§ABS39 rule 3). No provider populates this yet.</summary>
+public sealed record ScriptureNote(
+    ScriptureNoteKind Kind,
+    string? Caller,        // the marker in the text: "a", "1", "*"
+    string? Verse,         // the verse it hangs off; null when it belongs to the block
+    string Text);          // the note's own text, already plain
+
+public enum ScriptureNoteKind { Unknown = 0, Footnote = 1, CrossReference = 2, Other = 3 }
+
 [Flags]
 public enum ScriptureStyle
 {
@@ -972,6 +995,10 @@ public interface IBibleAbstractionProvider : IDisposable
 
     Task<ScriptureResult> GetScriptureByReferenceAsync(
         string providerName, string reference, CancellationToken cancellationToken = default);
+
+    /// <summary>Forwards to the named provider. Never merged across providers — §ABS44.4.</summary>
+    Task<IReadOnlyCollection<TranslationSummary>> GetTranslationsAsync(
+        string providerName, CancellationToken cancellationToken = default);
 }
 ```
 
@@ -1617,21 +1644,31 @@ third-party provider can take the same medicine (§SOL7 rule 3), and carries no
    through `ToStorageString()`, and is `None` exactly when `Html` is null (§ABS43).
 10. Every thrown `IBibleDependencyException` exposes `ProviderConsole` — a value or
     a deliberate null, never a throw (§ABS7.1).
+11. `GetTranslationsAsync` returns the same result twice without a second upstream
+    request, every entry's `Abbreviation` round-trips through `UsfmReference`, and a
+    cold-cache upstream failure **throws** rather than returning empty (§ABS44.2).
+12. `Notes` is empty on every `Found` result and never null (§ABS39 rule 3).
 
 ---
 
 ## ABS39. Open questions (#1)
 
-1. **Where does a consumer's translation list come from?** §SOL17 rule 3. Decide
-   before the first provider ships.
+1. ~~**Where does a consumer's translation list come from?**~~ **Settled: an async
+   `GetTranslationsAsync` on `IBibleProvider`, served from the cached catalogue.**
+   §ABS44.
 2. **TFM** — settled as `net10.0` (§SOL6). Recorded here only because earlier
    drafts left it open.
-3. **Footnotes and cross-references** — `ScriptureBlock`/`ScriptureSegment` have
-   no representation for USX `note` nodes, and providers request notes suppressed.
-   Fine for display; adding them later is a model change rather than a mapping
-   change. Note the interaction with §APB9: a verse whose *only* content is a
-   footnote is exactly the case the content check has to catch, and suppressing
-   notes is what makes it detectable.
+3. ~~**Footnotes and cross-references**~~ **Settled: the space is reserved, not
+   built.** `ScripturePassage.Notes` and `ScriptureNote` exist (§ABS16, §ABS22) and
+   are always empty; providers keep requesting notes suppressed. Populating them
+   later is then **additive and MINOR** rather than a model change and MAJOR
+   (§SOL7 rule 4) — which is the whole reason to spend the twenty lines now.
+
+   **Whoever populates them must design the §APB9 interaction first.** A verse
+   whose *only* content is a footnote is exactly the case the content check has to
+   read as empty, and suppressing notes is currently what makes that detectable.
+   Turning `include-notes` on without that pass would turn omitted verses into
+   `Found` results carrying nothing but a footnote.
 4. **A third provider** — §SOL17 rule 5.
 5. **Does `ScripturePassage` need an `AttributionUrl`?** API.Bible's terms
    [verified] require a per-quotation citation hyperlinked to full copyright
@@ -1667,8 +1704,9 @@ every item there depends on items 1–7 here.
 | 8 | **Conformance package** | A new project, plus the eight inherited tests in §ABS38 | 0.5 d |
 | 9 | **Reference surface** (§ABS41) | `BibleReference` over items 2–3 — cheap, it is a facade. Then `Suggest`, `ReferenceSuggestion`, the confidence floor, and the invariant tests in §ABS36 item 3 including the one-character collision fixture. **Priced for the tests, not the matcher:** edit distance over the existing abbreviation table is an afternoon; proving `Jos` never becomes James is the work | 1–1.5 d |
 | 10 | **Language scoping** (§ABS42) | Per-language table format, the ISO 639-3 scope parameter threaded through `BibleReference`/`RenderReference`, the `Language` + `ScriptDirection` DTO fields, `dir="rtl"` in the renderer, and a second shipped table used purely to prove the format is real. **The English table alone does not prove the design** — build it with two | 1–1.5 d |
+| 11 | **Translation discovery** (§ABS44) | `TranslationSummary`, `GetTranslationsAsync` on the interface, the base class and the abstraction, projected from each provider's existing catalogue holder. Cheap because the cache already exists; the tests are the cold-cache-throws and no-second-request cases | 0.5 d |
 
-Abstraction total ≈ **8.5–12 dev-days**. Sequencing that matters: 2 and 3 before
+Abstraction total ≈ **9–12.5 dev-days**. Sequencing that matters: 2 and 3 before
 6; 5 before 6 and before any provider; 4 is independent of 5–6 and can run in
 parallel. **Item 9 splits:** the `BibleReference` facade lands with items 2–3 and
 `BibleProviderBase` routes its parse through it (§ABS41), so that half is not
@@ -2045,3 +2083,70 @@ to it afterwards. A consumer that stores `Html`, edits it, concatenates it with
 something else, or templates values into it has produced new markup and owns it.
 The assertion travels with the row precisely so that such a consumer can tell it is
 no longer holding what we handed it.
+
+---
+
+## ABS44. Translation discovery (#3)
+
+*Settles §SOL17 rule 3 and §ABS39 rule 1. Appended per the no-renumbering rule;
+read it with §ABS4 and §ABS5 rule 4.*
+
+A consuming application needs to populate a translation list, and until now had no
+way to: each provider's catalogue is private, and the only way to learn a
+translation was unavailable was to spend a metered request and read
+`TranslationNotSupported` (§SOL12).
+
+```csharp
+public sealed record TranslationSummary(
+    string Abbreviation,          // "NIV" — the key callers pass back in a USFM reference
+    string Name,                  // "New International Version"
+    string Language,              // ISO 639-3 (§ABS42.3)
+    ScriptDirection ScriptDirection,
+    string? Attribution,          // the edition's copyright text, where the catalogue carries it
+    string ProviderEditionId);    // the upstream's own id — opaque, for diagnostics and Usage
+```
+
+### ABS44.1 Why a method and not a property (#3)
+
+A `IReadOnlyCollection<string> KnownTranslations { get; }` was the obvious shape
+and is the wrong one: **it would lie.** The catalogue loads lazily over HTTP
+(§APB7, §YVN7), so a synchronous property either blocks on I/O behind a property
+getter, or returns empty before the first fetch — reporting "no translations" for a
+provider carrying hundreds. An async method is honest about what it does.
+
+### ABS44.2 What it costs (#3)
+
+**Nearly nothing, which is what makes it worth having.** Both providers already
+fetch and cache the whole catalogue to resolve an abbreviation to an upstream id,
+so this is served from memory once warm and spends an upstream request only on a
+cold cache. It is the same cached object, projected — not a second call, and not a
+second cache.
+
+It therefore obeys the same holder rules as the catalogue it reads: TTL honoured,
+faults not memoized, single-flight refresh, serve-stale-on-failure (§APB7 rule 5).
+A cold-cache call that cannot reach the upstream **throws** an availability
+exception rather than returning empty — an empty list means "the catalogue has
+nothing", and an outage must never be mistaken for that (§ABS6).
+
+### ABS44.3 What it does not promise (#3)
+
+1. **It is a snapshot, not a guarantee.** §ABS5 rule 4 stands: availability is
+   subscription-driven and can change between this call and the next lookup. A
+   caller populates a list from it; a caller must not gate a fetch on it.
+2. **It is not a support check.** Attempting the lookup and handling
+   `TranslationNotSupported` remains the only correct way to find out.
+3. **`Attribution` here is nullable and often null**, because not every catalogue
+   carries copyright on its list response — API.Bible needs
+   `include-full-details=true` for it (§APB7 rule 3), and this design does not send
+   that on the hot path. A provider fills it when it has it.
+4. **It does not carry a publisher URL**, because neither upstream is known to
+   expose one. §SOL17 rule 8 is where that question lives.
+
+### ABS44.4 The abstraction forwards it (#3)
+
+`IBibleAbstractionProvider` gains the matching overload taking a provider name
+(§ABS24), classified through the same `TryCatch` as everything else (§ABS10). It
+does **not** merge across providers: two providers may carry the same abbreviation
+for different editions, and silently unioning them would produce a list no single
+provider can serve. Merging, if an application wants it, is an orchestration
+concern (§SOL10).

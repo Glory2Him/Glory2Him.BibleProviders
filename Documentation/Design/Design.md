@@ -828,14 +828,11 @@ are **decisions, not spikes** — no amount of upstream research settles them.
    Kept as a numbered rule rather than deleted, because what it records is general
    and will recur: **a relocated rule goes stale, and nothing validates a citation.**
 
-3. **Where does the consuming application's translation list come from?** Each
-   provider's catalogue is private and the only way to learn a translation is
-   unavailable is to spend a metered request. Either the list is
-   application-owned configuration — in which case each provider's
-   `TranslationMap` is authoritative and the live catalogue merely validates it —
-   or `IBibleProvider` grows a read-only `KnownTranslations` snapshot.
-   **Decide before the first provider ships**: a small addition now, a breaking
-   change later (§SOL2 rule 7).
+3. ~~**Where does the consuming application's translation list come from?**~~
+   **Settled: `GetTranslationsAsync` on `IBibleProvider`**, async, served from the
+   catalogue each provider already caches, and explicitly a snapshot rather than a
+   support check. §ABS44. Landed before the first release, which is what kept it a
+   MINOR-cost addition rather than a MAJOR one.
 
 4. **Is a ~20-second worst-case lookup acceptable?** Both providers ship a 20 s
    overall / 5 s per-attempt / 2-retry budget — the smallest that closes
@@ -900,6 +897,23 @@ are **decisions, not spikes** — no amount of upstream research settles them.
    `.github/workflows/*.yml` are build output. **Never hand-edit them.** Anyone who
    does will have their change silently reverted by the next person who runs the
    generator, with no conflict and no warning.
+
+---
+
+8. **Does either upstream expose a publisher website URL?** (#3) API.Bible Terms
+   §7 requires a hosted copyright page carrying "IP Holder details, and website
+   links", and `Attribution` is a copyright *string* with no URL in it. The
+   per-quotation hyperlink is not the gap — its target is the consumer's own
+   copyright page, which this library cannot know — but the publisher links that go
+   *on* that page have to come from somewhere.
+
+   API.Bible's Bible resource carries an `info` field described as promo
+   information, gated behind `include-full-details=true`; whether it contains
+   publisher URLs is **[unverified]**. If it does, they fold into
+   `TranslationSummary` (§ABS44) at no extra request. If it does not, building the
+   copyright page stays entirely the consumer's job and nothing in this library
+   changes. **A spike, not a decision** — and cheap, because the catalogue call
+   already exists.
 
 ---
 

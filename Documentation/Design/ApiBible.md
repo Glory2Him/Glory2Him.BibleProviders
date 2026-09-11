@@ -299,6 +299,17 @@ cached.
    catalogue miss, and a consumer must be able to suspend the provider rather than
    read it as "this translation does not exist" (§ABS6).
 
+
+### APB7.1 Serving `GetTranslationsAsync` (#3)
+
+§ABS44 is a **projection of this cache**, not a second one and not a second call.
+Once warm it is a map over the holder above; on a cold cache it triggers the same
+single-flight fetch, and a fetch that fails with no usable previous catalogue
+**throws** rather than returning empty (§ABS44.2) — an outage must never read as
+"this provider carries nothing".
+
+Field mapping: `abbreviation` → `Abbreviation`, `name` → `Name`, `language.id` → `Language`, `language.scriptDirection` → `ScriptDirection`, the opaque bibleId → `ProviderEditionId`, and `Attribution` **null unless `include-full-details=true` was sent** (rule 3) — which this design does not send on the hot path, so it is normally null here and filled on the passage instead (§APB11 rule 5).
+
 ---
 
 ## APB8. Endpoint selection by reference shape (#1)
@@ -1034,7 +1045,7 @@ Every item depends on the abstraction items 1–7 (§ABS40).
 |---|---|---|---|
 | 1 | **Spikes** | The eight items in §APB23. Produces the fixtures §APB24 is built on, so it cannot be skipped (§SOL9) | 1–1.5 d |
 | 2 | **Transport & container** | Internal `ServiceCollection`, typed client, resilience pipeline and budget validation, disposal via `InternalServices` | 0.5–1 d |
-| 3 | **Catalogue** | Refreshable holder with the properties in §APB7, `TranslationMap` precedence | 1 d |
+| 3 | **Catalogue** | Refreshable holder with the properties in §APB7, `TranslationMap` precedence, and the §APB7.1 projection | 1–1.25 d |
 | 4 | **Lookup flow** | Shape-based endpoint routing, the explicit query string, content check, truncation check, JSON→`Blocks` mapping, the `/search` fallback | 1.5–2 d |
 | 5 | **Failure mapping** | §APB14 and §APB15, including the catalogue-aware 403 rule and the 429 discriminator once the spike settles it | 0.5–1 d |
 | 6 | **FUMS** | `ScriptureUsage` population, and the new `.Fums` package: server path, browser payload, batching/chunking, charset validation, scheme-pinning test | 1–1.5 d |
