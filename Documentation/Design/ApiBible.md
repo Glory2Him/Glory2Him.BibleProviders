@@ -144,6 +144,13 @@ new key without spending one of the three licensed-Bible slots [unverified —
 §APB23 rule 2]. `NIV` is the worst candidate: licensed, non-commercial-only, and
 absent from a fresh key's catalogue.
 
+> **Superseded in part — see §APB27.** Terms §9.8 grants no licence for the KJV
+> within the United Kingdom and fifteen other named territories, *irrespective of
+> its public-domain status*, and §9.9(b)(i) bars transmitting it anywhere. The
+> availability reasoning above still holds; the conclusion that KJV is a safe
+> shipped default does not. **§APB27.4 rule 1 proposes `WEB` instead**, and that
+> decision is open.
+
 A deployment holding a licence sets `DefaultTranslation` explicitly. **The shipped
 constant is a *safe* default, not a recommended one.**
 
@@ -1238,3 +1245,236 @@ rule 5) — but both bind the consuming application.
 removal duties from §10 and §11; whether §13 adds to them is unknown. Read it
 before relying on §APB17 as a complete statement of the removal obligations —
 §APB18's history is the reason to check rather than assume.
+
+---
+
+## APB27. The King James Version is not licensed in the UK — Terms §9.8 (#3)
+
+**This is the most consequential single finding in the licence review, because it
+lands on the shipped default and on the territory this repository is developed
+in.** [verified], quoted in the material part:
+
+> "Rights in the Authorized Version in the United Kingdom are vested in the Crown.
+> **No licence granted under these Terms and Conditions extends to the Authorized
+> Version within the United Kingdom (GB), the Isle of Man (IM), Jersey (JE),
+> Guernsey (GG)**, or the British Overseas Territories of Anguilla (AI), Bermuda
+> (BM), the British Indian Ocean Territory (IO), the British Virgin Islands (VG),
+> the Cayman Islands (KY), the Falkland Islands (FK), Gibraltar (GI), Montserrat
+> (MS), the Pitcairn Islands (PN), Saint Helena, Ascension and Tristan da Cunha
+> (SH), South Georgia and the South Sandwich Islands (GS), or the Turks and Caicos
+> Islands (TC) (the "Restricted Territory"). This applies **irrespective of
+> whether your use is Commercial Use or Non-Commercial Use**, whether any fee is
+> charged, **whether the content is identified as Public Domain**, and
+> irrespective of format. **You shall not distribute the Authorized Version to a
+> Restricted Territory.**"
+
+### APB27.1 What it covers, and what it does not (#3)
+
+"Authorized Version" is defined tightly, and the exclusion list matters as much as
+the inclusion list [verified]:
+
+| In scope | Out of scope |
+|---|---|
+| King James Version | New King James Version (NKJV) |
+| King James Version, American Edition | English Standard Version (ESV) |
+| King James Version 400th Anniversary Edition | New American Standard Bible (NASB) |
+| "any other edition of that translation made available through API.Bible" | Revised Standard Version (RSV), NRSV |
+| — | **American Standard Version (ASV)** |
+| — | Modern English Version (MEV) |
+
+**So every other public-domain edition in §USE6.5 is unaffected.** ASV is named as
+out of scope, and WEB, BSB, YLT, Darby, DRA, GNV and WBT are not derived editions
+of the Authorized Version in the sense the clause defines.
+
+### APB27.2 Three reasons this is worse than it first reads (#3)
+
+1. **"Public Domain" is explicitly not a defence.** The clause says so in terms.
+   A reader who knows the KJV is public domain in the United States, and reasons
+   from there, reaches exactly the wrong answer.
+2. **§9.9(b)(i) removes the transmission permission.** §9.9(a) permits electronic
+   transmission of public-domain content, but §9.9(b)(i) excludes "any content
+   subject to a territorial restriction, **including the Authorized Version (King
+   James Version) under Section 9.8** … **irrespective of identification as Public
+   Domain**" [verified]. **So the KJV is the one public-domain translation that
+   may not be emailed or messaged.**
+3. **The duty is on distribution, not on the developer's location.** "You shall
+   not distribute the Authorized Version to a Restricted Territory" — a US-hosted
+   application with UK readers is squarely in scope. Geography of the *reader* is
+   what the clause turns on, and nothing in this library knows it.
+
+### APB27.3 What this changes in the design (#3)
+
+1. **§APB4's reasoning is intact; its conclusion is now narrower.** KJV was chosen
+   as the default because it is open-access on Starter and therefore resolves on a
+   fresh key. That is still true. **But the default now has a territorial
+   condition that the previous reasoning never considered**, and this repository's
+   own developer is in GB.
+2. **The recommendation is to change the shipped `DefaultTranslation` to `WEB`**
+   for this provider — public domain by dedication, no territorial restriction, no
+   share-alike obligation, open access, and with a British edition available. This
+   is a **behaviour change to a published default** and therefore an architect
+   decision under §SOL7; it is recorded as open at §APB27.4 rather than made here.
+3. **Nothing in this library can enforce §9.8.** The provider does not know the
+   reader's territory, and §SOL2 rule 5 keeps it that way. This is a consumer
+   obligation, documented, and the correct mechanism is `TranslationMetadata`
+   configuration plus the consumer's own geo policy — the same shape as §USE7's
+   `ShareRights` problem.
+4. **YouVersion is a separate agreement and this clause does not reach it.**
+   But the underlying Crown letters patent are a fact of UK law rather than a term
+   of the API.Bible contract, so a UK deployment should not read "§9.8 does not
+   apply to YouVersion" as "the KJV is unencumbered in the UK there" [unverified —
+   §YVN14 records no equivalent clause either way].
+
+### APB27.4 Open (#3)
+
+1. **Should `DefaultTranslation` change from `KJV` to `WEB`?** (§APB27.3 rule 2.)
+   It is a default-value change before first release, so MINOR under §SOL7 rule 4.
+   The counter-argument is that KJV is the most recognisable abbreviation and the
+   most likely to be present on any key; the argument for is that a shipped default
+   should not be one that a whole class of deployments may not lawfully serve.
+2. **Does the same reasoning apply to `KJVA`** and any other KJV edition in the
+   catalogue? The clause says "any other edition of that translation", so
+   presumptively yes, but the catalogue's edition names have not been enumerated
+   [unverified].
+
+---
+
+## APB28. Updates and removals, and the metadata duty — Terms §13 and §4.4 (#3)
+
+Closes the gap §APB26.4 and §USE9 rule 4 both recorded.
+
+### APB28.1 §13 Updates (#3)
+
+> "API.Bible may update, modify or discontinue any features, service, content or
+> function of the API content … **You shall implement and use the most current
+> version of the API content and make any changes to your Services that are
+> required as a result of the Update, at your sole expense.** Updates may adversely
+> affect the way your Services access or communicate with the API.Bible API or
+> display API.Bible Content."
+
+**This is a compatibility obligation, not a content one**, and it is the clause
+that makes §APB23's spike list a standing concern rather than a one-off: the
+upstream may change response shape, and absorbing that is contractually the
+consumer's cost. It is also why §APB16's parser tolerates unknown USX elements
+rather than failing on them.
+
+### APB28.2 §13 Removals (#3)
+
+> "If API.Bible content is deleted, **gains protected status**, or is otherwise
+> suspended, withheld, modified, or removed from the API.Bible Applications
+> (including removal of location information), you will make all reasonable
+> efforts to delete or modify that Content (as applicable) as soon as possible, and
+> **in any case within twenty four (24) hours after a written request** to do so by
+> API.Bible, or by an IP Holder with regard to their API.Bible Content."
+
+Two things §APB17 did not record:
+
+1. **"Gains protected status" is a removal trigger.** A work available today as
+   public domain can become licensed — a new critical edition, a disputed
+   dedication, a territorial ruling. **So the delete path is owed even by a
+   consumer that stores only public-domain translations** (§USE6.2).
+2. **24 hours on written request, against §10's 72 hours on termination.** They
+   are different clocks for different events and §APB17 now carries both. The
+   tighter one governs a content-specific request.
+
+### APB28.3 §4.4 The metadata review duty (#3)
+
+> "**Prior to using any API Content**, you are responsible for reviewing the
+> copyright and licensing metadata provided via the API.Bible API (including the
+> `copyright` field returned for the applicable Bible version, e.g. via
+> `Full Details = true` on the `/Bibles` endpoint) to identify the applicable
+> **copyright status, license type, and any use restrictions** for that specific
+> content … **This obligation applies to all API Content, including but not limited
+> to Public Domain, Creative Commons, and Licensed/Copyright Reserved content.**"
+
+**This partially contests §APB20.1 and §USE7**, which record that the catalogue
+exposes no rights class. Both remain correct about the *schema* — there is no
+`licenceTier` or `rightsClass` field — but the Terms assert that copyright status
+and licence type are discoverable from the `copyright` field, and place a duty on
+the consumer to read it.
+
+Marked **[contested]**, and the resolution is a spike: §APB23 gains a step to
+fetch `/bibles?include-full-details=true` and record what the `copyright` field
+actually contains across a public-domain, a Creative Commons and a licensed
+edition. **If it is free prose, §USE7's conclusion stands and configuration
+remains the only reliable classification. If it is structured, `ShareRights`
+(§USE9 rule 1) may be derivable rather than configured** — which would change that
+decision.
+
+Either way the duty is the consumer's and this library discharges none of it: the
+`copyright` string already travels as `Attribution` (§ABS16), which is the
+material this clause asks a consumer to read.
+
+---
+
+## APB29. The Starter plan, as the dashboard actually states it (#3)
+
+Read from the application's own Plan page rather than the marketing site, so all
+[verified] for this repository's key on 2026-09-11:
+
+| Option | Selection |
+|---|---|
+| API Calls | **5,000 / month** |
+| **Commercial Use** | **"Allowed on Pro Plans"** |
+| **End Users** | **0–1K** |
+| Bible Access | **250+ Bibles included**, 100+ audio Bibles |
+| Additional Bibles | **3 slots**, here holding NLT, NKJV and NIV |
+
+Three of these change or sharpen what the design recorded.
+
+### APB29.1 The Monthly End Users cap is new (#3)
+
+**Nothing in this design had recorded an end-user cap, and the Starter plan
+carries one: 0–1K.** §2 defines "Monthly End Users" as "the number of distinct end
+users who access an application during a Plan Month", and "Plan Month" as the
+recurring monthly period from the date the plan took effect — **not** a calendar
+month.
+
+**This is a second, independent ceiling on the free tier**, and it binds
+differently from the call quota: 5,000 calls could be spent by 50 users or by
+4,000, and only one of those breaches the plan. **A consumer whose audience grows
+past a thousand distinct users in a plan month needs a Pro plan even if call
+volume is comfortable.**
+
+Nothing in this library can observe it — the provider sees requests, not users
+(§SOL2 rule 5) — so it is documented and left with the consumer, like the
+Territory and device-count parameters at §APB26.3. It belongs in the same list.
+
+### APB29.2 "250+ Bibles", not the whole catalogue (#3)
+
+§APB4's reasoning assumed KJV sits in the open-access set on Starter and is
+therefore reachable from a fresh key [unverified — §APB23 rule 2]. **The dashboard
+confirms an open-access set exists and is 250+ Bibles, but does not enumerate
+it**, and the plan page offers no listing. So §APB23 rule 2 stays open, and
+§USE6.5's availability column stays [unverified].
+
+**Enumerating it requires a live call with the key** —
+`GET /bibles?include-full-details=true` — which is §APB23's spike and also settles
+§APB28.3's contested question about what the `copyright` field contains. **The two
+should be run as one spike**, because a single response answers both.
+
+### APB29.3 Commercial use is a plan attribute, stated plainly (#3)
+
+The dashboard's wording is "**Allowed on Pro Plans**", which confirms §APB20 and
+§APB20.1: commercial use is gated by the plan a consumer bought, is visible to
+that consumer in their own dashboard, and is not something this library can see or
+should model. **§APB20.1's decision — no `IsNonCommercialUseOnly` flag on the
+configuration — is reinforced rather than revisited**, because the authoritative
+statement already exists somewhere the consumer can read it.
+
+### APB29.4 ABS classifies licences into exactly two kinds (#3)
+
+The dashboard's citation builder asks for one of two license types [verified]:
+
+> "We have two kinds of licenses: **Licensed and/or Copyright Reserved** …
+> and **Creative-Commons and Public-Domain**."
+
+**This is the strongest available support for §USE7's proposed `ShareRights`
+being a small closed enum rather than a rights taxonomy.** ABS's own tooling
+draws the line in one place, and it is the same line §9.9(a) draws for
+transmission — with the two riders that the NC/ND Creative Commons variants sit on
+the restricted side of the transmission question (§USE4) and the KJV sits on the
+restricted side despite being public domain (§APB27).
+
+So a faithful enum is **not** two-valued after all, and `ShareRights`'s three
+members (§USE7) remain right: `Unknown`, `NotPermitted`, `Permitted`.

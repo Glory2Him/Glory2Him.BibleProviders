@@ -156,7 +156,7 @@ served it. Full detail and the clauses behind every mark:
 | Share a *reference* + link instead | ✅ | ✅ | ✅ |
 | Print more than 100 verses | ❌ | ❌ | ❌ |
 | Use commercially | ✅ | ❌ | ❌ <sub>on the free Starter tier</sub> |
-| Let users copy or redistribute freely | ❌ <sub>DRM required</sub> | ❌ | ❌ |
+| Let users copy or redistribute freely | ✅ <sub>DRM binds "the Property"; public domain is excluded from it</sub> | ❌ | ❌ <sub>DRM required</sub> |
 
 ### YouVersion
 
@@ -178,9 +178,40 @@ served it. Full detail and the clauses behind every mark:
 field on either catalogue. If you build a share button, classify translations in
 **configuration** and default to *not shareable*.
 
-**The safe default for anything that leaves your app is a public-domain
-translation.** KJV, ASV and WEB are shareable on both upstreams, which is part of
-why KJV is the shipped default.
+### Public-domain translations, and the one exception
+
+**The common case — look a verse up, show it on a page, let a reader send it on —
+is fully permitted for public-domain translations.**
+
+| Translation | Rights | Display | **Send on**<br/><sub>email · WhatsApp · SMS</sub> | Print | Commercial |
+|---|---|:---:|:---:|:---:|:---:|
+| **WEB** — World English Bible | Public domain (dedicated) | ✅ | ✅ | ✅ | ✅ |
+| **BSB** — Berean Standard Bible | Public domain (dedicated) | ✅ | ✅ | ✅ | ✅ |
+| **ASV** — American Standard Version | Public domain | ✅ | ✅ | ✅ | ✅ |
+| **YLT**, **DARBY**, **DRA**, **GNV**, **WBT**, **JPS 1917** | Public domain | ✅ | ✅ | ✅ | ✅ |
+| **OEB** — Open English Bible | CC0 | ✅ | ✅ | ✅ | ✅ |
+| **FBV**, **ULB/UST** | CC BY-SA 4.0 | ✅ | ✅ <sub>share-alike follows it</sub> | ✅ | ✅ |
+| **KJV** | Public domain in the US · **Crown copyright in the UK** | ⚠️ | ❌ | ⚠️ | ⚠️ |
+| Any CC BY-**NC** / **ND** edition | Restricted CC | ✅ | ❌ | ⚠️ | ❌ |
+
+> **⚠️ The King James Version is the exception to all of it.** API.Bible grants
+> **no licence** for the KJV within the United Kingdom, the Isle of Man, Jersey,
+> Guernsey or thirteen British Overseas Territories — "irrespective of whether your
+> use is Commercial Use or Non-Commercial Use … **whether the content is identified
+> as Public Domain**, and irrespective of format" (Terms §9.8) — and separately
+> bars transmitting it anywhere (§9.9(b)(i)). **The duty follows your reader's
+> location, not yours.** NKJV, ESV, NASB, RSV, NRSV, MEV and **ASV** are expressly
+> *not* covered by it.
+
+**So: for anything that leaves your app, reach for WEB or BSB.** Both are modern,
+dedicated to the public domain by their translators, and carry neither a
+territorial restriction nor a share-alike obligation.
+
+**And public domain does not switch the API terms off.** FUMS reporting, the
+30-day recency check on stored text, and the deletion duties are owed on a WEB
+verse exactly as on an NIV one — they are contractual duties to the API operator,
+not copyright duties to a rights holder. Full reasoning:
+[§USE6](Documentation/Design/UsagePermission.md).
 
 ---
 

@@ -18,7 +18,7 @@ library, which stores nothing and transmits nothing (§SOL2 rule 5).
 
 | | May a consumer **store** it? | May a consumer **pass it on** outside their app? |
 |---|---|---|
-| **API.Bible** — public domain, CC BY, CC BY-SA | Yes, refreshed on cycle | **Yes** |
+| **API.Bible** — public domain, CC BY, CC BY-SA | Yes, refreshed on cycle | **Yes** — §USE6. **Except the KJV**, which is territorially restricted and may not be transmitted at all (§USE11) |
 | **API.Bible** — any other translation (NIV, ESV, NLT…) | Yes, refreshed on cycle | **No**, unless the rights holder expressly authorised it |
 | **YouVersion** — the Public Domain & Creative Commons set (361) | Yes | **Governed by each work's own PD/CC licence**, not by an agreement — §USE6 |
 | **YouVersion** — any of the nine publisher agreements (1,124) | Yes | **No** — licensed for display *in your application* |
@@ -86,7 +86,8 @@ So a share-to-WhatsApp button:
 
 | Translation | Share button |
 |---|---|
-| KJV, ASV, WEB and other public domain | **Permitted** |
+| ASV, WEB, BSB and other public domain | **Permitted** |
+| **KJV** | **Not permitted** — §9.9(b)(i) excludes territorially restricted content "irrespective of identification as Public Domain" (§USE11) |
 | CC BY or CC BY-SA editions | **Permitted** |
 | CC BY-**NC** or CC BY-**ND** editions | **Not permitted** — the NC and ND elements are named as exclusions |
 | NIV, ESV, NLT, CSB and other licensed | **Not permitted** without the rights holder's express authorisation |
@@ -146,7 +147,153 @@ ask YouVersion rather than rely on this paragraph.**
 
 ---
 
-## USE6. The public-domain set is a different question (#3)
+## USE6. Public domain and permissively licensed works (#3)
+
+**The instinct this section exists to test is right, and it is right for a reason
+worth stating precisely: for a public-domain work, copyright restrains nobody.**
+Caching it, storing it indefinitely, printing it, and sending it on by email or
+WhatsApp are all permitted *by the work*.
+
+But that is only one of two questions, and the design has to answer both:
+
+1. **Does copyright restrain you?** A property of **the work**. For a
+   public-domain work the answer is no.
+2. **Does your agreement with the API operator restrain you?** A property of
+   **how you obtained it**. That answer is not no, and it is not the same on the
+   two upstreams.
+
+**A public-domain text fetched from an API arrives wrapped in a contract.** The
+text is free; the pipe is not. Everything below turns on keeping those apart.
+
+---
+
+### USE6.1 What public domain settles (#3)
+
+Take the World English Bible as the worked example, because its dedication is
+unusually explicit [verified,
+[ebible.org](https://ebible.org/engwebp/copyright.htm)]:
+
+> "The World English Bible is in the Public Domain. That means that it is not
+> copyrighted. … You may copy, publish, proclaim, distribute, redistribute, sell,
+> give away, quote, memorize, read publicly, broadcast, transmit, share, back up,
+> post on the Internet, print, reproduce, preach, teach from, and use the World
+> English Bible as much as you want, and others may also do so."
+
+That list is close to exhaustive of what this design ever asks about. **Store,
+share, transmit, print, and use commercially — all yes**, from the work's side.
+
+Two riders, both real:
+
+- **The name is a trademark.** eBible.org asks that a *changed* text not be called
+  the World English Bible. Since §ABS17 forbids altering a single character, a
+  conforming consumer cannot trip this — but a consumer that "modernises"
+  punctuation downstream can, and would then be misattributing as well.
+- **Public domain is territorial, not global.** A work is out of copyright *in a
+  jurisdiction*. The KJV is the notorious case and has its own section (§USE11) —
+  public domain in the United States, and **Crown copyright in perpetuity in the
+  United Kingdom**.
+
+---
+
+### USE6.2 What API.Bible's Terms still require for public-domain content (#3)
+
+**This is the part a reader is most likely to get wrong**, because "it is public
+domain" feels like it should end the conversation. It ends the *copyright*
+conversation. The Terms are a separate contract with American Bible Society, and
+their duties are written against **"API Content"**, which is defined to
+**include** public-domain content [verified, §2]:
+
+> "'API content' … means the data, information, text, audio and other content
+> provided through the API.Bible API, **including but not limited to** biblical
+> texts, **public domain content**, creative commons content, licensed content…"
+
+So the default is that a duty applies unless it carves public domain out. Only
+two do.
+
+| Terms duty | Applies to public domain? |
+|---|---|
+| **§7** copyright page and IP-holder link | **No** — "excluding explicitly labeled Public Domain content" [verified] |
+| **§12** DRM restricting users from copying or distributing | **No**, for permitted transmission — §USE6.3 |
+| **§4.4** review the licensing metadata before use | **Yes** — names "Public Domain" expressly [verified] |
+| **§11** keep stored content no more than 30 days out of date | **Yes** — no carve-out |
+| **§11** delete or modify content withdrawn or changed upstream | **Yes** — no carve-out |
+| **§10** remove everything within **72 hours** of termination, or of a deactivated (including unpaid) plan | **Yes** |
+| **§13** delete within **24 hours** of a written request, including where content "**gains protected status**" | **Yes** |
+| **§14 / §3** FUMS reporting from a webapp | **Yes** — no carve-out anywhere in §14 |
+| **§9.2** commercial-use bar on a plan designated non-commercial | **Yes** — a plan term, not a copyright term |
+| **§9.1** text-to-speech | **Permitted** for PD — ephemeral, **one chapter at a time**, no download [verified] |
+| **§9.4(d)** no sublicensing, redistributing or syndicating API Content | **Yes** |
+| **§9.6** one free-tier account per entity | **Yes** |
+
+**Four of those deserve emphasis, because they are the ones that surprise.**
+
+1. **FUMS is owed on a public-domain verse.** It is not a copyright mechanism —
+   §14 says it exists so ABS can "communicate the value of API-accessible
+   Scripture texts back to copyright holders and publishers", and §3 requires it
+   of "any webapp … unless otherwise prohibited by law". Nothing conditions it on
+   the rights class of what was fetched. §APB14's position is unchanged by this
+   section.
+2. **The 30-day recency duty survives transmission.** §11 closes with: "For
+   content transmitted through Electronic Correspondence as defined in Section
+   9.9, this requirement is measured **as of the time of transmission**"
+   [verified]. The obligation on a sent verse is therefore satisfiable — the text
+   must have been fresh when it left, not for ever afterwards. **That is the
+   clause that makes a share button workable at all**, and it is worth knowing it
+   exists before someone concludes a sent message must somehow be recalled.
+3. **The deletion duties bind public-domain content.** §13's "gains protected
+   status" is the reason: a work labelled public domain upstream can stop being
+   labelled that. The delete path §USE2 asks for is not a licensed-translation
+   feature.
+4. **The copyright-page exemption is not an attribution exemption.** §7 exempts PD
+   content from the *full copyright page*. It does not make attribution
+   pointless — §ABS16 still delivers `Attribution`, and a WEB or BSB passage
+   carries a dedication notice worth showing. Dropping it becomes a choice rather
+   than a breach.
+
+---
+
+### USE6.3 The DRM clause does not bite public-domain content (#3)
+
+§USE4 records §12 as requiring a consumer to "incorporate industry-standard
+digital rights management … which restricts end users from copying or
+distributing the Licensed Products and the Property". Read alone, that flatly
+contradicts §9.9(a)'s permission to transmit public-domain content: you cannot
+both be allowed to email a verse and be required to stop your users copying it.
+
+**The Terms resolve it themselves, and the resolving clause had not been read.**
+§9.9(c), in full [verified]:
+
+> "**Section 12 does not apply to transmission permitted under Section 9.9.a**, to
+> the extent of that transmission only."
+
+Two further supports point the same way:
+
+- **§2 excludes public-domain works from "IP"**: "Bible versions and bible
+  content, **unless clearly marked as Public Domain**, are considered Intellectual
+  Property of the creator, steward, manager or owner." §12's DRM sentence binds
+  "the Licensed Products and **the Property**" — terms that do not reach a work §2
+  has just said is not IP.
+- **§7's carve-out** shows the drafters carve public domain out explicitly when
+  they mean to.
+
+**But §12 does not vanish for public-domain content — only its DRM sentence, and
+only so far as the permitted transmission goes.** §12's first half is about *your*
+security, not your users' freedom, and binds "API.Bible Content", which includes
+public domain. So these still apply to a WEB deployment [verified]:
+
+- Never expose the API key to a third party (§SOL14 rule 5 already requires this).
+- Industry-standard safeguards against unauthorised access to the API.
+- Keep API.Bible Content "confidential and secure from unauthorized access … with
+  no less care than you use in connection with securing similar data".
+- **Notify support@api.bible immediately** on any suspected breach.
+
+**The practical answer: for public-domain translations you may ship a copy button,
+selectable text and a share sheet.** For licensed ones you may not, and §USE4
+stands unchanged there.
+
+---
+
+### USE6.4 YouVersion's public-domain set (#3)
 
 YouVersion's largest licence row — **361 Bibles under "Public Domain and Creative
 Commons"** — has **no agreement document to show** [verified]. That is consistent:
@@ -158,6 +305,93 @@ obligations that follow the text wherever it goes; a CC BY-NC work cannot be use
 commercially whatever any platform says. **Check the individual work**, and note
 that the same NC/ND exclusions API.Bible names in §9.9(a) apply by the licences'
 own terms.
+
+**What still binds, whatever the work's licence**, is the platform agreement — and
+it is a thinner instrument than API.Bible's:
+
+| YouVersion duty | Applies to the PD/CC set? |
+|---|---|
+| Reproduce the text word-for-word, unaltered | **Yes** — a platform term (§YVN14.2) |
+| Keep the app key confidential; report its loss | **Yes** |
+| No use with AI for open-ended chat; no AI training | **Yes** — a platform term (§YVN14.2) |
+| Do not brand the content as YouVersion's | **Yes** (§YVN14.2) |
+| Display all footnotes; Biblica's 2-chapter display cap; Lockman's annual report | **No** — publisher terms, and this row has no publisher |
+| Any refresh cadence | **None exists** on this upstream (§USE3) |
+
+**The asymmetry runs the opposite way to what you might guess.** On API.Bible a
+public-domain work still carries a refresh timer, a delete duty and a FUMS
+obligation. On YouVersion it carries almost nothing beyond "do not change the
+words and do not feed it to a model" — but the **storage** question §YVN14.9
+settles for publisher content is, for this row, answered by the work's own licence
+rather than by any agreement.
+
+---
+
+### USE6.5 The translations themselves (#3)
+
+**This is the list a consumer actually needs**, because the intent is narrow and
+common: look a verse up, show it on a page, and let a reader send it on.
+
+**Rights class is a property of the work and is [verified] below. Availability on
+a given upstream is [unverified]** — neither catalogue is enumerable without a
+key, and §USE7 explains why a consumer must confirm it per key anyway. Per §4.4
+the authoritative per-Bible answer is the `copyright` field returned by
+`/bibles?...Full Details=true`.
+
+| Translation | Rights | Look&nbsp;up | Display<br/>on a site | **Send on**<br/><sub>email · WhatsApp · SMS</sub> | Print | Commercial |
+|---|---|:---:|:---:|:---:|:---:|:---:|
+| **WEB** — World English Bible | Public domain (dedicated) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **WEBBE / WMB** — British and Messianic editions | Public domain (dedicated) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **BSB** — Berean Standard Bible | Public domain (dedicated) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **ASV** — American Standard Version 1901 | Public domain (expired) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **YLT** — Young's Literal Translation 1898 | Public domain (expired) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **DARBY** — Darby Bible 1890 | Public domain (expired) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **DRA** — Douay-Rheims, American edition 1899 | Public domain (expired) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **GNV** — Geneva Bible 1599 | Public domain (expired) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **WBT** — Webster's Bible 1833 | Public domain (expired) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **JPS 1917** — Jewish Publication Society | Public domain (expired) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **KJV / KJVA** — King James Version | Public domain **in the US**; **Crown copyright in the UK** | ✅ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
+| **OEB** — Open English Bible | CC0 | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **FBV** — Free Bible Version | **CC BY-SA 4.0** | ✅ | ✅ | ✅ <sub>share-alike follows it</sub> | ✅ | ✅ |
+| **ULB / UST** — unfoldingWord | **CC BY-SA 4.0** | ✅ | ✅ | ✅ <sub>share-alike follows it</sub> | ✅ | ✅ |
+| **BBE** — Bible in Basic English 1949 | **[contested]** — treated as PD in the US, disputed in the UK | ✅ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
+| *Any* CC BY-**NC** or CC BY-**ND** edition | Restricted Creative Commons | ✅ | ✅ | ❌ <sub>named exclusion, §9.9(a)</sub> | ⚠️ | ❌ |
+
+Beyond English the same reasoning reaches the major expired-copyright editions —
+**Reina-Valera 1909** (Spanish), **Luther 1912** (German), **Louis Segond 1910**
+(French), **Almeida 1911** (Portuguese), **Statenvertaling 1637** (Dutch) — and
+the modern public-domain translations eBible.org publishes in hundreds of
+languages. §ABS42's language scoping is what makes those reachable; each one's
+rights class is [unverified] individually and is the consumer's to confirm.
+
+**Three things this table is not.**
+
+1. **It is not a substitute for the metadata check.** §4.4 makes reviewing the
+   `copyright` field a contractual duty *before use*, for public-domain content
+   expressly. A hard-coded table in a consumer's source is the thing §SOL13 and
+   `INTENT.md` both argue against, for the same reason no copyright table ships
+   inside these packages: it goes stale silently.
+2. **It does not say these are on your key.** §USE7 stands — the class is not in
+   the catalogue, and availability is per key and per plan.
+3. **A ✅ under "Send on" is the work's permission, not the whole answer.** On
+   API.Bible the §11 recency duty and the FUMS obligation still ride along
+   (§USE6.2), and the KJV row is ⚠️ for a reason (§USE11).
+
+---
+
+### USE6.6 What to reach for (#3)
+
+**If a feature sends scripture out of your application, use WEB or BSB.**
+
+Both are modern, readable, dedicated to the public domain by their translators
+rather than merely expired, and carry neither a territorial restriction nor a
+share-alike obligation. WEB additionally publishes a British edition, so a UK
+deployment has a same-family option the KJV cannot give it.
+
+That is a narrower recommendation than §USE8 rule 3 made, deliberately:
+**"prefer a public-domain translation" is not specific enough advice when the most
+famous public-domain translation is the one carrying the territorial trap**
+(§USE11).
 
 ---
 
@@ -175,6 +409,14 @@ permissively licensed, or publisher-licensed. **Neither upstream exposes that.**
 - YouVersion's catalogue does not carry one either. The *portal* groups by
   publisher, so a human can see that 361 Bibles sit under "Public Domain and
   Creative Commons" — but the API does not say so.
+
+**[contested] — Terms §4.4 asserts otherwise**, and §APB28.3 records it: the Terms
+place a duty on the consumer to review "the `copyright` field returned for the
+applicable Bible version" to identify "the applicable **copyright status, license
+type**, and any use restrictions", expressly including for Public Domain content.
+Both statements can be true — there is no *typed* rights field in the schema, but
+ABS treats the `copyright` prose as carrying the answer. **Whether it does
+reliably is a spike** (§APB28.3), and the outcome decides §USE9 rule 1.
 
 **So a consumer that builds a share feature must classify translations itself, and
 the classification must be configuration rather than inference.** That is what
@@ -208,9 +450,12 @@ config row was missing is exactly the silent breach this design is built to avoi
    translations, you additionally owe **DRM that prevents users copying or
    distributing** (§APB26.2) — so the question is not only whether to offer the
    button but what else must be suppressed alongside it.
-3. **For a share feature, prefer a public-domain translation.** KJV, ASV and WEB
-   are shareable on both upstreams, and are the shipped defaults for a reason
-   (§APB4, §YVN4).
+3. **For a share feature, prefer a public-domain translation — but not the KJV.**
+   ~~KJV, ASV and WEB are shareable on both upstreams, and are the shipped defaults
+   for a reason (§APB4, §YVN4).~~ **Corrected:** ASV, WEB and BSB are shareable;
+   the KJV is territorially restricted on API.Bible and excluded from the
+   transmission permission outright (§USE11). **Reach for WEB or BSB** (§USE6.6).
+   The shipped default is `KJV` and §APB27.4 rule 1 proposes changing it.
 4. **Share a reference, not the text, when in doubt.** "John 3:16 (NIV)" plus a link
    to your own page carries no licensed text at all, and no clause above restricts
    it. This is the design's recommendation for licensed translations.
@@ -266,10 +511,72 @@ about an upstream they are not using.
    **Two things it surfaced are now open in their own right** (§APB26.3): what
    Territory and what device count were declared at sign-up. Neither is in the API,
    neither is enforceable by this library, and both bind the consuming application.
-4. **API.Bible Terms §13, "Updates and Removals", has not been read.** §APB17
-   records the removal duties from §10 and §11; whether §13 adds to them is unknown
-   (§APB26.4).
-5. **Per-translation figures are not recorded here**, only per-provider and
+4. ~~**API.Bible Terms §13, "Updates and Removals", has not been read.**~~
+   **Read** — §APB28. It adds two things §APB17 did not carry: a **24-hour**
+   deletion clock on written request, distinct from §10's 72-hour termination
+   clock; and "**gains protected status**" as a removal trigger, which is what
+   makes the delete path owed even by a consumer storing only public-domain
+   translations (§USE6.2).
+5. ~~**Per-translation figures are not recorded here**, only per-provider and
    per-publisher ones, because neither upstream exposes a per-translation rights
-   class (§USE7). If a consumer builds the classification table anyway, this file is
-   where it belongs.
+   class (§USE7).~~ **Done** — §USE6.5 carries a per-translation table for the
+   public-domain and permissively-licensed set. Its rights classes are [verified]
+   facts about the works; **availability on a given key remains [unverified]** and
+   is the consumer's to confirm.
+6. **Should the shipped `DefaultTranslation` change from `KJV` to `WEB`?**
+   §APB27.4 rule 1 makes the case. It is a MINOR default-value change before first
+   release, and it is the one open item on this page that changes shipped
+   behaviour rather than documentation.
+7. **§USE11's last paragraph is inference.** API.Bible's §9.8 does not bind
+   YouVersion, and no YouVersion agreement records a KJV territorial restriction —
+   but the Crown's letters patent are a fact of UK law rather than a term of either
+   contract. **Whether a UK deployment may serve the KJV from YouVersion is
+   unresolved**, and the conservative reading is the one §USE6.6 already
+   recommends: use WEB.
+8. **The `copyright` field's contents are unexamined** (§APB28.3). It decides
+   whether rule 1's `ShareRights` is configured or derived.
+
+---
+
+## USE11. The King James Version is the exception to everything above (#3)
+
+**The most famous public-domain translation is the one a consumer may not treat as
+public domain.** Full clause and analysis at §APB27; this is the consumer reading.
+
+**Rights in the King James Version in the United Kingdom are vested in the Crown**
+— perpetual letters patent, not an expiring copyright. API.Bible's Terms §9.8
+therefore grants **no licence at all** for the KJV within GB, the Isle of Man,
+Jersey, Guernsey and thirteen named British Overseas Territories, and says so
+"**irrespective of** whether your use is Commercial Use or Non-Commercial Use,
+whether any fee is charged, **whether the content is identified as Public
+Domain**, and irrespective of format" [verified].
+
+| | KJV via API.Bible |
+|---|---|
+| Look it up, display it, store it — **outside** the Restricted Territory | ✅ |
+| Anything at all — **to a reader inside** the Restricted Territory | ❌ no licence |
+| **Send it on** by email, SMS or messaging — anywhere | ❌ §9.9(b)(i) excludes territorially restricted content from §9.9(a), "irrespective of identification as Public Domain" |
+
+**Three traps worth naming.**
+
+1. **The duty follows the reader, not the developer.** "You shall not distribute
+   the Authorized Version to a Restricted Territory." A US-hosted app with UK
+   readers is in scope. **Nothing in this library knows a reader's territory**, and
+   §SOL2 rule 5 keeps it that way — this is a consumer control.
+2. **It is the one public-domain translation that cannot be shared.** Every other
+   row in §USE6.5 marked ✅ under "Send on" is genuinely ✅. KJV is not, and the
+   reason is a clause most readers will never think to look for.
+3. **Derived translations are expressly out of scope.** NKJV, ESV, NASB, RSV,
+   NRSV, **ASV** and MEV are named as not being the Authorized Version (§APB27.1).
+   ASV in particular is a safe public-domain substitute, and WEB — itself a
+   revision of the ASV — is safer still.
+
+**Practical guidance: for a UK or Commonwealth audience, or for any share feature,
+use WEB or BSB rather than KJV** (§USE6.6). If KJV must be offered, the territory
+check is the consuming application's, and the safest form of it is not to offer
+the edition at all in the Restricted Territory.
+
+**This clause is API.Bible's.** YouVersion's agreements record no equivalent
+[unverified, §YVN14] — but the Crown's rights are a fact of UK law rather than a
+term of the API.Bible contract, so a UK deployment should not read that silence as
+permission (§USE9 rule 7).

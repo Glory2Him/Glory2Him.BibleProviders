@@ -74,6 +74,12 @@ It is a **safe** default, not a recommended one. `NIV` is the worst candidate:
 licensed, non-commercial-only, and absent from a fresh key's catalogue. Set
 `DefaultTranslation` explicitly if you hold a licence.
 
+> **⚠️ If any of your readers are in the UK, change this.** API.Bible grants no
+> licence for the KJV in the United Kingdom or fifteen other territories, whatever
+> its public-domain status elsewhere, and it may not be sent on by email or
+> messaging anywhere. **`WEB` is the drop-in alternative** — public domain by
+> dedication, open access, no territorial restriction. See the table below.
+
 ---
 
 ## What can I do with API.Bible content
@@ -91,7 +97,40 @@ anything that leaves your application to *off*.
 | Share a *reference* + link instead | ✅ | ✅ | ✅ |
 | Print more than 100 verses | ❌ | ❌ | ❌ |
 | Use commercially | ✅ | ❌ | ❌ <sub>on the free Starter tier</sub> |
-| Let users copy or redistribute freely | ❌ <sub>DRM required</sub> | ❌ | ❌ |
+| Let users copy or redistribute freely | ✅ <sub>§12's DRM binds "the Property"; §2 excludes public domain from it</sub> | ❌ | ❌ <sub>DRM required</sub> |
+
+### Which public-domain translations may be sent on
+
+**The common case — look a verse up, show it on a page, let a reader send it on —
+is fully permitted for public-domain translations, with one important exception.**
+
+| Translation | Rights | Display | **Send on**<br/><sub>email · WhatsApp · SMS</sub> | Print | Commercial |
+|---|---|:---:|:---:|:---:|:---:|
+| **WEB** — World English Bible | Public domain (dedicated) | ✅ | ✅ | ✅ | ✅ |
+| **BSB** — Berean Standard Bible | Public domain (dedicated) | ✅ | ✅ | ✅ | ✅ |
+| **ASV** — American Standard Version | Public domain | ✅ | ✅ | ✅ | ✅ |
+| **YLT**, **DARBY**, **DRA**, **GNV**, **WBT** | Public domain | ✅ | ✅ | ✅ | ✅ |
+| **FBV**, **ULB/UST** | CC BY-SA 4.0 | ✅ | ✅ <sub>share-alike follows it</sub> | ✅ | ✅ |
+| **KJV** | Public domain in the US · **Crown copyright in the UK** | ⚠️ | ❌ | ⚠️ | ⚠️ |
+| Any CC BY-**NC** / **ND** edition | Restricted CC | ✅ | ❌ | ⚠️ | ❌ |
+
+**⚠️ The King James Version is the exception to all of it.** Terms §9.8 grants **no
+licence** for the KJV within the United Kingdom, the Isle of Man, Jersey, Guernsey
+or thirteen British Overseas Territories — "irrespective of whether your use is
+Commercial Use or Non-Commercial Use … **whether the content is identified as
+Public Domain**, and irrespective of format". §9.9(b)(i) separately bars
+transmitting it anywhere. **The duty follows your reader's location, not yours**,
+and this package cannot know it.
+
+Derived translations are expressly out of scope: NKJV, ESV, NASB, RSV, NRSV, MEV
+and **ASV** are named as *not* being the Authorized Version. **For a UK or
+Commonwealth audience, or for any share feature, use WEB or BSB.**
+
+**Public domain does not switch the Terms off.** Even for WEB you still owe FUMS
+reporting, the 30-day recency check on anything stored, and the deletion duties —
+those are contractual duties to ABS, not copyright duties to a rights holder. What
+public domain *does* switch off is the copyright-page requirement (§7) and the DRM
+requirement on transmission (§9.9(c)).
 
 **And whatever the class, all of these apply:**
 

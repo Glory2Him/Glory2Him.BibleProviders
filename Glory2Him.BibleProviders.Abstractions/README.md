@@ -164,6 +164,12 @@ The short version, and both provider READMEs carry the full table:
 | Share a *reference* and a link instead | ✅ always |
 | Print it | ❌ mostly |
 
+**The safe choice for anything that leaves your app is WEB or BSB** — public
+domain by dedication, no territorial restriction, no share-alike obligation.
+**Not the KJV**: it is Crown copyright in the UK and API.Bible licenses it in
+neither that territory nor any onward transmission, whatever its status
+elsewhere.
+
 **Neither upstream exposes a rights class**, so a share feature must classify
 translations from configuration and default to *not shareable*. See
 [ApiBible](https://www.nuget.org/packages/Glory2Him.BibleProviders.ApiBible) and
