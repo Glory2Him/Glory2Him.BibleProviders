@@ -20,7 +20,8 @@ platform is free.
    looks identical to a translation that does not exist. See
    [the licence trap](#the-licence-acceptance-trap).
 2. **Storing scripture is permitted here, and the platform encourages it** — no
-   refresh timer and no usage reporting — but **Biblica gives you 48 hours to
+   refresh timer and no *per-display* reporting — but **Lockman owes an annual
+   report** if you serve NASB, AMP, NBLA or LBLA, and **Biblica gives you 48 hours to
    remove content on written request**, so you still need a delete path. See
    [Storage](#storage--permitted-and-encouraged).
 
@@ -167,7 +168,8 @@ configuration and default anything that leaves your application to *off*.
 | Report annually to Lockman by end of February | **required** <sub>NASB, AMP, NBLA, LBLA</sub> |
 
 **Biblica's 48-hour removal clock is the one removal deadline on this upstream** — Lockman's end-of-February usage report is the other dated duty. There is
-no periodic sweep to build, but there is a delete path — and for NASB and AMP,
+no periodic sweep to build, but there is a delete path — and for NASB, AMP, NBLA
+and LBLA,
 Lockman requires the attribution to be a *clickable link to lockman.org* and each
 verse tag to link as well, which is stricter than displaying a copyright string.
 
@@ -291,7 +293,7 @@ be told if it is lost, stolen or misused**. This package never logs it.
 If your application charges a fee you must "conspicuously and explicitly advise
 Users that the YouVersion Bible App is provided at no cost to the User."
 
-**Lockman (NASB, AMP) is the exception and it is absolute**: no third-party
+**Lockman (NASB, AMP, NBLA, LBLA) is the exception and it is absolute**: no third-party
 advertising at all, and **no access charges or membership fees**. Stricter than
 "free to end users", and it is the one publisher position in this table with a
 clause behind it.

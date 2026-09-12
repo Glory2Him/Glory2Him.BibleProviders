@@ -56,7 +56,7 @@ function Get-ProseLines([string] $path) {
     $out = New-Object System.Collections.ArrayList
     $fenced = $false
     $n = 0
-    foreach ($line in (Get-Content -LiteralPath $path)) {
+    foreach ($line in (Get-Content -LiteralPath $path -Encoding UTF8)) {
         $n++
         if ($line -match '^\s*```') { $fenced = -not $fenced; $null = $out.Add([pscustomobject]@{ N = $n; Text = '' }); continue }
         if ($fenced) { $null = $out.Add([pscustomobject]@{ N = $n; Text = '' }) }
@@ -74,6 +74,7 @@ $prose = $prose | Sort-Object FullName -Unique
 $sectionList = New-Object System.Collections.ArrayList
 $ruleMax = @{}
 $ruleText = @{}
+$tableRun = @{}
 
 foreach ($f in $designFiles) {
     $current = $null
@@ -82,9 +83,15 @@ foreach ($f in $designFiles) {
         if ($line -match '^##\s+((?:SOL|ABS|APB|YVN|USE)\d+)\.\s')        { $current = $Matches[1]; $null = $sectionList.Add($current) }
         elseif ($line -match '^###\s+((?:SOL|ABS|APB|YVN|USE)\d+\.\d+)\s') { $current = $Matches[1]; $null = $sectionList.Add($current) }
         elseif ($line -match '^\|\s*(\d+)\s*\|' -and $current) {
-            # SOL16 numbers its rules as table rows, not as a markdown list.
+            # SOL16 numbers its rules as table rows. Only treat a table as a rule
+            # list when its first column counts 1,2,3... from the top - otherwise a
+            # Bible id or an HTTP status raises the ceiling and check 4 goes blind.
             $n = [int]$Matches[1]
-            if (-not $ruleMax.ContainsKey($current) -or $ruleMax[$current] -lt $n) { $ruleMax[$current] = $n }
+            if (-not $tableRun.ContainsKey($current)) { $tableRun[$current] = 0 }
+            if ($n -eq $tableRun[$current] + 1) {
+                $tableRun[$current] = $n
+                if (-not $ruleMax.ContainsKey($current) -or $ruleMax[$current] -lt $n) { $ruleMax[$current] = $n }
+            }
         }
         elseif ($line -match '^(\d+)\.\s+(.*)$' -and $current) {
             $n = [int]$Matches[1]
@@ -155,7 +162,7 @@ $ruleBad = $false
 foreach ($f in $prose) {
     if ($f.Name -eq 'CLAUDE.md') { continue }
     foreach ($row in (Get-ProseLines $f.FullName)) {
-        foreach ($m in [regex]::Matches($row.Text, "$([char]0xA7)((?:SOL|ABS|APB|YVN|USE)\d+(?:\.\d+)?)\s+rule\s+(\d+)")) {
+        foreach ($m in [regex]::Matches($row.Text, "$([char]0xA7)((?:SOL|ABS|APB|YVN|USE)\d+(?:\.\d+)?)\s+(?:rule|duty|item|consequence)s?\s+(\d+)")) {
             $sec = $m.Groups[1].Value; $n = [int]$m.Groups[2].Value
             if (-not $sections.Contains($sec)) { continue }
             if (-not $ruleMax.ContainsKey($sec)) {
@@ -167,12 +174,18 @@ foreach ($f in $prose) {
         }
     }
 }
-if (-not $ruleBad) { Pass 'every "SECTION rule N" citation names a rule that exists' }
+if (-not $ruleBad) { Pass 'every "SECTION rule/duty/item/consequence N" citation names one that exists' }
 
 Write-Host "`n5. Pre-existing rules keep their numbers" -ForegroundColor Cyan
+$ran5 = $false
 $null = & git -C $root rev-parse --verify --quiet "$BaseRef^{commit}" 2>$null
 if ($LASTEXITCODE -ne 0) {
-    Note ("base ref '{0}' not found - this check did not run" -f $BaseRef)
+    if ($PSBoundParameters.ContainsKey('BaseRef')) {
+        Fail ("base ref '{0}' does not resolve - this check could not run, and you asked for it by name" -f $BaseRef)
+    }
+    else {
+        Note ("default base ref '{0}' not found - this check did not run" -f $BaseRef)
+    }
 }
 else {
     $renum = $false
@@ -208,13 +221,16 @@ else {
             }
         }
     }
+    $ran5 = $true
     if (-not $renum) { Pass ("no rule that existed on {0} changed its number" -f $BaseRef) }
 }
 
 Write-Host "`n6. Range headers match their file" -ForegroundColor Cyan
 $rangeBad = $false
 foreach ($f in $designFiles) {
-    $text = Get-Content -LiteralPath $f.FullName -Raw
+    # -Encoding UTF8 is not optional: Windows PowerShell 5.1 otherwise reads a
+    # BOM-less UTF-8 file as Windows-1252 and this check silently matches nothing.
+    $text = Get-Content -LiteralPath $f.FullName -Raw -Encoding UTF8
     if ($text -match "\*\*Sections:\*\*\s+$([char]0xA7)([A-Z]{3})(\d+)\s*[-\u2013\u2014]\s*$([char]0xA7)([A-Z]{3})(\d+)") {
         $prefix = $Matches[1]; $from = [int]$Matches[2]; $to = [int]$Matches[4]
         $nums = @([regex]::Matches($text, '(?m)^##\s+' + $prefix + '(\d+)\.\s') | ForEach-Object { [int]$_.Groups[1].Value })
@@ -235,4 +251,7 @@ if ($failures) {
     Write-Host ("`n{0} failure(s)." -f $failures) -ForegroundColor Red
     exit 1
 }
-Write-Host "`nThe six checks above passed." -ForegroundColor Green
+$ran = $(if ($ran5) { 6 } else { 5 })
+Write-Host ("`n{0} of 6 checks ran and passed." -f $ran) -ForegroundColor Green
+if (-not $ran5) { Write-Host 'Check 5 did not run - it has verified nothing about rule numbering.' -ForegroundColor Yellow }
+exit 0

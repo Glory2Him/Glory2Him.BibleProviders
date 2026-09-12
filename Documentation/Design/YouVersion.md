@@ -503,7 +503,8 @@ but catching it is not the same as not doing it.
 6. Verses returning empty go into `MissingVerseIds`.
 7. **Whatever the spike settles, record it here**, and log at Debug when a lookup
    costs more than one upstream request so the real cost is visible during tuning
-   (§SOL14 rule 2).
+   (§SOL14 rule 1 — Debug. §SOL14 rule 2, the Warning list, names a *stitched*
+   range that cost more than one request; this is the per-call cost note).
 
 ---
 
@@ -1103,13 +1104,19 @@ there is no token to carry and no report to send. What a consumer does inherit:
    given time**, whichever is greater (§YVN14.10 rule 8). Per user, per moment.
 6. **Lockman requires a conspicuous clickable link**, a per-verse tag that itself
    links, no third-party advertising anywhere in your application, and **an annual
-   report by end of February** of copies distributed (§YVN14.10 rules 10–13). This
+   report by end of February** of copies distributed (§YVN14.10 rules 10–13), **including "no access charges or
+   membership fees"**, which is absolute and not a disclosure obligation. This
    library surfaces none of that — it is yours.
 7. **No AI-personalised content**, and no printing (§YVN14.10 rules 5–6).
 8. **Scripture must be reproduced word-for-word and unaltered** (§YVN14.2 rule 1).
    Anything a consumer does between `Text` and the screen — normalising quotes,
    collapsing whitespace, truncating with an ellipsis — is its own risk to assess.
-9. **Commercial use is permitted with a disclosure** (§YVN14.2 rule 4), which is
+9. **Commercial use is permitted with a disclosure** (§YVN14.2 rule 4) **for every
+   publisher except Lockman**, whose agreement bars third-party advertising
+   outright and allows **no access charges or membership fees** at all
+   (§YVN14.10 rule 10) — so an application charging for access may not serve NASB,
+   AMP, NBLA or LBLA. Biblica's position is **unsourced** rather than permissive
+   (§USE9). The permitted-with-disclosure case is
    not true of API.Bible's licensed editions (§APB20). Do not assume one upstream's
    commercial position applies to the other.
 

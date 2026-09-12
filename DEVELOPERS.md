@@ -313,7 +313,8 @@ Two cautions worth inheriting rather than rediscovering:
 - **Resolving is not the same as being right.** The annotation maps an old number
   to a new one; it says nothing about whether the section was the correct one to
   cite originally.
-- **Nothing validates citations.** No CI step, no script. The guarantee that an
+- ~~**Nothing validates citations.** No CI step, no script.~~ **Both exist now**:
+  `Documentation/Check-Design.ps1`, run as a required step in `build.yml`. The guarantee that an
   old `§10.X` still resolves is the annotation convention and nothing else.
 
 ### Citing design from code

@@ -353,7 +353,7 @@ the authoritative per-Bible answer is the `copyright` field returned by
 | **GNV** — Geneva Bible 1599 | Public domain (expired) | ✅ | ✅ | ✅ | ✅ | ⚠️ <sub>plan, not licence — see below</sub> |
 | **WBT** — Webster's Bible 1833 | Public domain (expired) | ✅ | ✅ | ✅ | ✅ | ⚠️ <sub>plan, not licence — see below</sub> |
 | **JPS 1917** — Jewish Publication Society | Public domain (expired) | ✅ | ✅ | ✅ | ✅ | ⚠️ <sub>plan, not licence — see below</sub> |
-| **KJV / KJVA** — King James Version | Public domain **in the US**; **Crown copyright in the UK** | ✅ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
+| **KJV / KJVA** — King James Version | Public domain **in the US**; **Crown copyright in the UK** | ✅ | ⚠️ <sub>not in the Restricted Territory</sub> | ❌ <sub>§9.9(b)(i), anywhere</sub> | ⚠️ | ⚠️ <sub>plan, not licence</sub> |
 | **OEB** — Open English Bible | CC0 | ✅ | ✅ | ✅ | ✅ | ⚠️ <sub>plan, not licence — see below</sub> |
 | **FBV** — Free Bible Version | **CC BY-SA 4.0** | ✅ | ✅ | ✅ <sub>share-alike follows it</sub> | ✅ | ⚠️ <sub>plan, not licence — see below</sub> |
 | **ULB / UST** — unfoldingWord | **CC BY-SA 4.0** | ✅ | ✅ | ✅ <sub>share-alike follows it</sub> | ✅ | ⚠️ <sub>plan, not licence — see below</sub> |

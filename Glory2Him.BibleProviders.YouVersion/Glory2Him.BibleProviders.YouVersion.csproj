@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
@@ -15,11 +15,11 @@
 		<AssemblyVersion>0.1.0.0</AssemblyVersion>
 		<FileVersion>0.1.0.0</FileVersion>
 		<NeutralLanguage>en-US</NeutralLanguage>
-		<PackageProjectUrl>https://github.com/Glory2Him/Glory2Him.BibleProviders/Glory2Him.BibleProviders.YouVersion</PackageProjectUrl>
+		<PackageProjectUrl>https://github.com/Glory2Him/Glory2Him.BibleProviders</PackageProjectUrl>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
-		<RepositoryUrl>https://github.com/Glory2Him/Glory2Him.BibleProviders/Glory2Him.BibleProviders.YouVersion</RepositoryUrl>
-		<RepositoryType>Github</RepositoryType>
+		<RepositoryUrl>https://github.com/Glory2Him/Glory2Him.BibleProviders.git</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
 		<PackageTags>Glory 2 Him; G2H; C#; .NET; The Standard</PackageTags>
 		<PackageReleaseNotes>
 			Initial release of Glory2Him.BibleProviders.YouVersion

@@ -1382,7 +1382,7 @@ Closes the gap §APB26.4 and §USE9 rule 4 both recorded.
 **This is a compatibility obligation, not a content one**, and it is the clause
 that makes §APB23's spike list a standing concern rather than a one-off: the
 upstream may change response shape, and absorbing that is contractually the
-consumer's cost. It is also why §APB16's parser tolerates unknown USX elements
+consumer's cost. It is also why §APB11's parser tolerates unknown USX elements
 rather than failing on them.
 
 ### APB28.2 §13 Removals (#3)

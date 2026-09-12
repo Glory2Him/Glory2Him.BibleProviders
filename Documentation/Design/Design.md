@@ -225,7 +225,7 @@ forgotten.
 
    - **This library is never a party to a retention obligation.** §APB17's 30-day
      refresh, its delete-on-withdrawal and 72-hour removal duties, and §YVN14's
-     unresolved storage question all bind **the consumer**, and only once the
+     storage question — since settled, §YVN14.9 — all bind **the consumer**, and only once the
      consumer chooses to persist. Nothing in this solution can breach them, because
      nothing in it retains anything to breach them with.
    - **A display-only consumer inherits none of them.** ~~That is why §YVN14 blocks
