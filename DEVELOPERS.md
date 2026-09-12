@@ -788,7 +788,7 @@ than mechanism:
   once. Note the trap either way: an all-caps `DESIGN` label turns up regardless,
   auto-created by the PR linter from a `DESIGN:` title prefix. That is a category
   label on PRs, not an area label on issues.
-- ~~**Section 1 of the design.**~~ Done — `Documentation/Design/` holds four
+- ~~**Section 1 of the design.**~~ Done — `Documentation/Design/` holds five
   area-scoped documents (§4). The architect has sections to extend and the analyst
   has design to derive criteria from; the implementation backlog is the
   work-breakdown table at the foot of each file.
