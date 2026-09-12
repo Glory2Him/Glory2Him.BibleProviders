@@ -1990,8 +1990,9 @@ resolved, and there is nothing else it could honestly use.
   and does not consult `Suggest` on the caller's behalf.
 - **Nothing becomes provider-aware.** `BibleReference` has no catalogue, so it
   cannot tell you whether a translation is licensed — that stays
-  `TranslationNotSupported` at fetch time (§ABS5 rule 4), and stays the open
-  question in §SOL17 rule 3.
+  `TranslationNotSupported` at fetch time (§ABS5 rule 4). ~~and stays the open
+  question in §SOL17 rule 3.~~ **§SOL17 rule 3 is settled**; what remains here is the
+  behaviour above, not a pending decision.
 
 ---
 

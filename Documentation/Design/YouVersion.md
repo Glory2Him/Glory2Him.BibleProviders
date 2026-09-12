@@ -348,7 +348,7 @@ Required by §ABS33 item 8, because this provider has timeout logic and
    offers toward the copyright-page requirement API.Bible's terms impose
    (§ABS44.5). It is
    not on the passage response, so if the catalogue does not keep it, `Attribution`
-   cannot be populated at all. Contrast §APB7 rule 2, where the passage response
+   cannot be populated at all. Contrast §APB7 rule 3, where the passage response
    carries it and catalogue retention is optional.
 
 5. **Pagination's request parameter is [contested] too.** The response field is
@@ -1176,7 +1176,7 @@ gets built**, not merely how it is configured.
    require footnotes** (§YVN14.6)? If footnotes are a common publisher requirement
    rather than Biblica's alone, that is a contract-level obligation.
 10. **Does the Bible resource expose a script direction** (or a script code we can
-    map from)? §ABS42.6 needs it and §YVN7 rule 4 falls back to a built-in table
+    map from)? §ABS42.6 needs it and §YVN7 rule 3 falls back to a built-in table
     without it. Low cost to check, and it decides whether a Hebrew or Arabic edition
     renders correctly by default.
 11. **Capture fixtures** for the acceptance suite: a two-page catalogue, a passage

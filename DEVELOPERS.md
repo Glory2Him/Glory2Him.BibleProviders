@@ -808,6 +808,6 @@ One thing will not exist unless someone builds it: **nothing reads the
 powershell -ExecutionPolicy Bypass -File .\Documentation\Check-Design.ps1
 ```
 
-It checks six things and its header lists, just as plainly, the three it does
+It checks six things and its header lists, just as plainly, the four it does
 **not** — chiefly whether an obligation in a design section reached the README
 §SOL19.3 assigns it to, which is the class that has caused the most rework here.

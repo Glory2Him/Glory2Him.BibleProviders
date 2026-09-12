@@ -55,7 +55,7 @@ correct and the older one as legacy.
 | Auth | `api-key: {key}` header on every scripture request [verified] |
 | Plans | **Starter 5,000 requests/month, Pro 150,000, Enterprise negotiated** [verified]. Overage is billed at **$1 per additional 1,000 calls**, and **plans default to *no* overage protection: past the quota the service is disrupted rather than billed** [verified]. Starter carries up to 3 licensed Bibles **non-commercial** plus open-access translations |
 | Catalogue | `GET /v1/bibles` → Bibles with an **opaque** `id` — documented as a 16-digit string plus a publication suffix, e.g. `de4e12af7f28f599-02` [verified] — plus `abbreviation`, `abbreviationLocal`, `name`, `language`, `countries`. **Abbreviations are not documented as unique** across the catalogue, so this design does not assume they are (§APB7) |
-| **Catalogue copyright** | **`copyright` is not on the plain list response.** It is documented on the single-Bible endpoint, and on the list only when **`include-full-details=true`** is sent [verified]. See §APB7 rule 2 — this corrects an assumption that cost nothing here only because the passage response also carries it |
+| **Catalogue copyright** | **`copyright` is not on the plain list response.** It is documented on the single-Bible endpoint, and on the list only when **`include-full-details=true`** is sent [verified]. See §APB7 rule 3 — this corrects an assumption that cost nothing here only because the passage response also carries it |
 | Verse | `GET /v1/bibles/{bibleId}/verses/{verseId}` — `JHN.3.16`. **Single verse only** [verified] |
 | Passage (range) | `GET /v1/bibles/{bibleId}/passages/{passageId}` where **`passageId` is two full verse IDs joined by `-`** [verified] — `JHN.3.16-JHN.3.18`, `1CO.16.1-2CO.1.23`. A bare chapter id is *not* a passage id. Ranges may cross chapters and books, capped at **200 verses**; past the cap the response's `id` reports the range actually returned [verified] |
 | Chapter | `GET /v1/bibles/{bibleId}/chapters/{chapterId}` — `PSA.23` [verified]. **This, not `/passages`, is the route for a chapter-only key** — the passage-id grammar is two *verse* ids [verified], so a bare chapter id is not a valid passage id. No chapter reaches the 200-verse cap (the longest, PSA.119, is 176) |
@@ -940,17 +940,25 @@ Warning is how it finds out.
 
 **Requirement 2 is the one this library does not fully serve.** `Attribution` is a
 bare string; the required hyperlink needs a target, and nothing in
-`ScripturePassage` carries one. Two ways to close it, and they should be decided
-together with §SOL17 rule 3 because both are additions to a published DTO:
+`ScripturePassage` carries one. ~~Two ways to close it, and they should be decided
+together with §SOL17 rule 3…~~ **Decided — §SOL17 rule 3 and §ABS39 rule 5 are both
+settled, and the answer is the first option:**
 
-- the consumer holds `translation → copyright page URL` in its own configuration —
-  cheap, correct, and duplicated per consumer; or
-- `ScripturePassage` grows a nullable `AttributionUrl`, populated from the
-  catalogue's per-Bible `info`/`copyright` details (§ABS39 rule 5).
+- **the consumer holds `translation → copyright page URL` in its own
+  configuration** — cheap, correct, and duplicated per consumer. This is what
+  `TranslationMetadata.PublisherUrl` (§ABS45) exists for.
+- ~~`ScripturePassage` grows a nullable `AttributionUrl`, populated from the
+  catalogue's per-Bible `info`/`copyright` details.~~ **Rejected** (§ABS39 rule 5,
+  §ABS44.5): this upstream exposes no URL property at all, so the member would be
+  null for the one provider whose terms demand a hyperlinked copyright page.
 
-Until one is chosen, **a consumer is responsible for building the link itself**,
-and this document says so plainly rather than letting `Attribution` imply
-compliance it does not deliver.
+**Do not implement `AttributionUrl`.** An earlier draft of this passage left it
+offered as a live option after the decision had been taken elsewhere, which is
+exactly how a rejected member gets built.
+
+**A consumer is responsible for building the link itself**, and this document says
+so plainly rather than letting `Attribution` imply compliance it does not
+deliver.
 
 ---
 

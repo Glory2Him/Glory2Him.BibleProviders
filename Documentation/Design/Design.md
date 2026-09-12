@@ -285,7 +285,7 @@ forgotten.
    major-version break; the async shape and the token parameter *are* that surface,
    so the decision belonged in this list and was only ever visible as an incidental
    detail of a code sample. It is the same class and the same deadline as the two
-   surface questions still open at §SOL17 rule 3 and §ABS39 rule 5: free now,
+   surface questions ~~still open at~~ **settled at** §SOL17 rule 3 and §ABS39 rule 5: free now,
    breaking after the first `RELEASES:` PR.
 
    The *mechanism* — how a caller's token composes with a provider's own timeout

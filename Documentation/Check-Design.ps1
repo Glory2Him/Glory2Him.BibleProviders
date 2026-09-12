@@ -31,6 +31,9 @@
       * Anything about the licence readings. Not one clause is in this
         repository; every [verified] tag rests on a human having read a portal.
       * Prose obligations carrying no figure.
+      * A citation naming a rule that EXISTS but is the wrong one. Check 4 only
+        bounds-checks the number. Design.md rates that class above a dangling
+        reference, and no script here reaches it.
 
     Exits non-zero on any failure.
 
@@ -162,8 +165,11 @@ $ruleBad = $false
 foreach ($f in $prose) {
     if ($f.Name -eq 'CLAUDE.md') { continue }
     foreach ($row in (Get-ProseLines $f.FullName)) {
-        foreach ($m in [regex]::Matches($row.Text, "$([char]0xA7)((?:SOL|ABS|APB|YVN|USE)\d+(?:\.\d+)?)\s+(?:rule|duty|item|consequence)s?\s+(\d+)")) {
-            $sec = $m.Groups[1].Value; $n = [int]$m.Groups[2].Value
+        foreach ($m in [regex]::Matches($row.Text, "$([char]0xA7)((?:SOL|ABS|APB|YVN|USE)\d+(?:\.\d+)?)\s+(?:rule|duty|item|consequence|trap)s?\s+(\d+)(?:\s*[-\u2013\u2014]\s*(\d+))?")) {
+            $sec = $m.Groups[1].Value
+            # A range citation ("rules 10-13") must have BOTH ends inside the list.
+            $n = [int]$m.Groups[2].Value
+            if ($m.Groups[3].Success) { $n = [int]$m.Groups[3].Value }
             if (-not $sections.Contains($sec)) { continue }
             if (-not $ruleMax.ContainsKey($sec)) {
                 Fail ("{0}:{1} cites {2} rule {3}, but {2} has no numbered list" -f $f.Name, $row.N, $sec, $n); $ruleBad = $true
@@ -174,7 +180,7 @@ foreach ($f in $prose) {
         }
     }
 }
-if (-not $ruleBad) { Pass 'every "SECTION rule/duty/item/consequence N" citation names one that exists' }
+if (-not $ruleBad) { Pass 'every rule/duty/item/consequence/trap citation, ranges included, names one that exists' }
 
 Write-Host "`n5. Pre-existing rules keep their numbers" -ForegroundColor Cyan
 $ran5 = $false

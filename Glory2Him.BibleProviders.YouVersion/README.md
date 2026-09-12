@@ -20,10 +20,11 @@ platform is free.
    looks identical to a translation that does not exist. See
    [the licence trap](#the-licence-acceptance-trap).
 2. **Storing scripture is permitted here, and the platform encourages it** — no
-   refresh timer and no *per-display* reporting — but **Lockman owes an annual
-   report** if you serve NASB, AMP, NBLA or LBLA, and **Biblica gives you 48 hours to
-   remove content on written request**, so you still need a delete path. See
-   [Storage](#storage--permitted-and-encouraged).
+   refresh timer and no *per-display* reporting — but **you owe Lockman an annual
+   usage report** if you serve NASB, AMP, NBLA or LBLA
+   ([details](#usage-reporting--none-owed-except-lockman)), and **Biblica gives you
+   48 hours to remove content on written request**, so you still need a delete
+   path. See [Storage](#storage--permitted-and-encouraged).
 
 ---
 
