@@ -1,6 +1,6 @@
 # API.Bible provider
 
-**Area prefix:** `APB` · **Sections:** §APB1 – §APB25
+**Area prefix:** `APB` · **Sections:** §APB1 – §APB29
 **Packages:** `Glory2Him.BibleProviders.ApiBible`, `Glory2Him.BibleProviders.ApiBible.Fums`
 **Implements:** the contract in [Abstractions.md](Abstractions.md)
 **Solution overview:** [Design.md](Design.md) · **Sibling provider:** [YouVersion.md](YouVersion.md)
@@ -55,7 +55,7 @@ correct and the older one as legacy.
 | Auth | `api-key: {key}` header on every scripture request [verified] |
 | Plans | **Starter 5,000 requests/month, Pro 150,000, Enterprise negotiated** [verified]. Overage is billed at **$1 per additional 1,000 calls**, and **plans default to *no* overage protection: past the quota the service is disrupted rather than billed** [verified]. Starter carries up to 3 licensed Bibles **non-commercial** plus open-access translations |
 | Catalogue | `GET /v1/bibles` → Bibles with an **opaque** `id` — documented as a 16-digit string plus a publication suffix, e.g. `de4e12af7f28f599-02` [verified] — plus `abbreviation`, `abbreviationLocal`, `name`, `language`, `countries`. **Abbreviations are not documented as unique** across the catalogue, so this design does not assume they are (§APB7) |
-| **Catalogue copyright** | **`copyright` is not on the plain list response.** It is documented on the single-Bible endpoint, and on the list only when **`include-full-details=true`** is sent [verified]. See §APB7 rule 2 — this corrects an assumption that cost nothing here only because the passage response also carries it |
+| **Catalogue copyright** | **`copyright` is not on the plain list response.** It is documented on the single-Bible endpoint, and on the list only when **`include-full-details=true`** is sent [verified]. See §APB7 rule 3 — this corrects an assumption that cost nothing here only because the passage response also carries it |
 | Verse | `GET /v1/bibles/{bibleId}/verses/{verseId}` — `JHN.3.16`. **Single verse only** [verified] |
 | Passage (range) | `GET /v1/bibles/{bibleId}/passages/{passageId}` where **`passageId` is two full verse IDs joined by `-`** [verified] — `JHN.3.16-JHN.3.18`, `1CO.16.1-2CO.1.23`. A bare chapter id is *not* a passage id. Ranges may cross chapters and books, capped at **200 verses**; past the cap the response's `id` reports the range actually returned [verified] |
 | Chapter | `GET /v1/bibles/{bibleId}/chapters/{chapterId}` — `PSA.23` [verified]. **This, not `/passages`, is the route for a chapter-only key** — the passage-id grammar is two *verse* ids [verified], so a bare chapter id is not a valid passage id. No chapter reaches the 200-verse cap (the longest, PSA.119, is 176) |
@@ -93,15 +93,20 @@ public sealed class ApiBibleConfigurations
 {
     public string ApiKey { get; set; } = string.Empty;                     // required
     public string BaseUrl { get; set; } = "https://rest.api.bible/v1/";
-    public string DefaultTranslation { get; set; } = "KJV";                // §APB4
+    public string DefaultTranslation { get; set; }
+        = ScriptureDefaults.Translation;                                   // "WEB" — §APB4, §ABS20.1
+    /// <summary>Abbreviation -> bibleId override. NOTE: the licensed Bibles on a Starter
+    /// plan are NON-COMMERCIAL ONLY, and "commercial" includes advertising, sponsorship
+    /// and freemium — see the package README before mapping one. §APB20</summary>
     public Dictionary<string, string> TranslationMap { get; set; } = new();// "NIV" -> bibleId override
     public bool UseOrgId { get; set; } = false;                            // §APB13 — never flip against stored keys
     public IList<string> ParseLanguages { get; set; } = new List<string> { "eng" };  // §ABS42.4
+    public IList<TranslationMetadata> TranslationMetadata { get; set; } = new List<TranslationMetadata>();  // §ABS45
     public int? MonthlyRequestAllowance { get; set; } = null;              // §APB15 rule 5; null = unknown
     public TimeSpan CatalogueCacheDuration { get; set; } = TimeSpan.FromHours(6);
     public int TimeoutSeconds { get; set; } = 20;                          // overall budget for one lookup
     public int PerAttemptTimeoutSeconds { get; set; } = 5;
-    public int MaxRetryAttempts { get; set; } = 2;                         // retries, not attempts: 2 ⇒ 3 attempts
+    public int MaxRetryAttempts { get; set; } = 1;                         // retries, not attempts: 1 ⇒ 2 attempts. §SOL17 rule 4
 }
 ```
 
@@ -110,7 +115,8 @@ default to the base, which owns `Name`, per §ABS5 rule 1 and §ABS14.
 
 1. **Validates eagerly and throws on construction:** non-empty `ApiKey`,
    non-blank `DefaultTranslation`, parseable `BaseUrl`, **non-empty
-   `ParseLanguages` with every entry a known book-name table**, and the timeout
+   `ParseLanguages` with every entry a known book-name table**, **no duplicate
+   `Abbreviation` in `TranslationMetadata`** (§ABS45.1 rule 4), and the timeout
    budget inequality in §APB6. A composition root should force construction at startup so
    a bad key fails the host rather than the first user request (§ABS28 trap 1).
 2. **The logger is optional and defaults to `null`** — replaced internally with
@@ -128,19 +134,43 @@ default to the base, which owns `Name`, per §ABS5 rule 1 and §ABS14.
 
 ---
 
-## APB4. Why the default translation is KJV (#1)
+## APB4. Why the default translation is WEB (#1)
 
 An unqualified reference is a first-class input (§ABS20), and the default is what
 silently fills the gap — so the shipped value decides whether a freshly-keyed
 installation works at all.
 
-On API.Bible, **KJV is in the open-access set on Starter**, so it resolves on a
-new key without spending one of the three licensed-Bible slots [unverified —
-§APB23 rule 2]. `NIV` is the worst candidate: licensed, non-commercial-only, and
-absent from a fresh key's catalogue.
+**The shipped default is `WEB`, the World English Bible**, taken from
+`ScriptureDefaults.Translation` so that one constant serves both providers
+(§ABS20.1). ~~KJV.~~ **Changed**,
+and §APB27 is the reason: Terms §9.8 grants **no licence for the KJV within the
+United Kingdom and fifteen other named territories**, *irrespective of its
+public-domain status*, and §9.9(b)(i) bars transmitting it anywhere. **A shipped
+default must not be one that a whole class of deployments may not lawfully
+serve**, and this repository's own developer sits inside the Restricted Territory.
+
+`WEB` answers every requirement the old reasoning had, and two it did not:
+
+| Requirement | KJV | WEB |
+|---|:---:|:---:|
+| In the open-access set, so it resolves on a fresh key without spending a licensed slot | ✅ | ✅ [unverified — §APB23 rule 2] |
+| Public domain, so no licence to accept | ✅ | ✅ |
+| Servable to a reader anywhere | ❌ §9.8 | ✅ |
+| May be sent on by email or messaging | ❌ §9.9(b)(i) | ✅ §9.9(a) |
+| Modern English a reader unfamiliar with scripture can follow | ❌ | ✅ |
+
+`NIV` remains the worst candidate: licensed, non-commercial-only on the free tier,
+and absent from a fresh key's catalogue.
 
 A deployment holding a licence sets `DefaultTranslation` explicitly. **The shipped
-constant is a *safe* default, not a recommended one.**
+constant is now a *safe and recommended* default** — the distinction §SOL19.2 item 3
+asks every README to draw, and the first shipped default in this design where the
+two coincide.
+
+**One caveat this default does not remove.** `WEB` is a public-domain *dedication*
+rather than an expired copyright, and eBible.org holds the **name** as a
+trademark: a consumer that alters the text may not still call it the World English
+Bible. §ABS17 forbids altering it, so a conforming consumer cannot trip this.
 
 ---
 
@@ -178,9 +208,9 @@ service composed and returns the response. It gets no unit tests.
 | Knob | Config | Default | Note |
 |---|---|---|---|
 | Per-attempt timeout | `PerAttemptTimeoutSeconds` | 5 | each HTTP attempt |
-| Retries | `MaxRetryAttempts` | 2 (⇒ 3 attempts) | on 408 / 429-transient / 5xx and transient socket errors |
-| Backoff | — | exponential + jitter, base 0.5 s, each delay ≤ 2 s | ≤ 4 s total |
-| Overall budget | `TimeoutSeconds` | 20 | 3 × 5 s + ≤ 4 s = ≤ 19 s ⇒ fits |
+| Retries | `MaxRetryAttempts` | **1 (⇒ 2 attempts)** | on 408 / 429-transient / 5xx and transient socket errors. §APB6.2 explains why this is 1 |
+| Backoff | — | exponential + jitter, base 0.5 s, each delay ≤ 2 s | ≤ 2 s total at one retry |
+| Overall budget | `TimeoutSeconds` | 20 | 2 × 5 s + ≤ 2 s = ≤ 12 s ⇒ fits, with 8 s of slack |
 | `HttpClient.Timeout` | — | `Timeout.InfiniteTimeSpan` | otherwise it pre-empts the pipeline |
 
 1. The constructor validates
@@ -258,6 +288,46 @@ Required by §ABS33 item 8, because this provider has timeout logic and
    anti-pattern, and nothing above would catch it.
 
 ---
+
+### APB6.2 Why the retry default is 1, not 2 (#3)
+
+**`MaxRetryAttempts` is a quota policy wearing a timeout's clothes**, and an
+earlier version of this section did not say so. Every retry is another **metered
+request**. At two retries a single failing lookup burns three of the 5,000 this
+plan allows in a month (§SOL12), so a bad hour of upstream 5xx consumes the
+allowance three times faster while succeeding no more often — and past the
+allowance, service is disrupted rather than billed.
+
+Three reasons the second retry is not worth its request:
+
+1. **It rarely converts a failure the first did not.** A transient blip is caught
+   by attempt two; an upstream that is actually struggling is not fixed by attempt
+   three.
+2. **Failing over is cheaper and likelier to succeed.** The consumer's
+   orchestration already holds another provider (§ABS34). A third attempt at a sick
+   upstream spends a metered request to probably fail again; the next provider
+   spends one to probably succeed.
+3. **It buys slack in an arithmetic that had almost none.** The old budget closed
+   at 19 s of 20; this one closes at 12, so slow DNS or a TLS handshake no longer
+   risks tripping the ceiling.
+
+**`TimeoutSeconds` is deliberately left at 20, because it is a ceiling and not a
+target.** §APB6.1 links the caller's token with this budget, so a caller who cares
+passes a `CancellationToken` and gets *their* number — an interactive page passing
+three seconds gets three seconds whatever this POCO says. The provider budget binds
+only when nobody specified, which is exactly when it should be forgiving.
+
+That is also why §SOL17 rule 4's `TimeoutSeconds = 12` alternative was not taken:
+it closes with **zero** slack, which makes the arithmetic brittle for no gain,
+since a caller wanting twelve seconds should pass a token rather than have the
+backstop moved.
+
+**This is a judgement on numbers nobody has measured.** The unmeasured quantity is
+what fraction of failures a third attempt actually rescues; if it turns out to be
+high, raise the default and say so here.
+
+---
+
 ## APB7. Catalogue resolution (#1)
 
 The public surface speaks in abbreviations (`"NIV"`); the upstream wants opaque
@@ -298,6 +368,17 @@ cached.
    throws `ApiBibleUnavailableException` — it is an availability failure, not a
    catalogue miss, and a consumer must be able to suspend the provider rather than
    read it as "this translation does not exist" (§ABS6).
+
+
+### APB7.1 Serving `GetTranslationsAsync` (#3)
+
+§ABS44 is a **projection of this cache**, not a second one and not a second call.
+Once warm it is a map over the holder above; on a cold cache it triggers the same
+single-flight fetch, and a fetch that fails with no usable previous catalogue
+**throws** rather than returning empty (§ABS44.2) — an outage must never read as
+"this provider carries nothing".
+
+Field mapping: `abbreviation` → `Abbreviation`, `name` → `Name`, `language.id` → `Language`, `language.scriptDirection` → `ScriptDirection`, the opaque bibleId → `ProviderEditionId`, `Attribution` **null unless `include-full-details=true` was sent** (rule 3) — normally null here and filled on the passage instead (§APB11 rule 5) — and **`PublisherUrl` null from the upstream — no URL property exists on either schema** [verified, §ABS44.5] — then **merged with `TranslationMetadata`** (§ABS45.1), which is how it becomes non-null here at all.
 
 ---
 
@@ -433,6 +514,10 @@ nodes and nestable `char` nodes:
    `language.id` → `Language`, `language.scriptDirection` → `ScriptDirection`
    (§ABS42.6). `Reference` comes from `RenderReference(usfmReference, Language)` —
    the two-argument form, rendered in the edition's own language (§ABS42.5).
+
+   Then **merge with `TranslationMetadata`** (§ABS45.1): the upstream's `copyright`
+   wins where present, and a blank one falls through to config — which is what stops
+   a missing copyright reaching the consumer as a null `Attribution` (§ABS32).
 
    From the renderer: `ScriptureMarkup.Generated(ProviderName, "ScriptureHtmlRenderer")`
    → `Markup` when `Html` was produced, `ScriptureMarkup.None(ProviderName)` when it
@@ -735,7 +820,7 @@ every stored usage carries an `IssuedAt` (§ABS29).
 ## APB17. Content recency — Terms §11 (#1)
 
 The Terms require that content stored offline be kept up to date with API.Bible.
-Four duties, all [verified], and the last two are **removal** duties that an
+Five duties, all [verified], and the last three are **removal** duties that an
 earlier draft of this section missed entirely by enumerating only the first two:
 
 1. **Check at least every 30 days for content updates** (§11).
@@ -749,6 +834,15 @@ earlier draft of this section missed entirely by enumerating only the first two:
    API.Bible suspends you, or when a subscription is terminated or deactivated —
    **an unpaid plan counts as deactivated** (§10.2) — and within 72 hours of any
    removal request from API.Bible or an IP Holder (§10.3).
+5. **Delete within 24 hours of a written removal request** — Terms §13, appended
+   here because §APB28.2 wrongly claimed this list already carried it. §13 is the
+   *content-specific* clock and it is tighter than duty 4's: "in any case within
+   twenty four (24) hours after a written request to do so by API.Bible, or by an
+   IP Holder with regard to their API.Bible Content", and it triggers on content
+   that is deleted, suspended, withheld, modified **or "gains protected status"**.
+   Duty 4's 72 hours governs *termination* — a lapsed licence, a suspended or
+   deactivated plan. **A consumer served a written request owes 24 hours, not 72**,
+   and the packed README said 72 for "any removal request" until this was corrected.
 
 This is contractual and binding. Five consequences:
 
@@ -768,6 +862,7 @@ This is contractual and binding. Five consequences:
    lapsed subscription. **Design the purge before the first row is written** — this
    is the obligation most likely to be discovered only when it is already breached,
    because nothing in normal operation exercises it.
+
 5. **The two FAQs disagree** — 14 days on scripture.api.bible, 30 on api.bible and
    in the Terms [contested]. **The Terms govern at 30.** A consumer may use 14 and
    satisfy both, and that remains the safe recommendation, but this document no
@@ -829,19 +924,41 @@ This provider always populates `Attribution` from the passage response's
 `Attribution` on a licensed edition is a mapping or licensing defect and is logged
 at Warning by the base class (§ABS32).
 
+**Neither requirement's link can be sourced from this upstream, and that is now
+verified rather than assumed.** The Bible schema has no URL property and the passage
+response has none either; `info` is a string of publisher information, not a link
+(§ABS44.5). So `TranslationSummary.PublisherUrl` is always null here, and the
+"website links" requirement 1 asks for must come from the licence paperwork, or be
+looked up against the Digital Bible Library using the `dblId`/`relatedDbl` the
+catalogue does carry — a lead, not a documented route.
+
+**§ABS45 closes requirement 1 as far as this library can.** `TranslationMetadata`
+lets a deployment supply the publisher links this upstream does not expose, and the
+merge puts them on both `TranslationSummary` and the passage. What it cannot do is
+invent them — a deployment that configures nothing still gets nulls, and §ABS32's
+Warning is how it finds out.
+
 **Requirement 2 is the one this library does not fully serve.** `Attribution` is a
 bare string; the required hyperlink needs a target, and nothing in
-`ScripturePassage` carries one. Two ways to close it, and they should be decided
-together with §SOL17 rule 3 because both are additions to a published DTO:
+`ScripturePassage` carries one. ~~Two ways to close it, and they should be decided
+together with §SOL17 rule 3…~~ **Decided — §SOL17 rule 3 and §ABS39 rule 5 are both
+settled, and the answer is the first option:**
 
-- the consumer holds `translation → copyright page URL` in its own configuration —
-  cheap, correct, and duplicated per consumer; or
-- `ScripturePassage` grows a nullable `AttributionUrl`, populated from the
-  catalogue's per-Bible `info`/`copyright` details (§ABS39 rule 5).
+- **the consumer holds `translation → copyright page URL` in its own
+  configuration** — cheap, correct, and duplicated per consumer. This is what
+  `TranslationMetadata.PublisherUrl` (§ABS45) exists for.
+- ~~`ScripturePassage` grows a nullable `AttributionUrl`, populated from the
+  catalogue's per-Bible `info`/`copyright` details.~~ **Rejected** (§ABS39 rule 5,
+  §ABS44.5): this upstream exposes no URL property at all, so the member would be
+  null for the one provider whose terms demand a hyperlinked copyright page.
 
-Until one is chosen, **a consumer is responsible for building the link itself**,
-and this document says so plainly rather than letting `Attribution` imply
-compliance it does not deliver.
+**Do not implement `AttributionUrl`.** An earlier draft of this passage left it
+offered as a live option after the decision had been taken elsewhere, which is
+exactly how a rejected member gets built.
+
+**A consumer is responsible for building the link itself**, and this document says
+so plainly rather than letting `Attribution` imply compliance it does not
+deliver.
 
 ---
 
@@ -854,10 +971,49 @@ sponsorships, freemium models, paid access, "or any other situation that may
 reasonably be considered as a revenue generating activity".
 
 That is wider than most readings of "we don't sell it". **An ad-supported or
-freemium surface is commercial under these Terms**, and whether a given deployment
+freemium surface is commercial under these terms**, and whether a given deployment
 qualifies decides whether a licensed translation (NIV, ESV, NLT) may be configured
 at all. It is a business and legal question, not an engineering one. Resolve it
 before configuring one.
+
+### APB20.1 Why this library enforces nothing, and what it does instead (#3)
+
+**Settled: no configuration flag, no gate, no detection.** The obvious design — a
+`IsNonCommercialUseOnly` switch that blocks licensed translations until a consumer
+declares itself — was considered and rejected on three grounds, the first of which
+is decisive:
+
+1. **There is nothing to detect.** The Bible schema carries `id`, `dblId`,
+   `abbreviation`, `abbreviationLocal`, `copyright`, `language`, `countries`,
+   `name`, `nameLocal`, `description`, `descriptionLocal`, `info`, `type`,
+   `updatedAt`, `relatedDbl` and `audioBibles` [verified] — **no licence tier and no
+   commercial-use flag.** Open-access and licensed Bibles are indistinguishable to
+   this provider, so a gate would either block correctly-licensed deployments or
+   block nothing at all.
+2. **The determination is made before this code runs.** Commercial use is declared
+   to ABS when a licensed Bible is requested in the portal, and ABS grants or
+   refuses. By the time a key can fetch NIV, the question has already been answered
+   by the parties to the agreement — neither of whom is this library.
+3. **A self-declared boolean that gates behaviour is compliance theatre.** The
+   consumer sets it to whatever makes the code work. It binds nobody — the Terms do
+   that — while looking enough like a control to be trusted as one, which is worse
+   than an honest absence.
+
+   It would also be wrong at the abstraction level. YouVersion permits commercial
+   use with a disclosure (§YVN14.2 rule 4) where this upstream forbids advertising
+   and freemium outright; one flag across both would flatten a real difference, and
+   §ABS5 rule 1 keeps provider licensing out of shared configuration for exactly
+   that reason.
+
+**What ships instead is documentation placed where it bites** (§SOL6, §SOL19.2
+item 6): the clause quoted in full above, the same clause in the package README's
+compliance section, and — the one cheap addition — **an XML documentation comment
+on `TranslationMap` and on the `TranslationMetadata` sample naming this section**,
+because configuring `"NIV" → bibleId` is the exact moment someone is deciding to
+use a licensed edition. A developer typing that line reads the restriction then,
+rather than discovering it in an appendix or not at all.
+
+That is the whole mitigation, and it is deliberately the whole of it.
 
 ---
 
@@ -926,7 +1082,7 @@ are not repeated.
    disrupted plan actually returns** (§APB15). The highest-value item in this
    document — it is the one unknown that can silently disable failover. Exhaust a
    test plan if that is what it takes, or ask ABS directly.
-2. **Confirm `KJV` is in a fresh, unconfigured key's catalogue** — it is the
+2. **Confirm `WEB` is in a fresh, unconfigured key's catalogue** — it is the
    shipped `DefaultTranslation` (§APB4).
 3. **Probe the omitted-verse behaviour** — `MAT.17.21`, `ACT.8.37`, `ROM.16.24`
    against a critical-text translation. Commit the real responses as fixtures.
@@ -941,7 +1097,7 @@ are not repeated.
    `content-type=json` verse, a red-letter passage from a red-letter-capable
    edition, and a `/search` response for a reference-shaped query.
 7. **Ask ABS** (support@americanbible.org): is there a consecutive-verse cache cap
-   (§APB18)? Which refresh figure governs, 14 or 30 days (§APB17 rule 5)?
+   (§APB18)? Which refresh figure governs, 14 or 30 days (§APB17 consequence 5)?
 8. **Ask ABS:** is an undocumented age cut-off applied to stored tokens during log
    processing (§APB21)? Is `&ts=` honoured from a third-party server?
 
@@ -1005,7 +1161,7 @@ only through `IBibleProvider` (§ABS35 rule 3).
 9. A cancelled token aborts in flight and surfaces `OperationCanceledException`,
    not an exception type; a **provider-side timeout** with the caller's token
    unsignalled surfaces `ApiBibleUnavailableException` (§ABS13 rule 3).
-10. **The API key appears in no captured log** (§SOL14 rule 4).
+10. **The API key appears in no captured log** (§SOL14 rule 5).
 
 **`…ApiBible.Tests.Integrations`** — the live API. Credentials from
 `APIBIBLE_API_KEY` only; every fact guarded so the suite is **skipped, not
@@ -1034,10 +1190,329 @@ Every item depends on the abstraction items 1–7 (§ABS40).
 |---|---|---|---|
 | 1 | **Spikes** | The eight items in §APB23. Produces the fixtures §APB24 is built on, so it cannot be skipped (§SOL9) | 1–1.5 d |
 | 2 | **Transport & container** | Internal `ServiceCollection`, typed client, resilience pipeline and budget validation, disposal via `InternalServices` | 0.5–1 d |
-| 3 | **Catalogue** | Refreshable holder with the properties in §APB7, `TranslationMap` precedence | 1 d |
+| 3 | **Catalogue** | Refreshable holder with the properties in §APB7, `TranslationMap` precedence, and the §APB7.1 projection | 1–1.25 d |
 | 4 | **Lookup flow** | Shape-based endpoint routing, the explicit query string, content check, truncation check, JSON→`Blocks` mapping, the `/search` fallback | 1.5–2 d |
 | 5 | **Failure mapping** | §APB14 and §APB15, including the catalogue-aware 403 rule and the 429 discriminator once the spike settles it | 0.5–1 d |
 | 6 | **FUMS** | `ScriptureUsage` population, and the new `.Fums` package: server path, browser payload, batching/chunking, charset validation, scheme-pinning test | 1–1.5 d |
 | 7 | **Tests** | The four projects in §APB24 plus the inherited Conformance suite | 1–1.5 d |
 
 Provider total ≈ **6.5–9 dev-days**.
+
+---
+
+## APB26. Security and DRM — Terms §12 (#3)
+
+*Appended per the no-renumbering rule. Read it with §APB17 and §USE4.*
+
+§12 is titled **Security**, and an earlier reading of this design cited it only for
+a print limit. It is substantially more than that, and **two of its clauses are
+obligations no other part of this design had reached**. All [verified].
+
+### APB26.1 Securing the key and the content (#3)
+
+1. **Credentials go to no third party.** Maintain the security of the API and "not
+   make available to any third party, any token, key, password or other login
+   credentials". Aligns with §SOL14 rule 5, which keeps the key out of logs, and
+   with YouVersion's equivalent (§YVN14.2 rule 5).
+2. **The content itself is confidential.** "You shall keep API.Bible Content
+   confidential and secure from unauthorized access by using industry-standard
+   organizational and technical safeguards for such data, **and with no less care
+   than you use in connection with securing similar data you store**."
+
+   That last clause is a *relative* standard and bites harder than it reads: a
+   consumer that encrypts its own user data at rest and leaves cached scripture in
+   plaintext has, by the words of the clause, failed it.
+3. **Breach notification is immediate and broad.** Notify `support@api.bible`
+   "immediately" on knowing of **or suspecting** any breach **or potential
+   vulnerability**, then consult, cooperate with investigations, assist with
+   required notices, provide information requested, and "promptly remedy" it.
+   **Suspicion is the trigger, not confirmation.**
+
+### APB26.2 DRM is mandatory, and it must prevent copying (#3)
+
+> "Users may only use content from API.Bible and its services in a secured manner
+> that **does not allow the property to be freely copied**. Users will incorporate
+> industry-standard digital rights management ("DRM") technology into products
+> which **restricts end users from copying or distributing** the Licensed Products
+> and the Property, **restricts printing the property more than 100 verses**,
+> **restricts the Licensed Products to the Territory**, and **does not permit use
+> of a Licensed Product or the Property on more than the number of devices as
+> indicated by the developer upon sign up**."
+
+Four requirements, and the first changes §USE4's conclusion in kind:
+
+1. **Restrict end users from copying or distributing.** §USE4 established that a
+   consumer may not *transmit* licensed content. This goes further: a consumer must
+   actively **prevent its own users** from doing so. A share button, a copy-verse
+   button, and arguably freely selectable text all run against it for licensed
+   translations. **Not permitted** and **must be prevented** are different
+   obligations, and only the second requires building something.
+2. **No printing beyond 100 verses.**
+3. **Restrict to the Territory** — a geographic scope, declared somewhere outside
+   this design. §APB26.3.
+4. **No more than the declared device count** — "as indicated by the developer upon
+   sign up". §APB26.3.
+
+DRM "may contain errors and be subject to attempts to circumvent"; the duty is
+**commercially reasonable efforts**, not perfection. That is the one softening in
+the section, and it is the right one to lean on — a web page cannot truly prevent
+copying, and the clause does not pretend otherwise.
+
+### APB26.3 Two parameters nobody has looked at (#3)
+
+**Territory and device count are configuration this solution has never mentioned**,
+and both were apparently fixed at sign-up:
+
+- **Territory** — the geographic scope the Licensed Products are restricted to.
+  Nothing in the catalogue, the passage response or this design carries it. A
+  consumer serving outside it is in breach, and would have no signal.
+- **Device count** — "the number of devices as indicated by the developer upon sign
+  up". A web application does not have a device count in any natural sense, so what
+  was declared, and what it binds, is unclear.
+
+**Both are [unverified] as to their actual values** and are questions for the
+account holder, not the code: check what was declared at sign-up. Neither is
+enforceable by this library, which stores nothing and serves no users (§SOL2
+rule 5) — but both bind the consuming application.
+
+### APB26.4 What this does not settle (#3)
+
+**~~§13, "Updates and Removals", has not been read in full~~ — **read, §APB28**.** §APB17 records the
+removal duties from §10 and §11; whether §13 adds to them is **now known — it does, §APB28**. Read it
+before relying on §APB17 as a complete statement of the removal obligations —
+§APB18's history is the reason to check rather than assume.
+
+---
+
+## APB27. The King James Version is not licensed in the UK — Terms §9.8 (#3)
+
+**This is the most consequential single finding in the licence review, because it
+lands on the shipped default and on the territory this repository is developed
+in.** [verified], quoted in the material part:
+
+> "Rights in the Authorized Version in the United Kingdom are vested in the Crown.
+> **No licence granted under these Terms and Conditions extends to the Authorized
+> Version within the United Kingdom (GB), the Isle of Man (IM), Jersey (JE),
+> Guernsey (GG)**, or the British Overseas Territories of Anguilla (AI), Bermuda
+> (BM), the British Indian Ocean Territory (IO), the British Virgin Islands (VG),
+> the Cayman Islands (KY), the Falkland Islands (FK), Gibraltar (GI), Montserrat
+> (MS), the Pitcairn Islands (PN), Saint Helena, Ascension and Tristan da Cunha
+> (SH), South Georgia and the South Sandwich Islands (GS), or the Turks and Caicos
+> Islands (TC) (the "Restricted Territory"). This applies **irrespective of
+> whether your use is Commercial Use or Non-Commercial Use**, whether any fee is
+> charged, **whether the content is identified as Public Domain**, and
+> irrespective of format. **You shall not distribute the Authorized Version to a
+> Restricted Territory.**"
+
+### APB27.1 What it covers, and what it does not (#3)
+
+"Authorized Version" is defined tightly, and the exclusion list matters as much as
+the inclusion list [verified]:
+
+| In scope | Out of scope |
+|---|---|
+| King James Version | New King James Version (NKJV) |
+| King James Version, American Edition | English Standard Version (ESV) |
+| King James Version 400th Anniversary Edition | New American Standard Bible (NASB) |
+| "any other edition of that translation made available through API.Bible" | Revised Standard Version (RSV), NRSV |
+| — | **American Standard Version (ASV)** |
+| — | Modern English Version (MEV) |
+
+**So every other public-domain edition in §USE6.5 is unaffected.** ASV is named as
+out of scope, and WEB, BSB, YLT, Darby, DRA, GNV and WBT are not derived editions
+of the Authorized Version in the sense the clause defines.
+
+### APB27.2 Three reasons this is worse than it first reads (#3)
+
+1. **"Public Domain" is explicitly not a defence.** The clause says so in terms.
+   A reader who knows the KJV is public domain in the United States, and reasons
+   from there, reaches exactly the wrong answer.
+2. **§9.9(b)(i) removes the transmission permission.** §9.9(a) permits electronic
+   transmission of public-domain content, but §9.9(b)(i) excludes "any content
+   subject to a territorial restriction, **including the Authorized Version (King
+   James Version) under Section 9.8** … **irrespective of identification as Public
+   Domain**" [verified]. **So the KJV is the one public-domain translation that
+   may not be emailed or messaged.**
+3. **The duty is on distribution, not on the developer's location.** "You shall
+   not distribute the Authorized Version to a Restricted Territory" — a US-hosted
+   application with UK readers is squarely in scope. Geography of the *reader* is
+   what the clause turns on, and nothing in this library knows it.
+
+### APB27.3 What this changes in the design (#3)
+
+1. **§APB4's reasoning is intact; its conclusion is now narrower.** KJV was chosen
+   as the default because it is open-access on Starter and therefore resolves on a
+   fresh key. That is still true. **But the default now has a territorial
+   condition that the previous reasoning never considered**, and this repository's
+   own developer is in GB.
+2. ~~**The recommendation is to change the shipped `DefaultTranslation` to
+   `WEB`**…~~ **Done** — §APB4. Public domain by dedication, no territorial
+   restriction, no share-alike obligation, open access, and with a British edition
+   available.
+3. **Nothing in this library can enforce §9.8.** The provider does not know the
+   reader's territory, and §SOL2 rule 5 keeps it that way. This is a consumer
+   obligation, documented, and the correct mechanism is `TranslationMetadata`
+   configuration plus the consumer's own geo policy — the same shape as §USE7's
+   `ShareRights` problem.
+4. **YouVersion is a separate agreement and this clause does not reach it.**
+   But the underlying Crown letters patent are a fact of UK law rather than a term
+   of the API.Bible contract, so a UK deployment should not read "§9.8 does not
+   apply to YouVersion" as "the KJV is unencumbered in the UK there" [unverified —
+   §YVN14 records no equivalent clause either way].
+
+### APB27.4 Open (#3)
+
+1. ~~**Should `DefaultTranslation` change from `KJV` to `WEB`?**~~ **Decided —
+   yes, and done.** §APB4 now ships `WEB`, and §YVN4 matches it. MINOR under §SOL7
+   rule 4, taken before first release. The recognisability argument for KJV lost to
+   the plain fact that a shipped default must be lawfully servable everywhere the
+   package can be installed.
+2. **Does the same reasoning apply to `KJVA`** and any other KJV edition in the
+   catalogue? The clause says "any other edition of that translation", so
+   presumptively yes, but the catalogue's edition names have not been enumerated
+   [unverified].
+
+---
+
+## APB28. Updates and removals, and the metadata duty — Terms §13 and §4.4 (#3)
+
+Closes the gap §APB26.4 and §USE9 rule 4 both recorded.
+
+### APB28.1 §13 Updates (#3)
+
+> "API.Bible may update, modify or discontinue any features, service, content or
+> function of the API content … **You shall implement and use the most current
+> version of the API content and make any changes to your Services that are
+> required as a result of the Update, at your sole expense.** Updates may adversely
+> affect the way your Services access or communicate with the API.Bible API or
+> display API.Bible Content."
+
+**This is a compatibility obligation, not a content one**, and it is the clause
+that makes §APB23's spike list a standing concern rather than a one-off: the
+upstream may change response shape, and absorbing that is contractually the
+consumer's cost. It is also why §APB11's parser tolerates unknown USX elements
+rather than failing on them.
+
+### APB28.2 §13 Removals (#3)
+
+> "If API.Bible content is deleted, **gains protected status**, or is otherwise
+> suspended, withheld, modified, or removed from the API.Bible Applications
+> (including removal of location information), you will make all reasonable
+> efforts to delete or modify that Content (as applicable) as soon as possible, and
+> **in any case within twenty four (24) hours after a written request** to do so by
+> API.Bible, or by an IP Holder with regard to their API.Bible Content."
+
+Two things §APB17 did not record:
+
+1. **"Gains protected status" is a removal trigger.** A work available today as
+   public domain can become licensed — a new critical edition, a disputed
+   dedication, a territorial ruling. **So the delete path is owed even by a
+   consumer that stores only public-domain translations** (§USE6.2).
+2. **24 hours on written request, against §10's 72 hours on termination.** They
+   are different clocks for different events. ~~§APB17 now carries both.~~ **It did
+   not** — §APB17 was never amended and still gave 72 hours for "any removal
+   request", which the packed README then published. **§APB17 duty 5 now carries
+   the 24-hour clock**, appended rather than inserted. The tighter one governs a
+   content-specific request.
+
+### APB28.3 §4.4 The metadata review duty (#3)
+
+> "**Prior to using any API Content**, you are responsible for reviewing the
+> copyright and licensing metadata provided via the API.Bible API (including the
+> `copyright` field returned for the applicable Bible version, e.g. via
+> `Full Details = true` on the `/Bibles` endpoint) to identify the applicable
+> **copyright status, license type, and any use restrictions** for that specific
+> content … **This obligation applies to all API Content, including but not limited
+> to Public Domain, Creative Commons, and Licensed/Copyright Reserved content.**"
+
+**This partially contests §APB20.1 and §USE7**, which record that the catalogue
+exposes no rights class. Both remain correct about the *schema* — there is no
+`licenceTier` or `rightsClass` field — but the Terms assert that copyright status
+and licence type are discoverable from the `copyright` field, and place a duty on
+the consumer to read it.
+
+Marked **[contested]**, and the resolution is a spike: §APB23 gains a step to
+fetch `/bibles?include-full-details=true` and record what the `copyright` field
+actually contains across a public-domain, a Creative Commons and a licensed
+edition. **If it is free prose, §USE7's conclusion stands and configuration
+remains the only reliable classification. If it is structured, `ShareRights`
+(§USE9 rule 1) may be derivable rather than configured** — which would change that
+decision.
+
+Either way the duty is the consumer's and this library discharges none of it: the
+`copyright` string already travels as `Attribution` (§ABS16), which is the
+material this clause asks a consumer to read.
+
+---
+
+## APB29. The Starter plan, as the dashboard actually states it (#3)
+
+Read from the application's own Plan page rather than the marketing site, so all
+[verified] for this repository's key on 2026-09-11:
+
+| Option | Selection |
+|---|---|
+| API Calls | **5,000 / month** |
+| **Commercial Use** | **"Allowed on Pro Plans"** |
+| **End Users** | **0–1K** |
+| Bible Access | **250+ Bibles included**, 100+ audio Bibles |
+| Additional Bibles | **3 slots**, here holding NLT, NKJV and NIV |
+
+Three of these change or sharpen what the design recorded.
+
+### APB29.1 The Monthly End Users cap is new (#3)
+
+**Nothing in this design had recorded an end-user cap, and the Starter plan
+carries one: 0–1K.** §2 defines "Monthly End Users" as "the number of distinct end
+users who access an application during a Plan Month", and "Plan Month" as the
+recurring monthly period from the date the plan took effect — **not** a calendar
+month.
+
+**This is a second, independent ceiling on the free tier**, and it binds
+differently from the call quota: 5,000 calls could be spent by 50 users or by
+4,000, and only one of those breaches the plan. **A consumer whose audience grows
+past a thousand distinct users in a plan month needs a Pro plan even if call
+volume is comfortable.**
+
+Nothing in this library can observe it — the provider sees requests, not users
+(§SOL2 rule 5) — so it is documented and left with the consumer, like the
+Territory and device-count parameters at §APB26.3. It belongs in the same list.
+
+### APB29.2 "250+ Bibles", not the whole catalogue (#3)
+
+§APB4's reasoning assumed KJV sits in the open-access set on Starter and is
+therefore reachable from a fresh key [unverified — §APB23 rule 2]. **The dashboard
+confirms an open-access set exists and is 250+ Bibles, but does not enumerate
+it**, and the plan page offers no listing. So §APB23 rule 2 stays open, and
+§USE6.5's availability column stays [unverified].
+
+**Enumerating it requires a live call with the key** —
+`GET /bibles?include-full-details=true` — which is §APB23's spike and also settles
+§APB28.3's contested question about what the `copyright` field contains. **The two
+should be run as one spike**, because a single response answers both.
+
+### APB29.3 Commercial use is a plan attribute, stated plainly (#3)
+
+The dashboard's wording is "**Allowed on Pro Plans**", which confirms §APB20 and
+§APB20.1: commercial use is gated by the plan a consumer bought, is visible to
+that consumer in their own dashboard, and is not something this library can see or
+should model. **§APB20.1's decision — no `IsNonCommercialUseOnly` flag on the
+configuration — is reinforced rather than revisited**, because the authoritative
+statement already exists somewhere the consumer can read it.
+
+### APB29.4 ABS classifies licences into exactly two kinds (#3)
+
+The dashboard's citation builder asks for one of two license types [verified]:
+
+> "We have two kinds of licenses: **Licensed and/or Copyright Reserved** …
+> and **Creative-Commons and Public-Domain**."
+
+**This is the strongest available support for §USE7's proposed `ShareRights`
+being a small closed enum rather than a rights taxonomy.** ABS's own tooling
+draws the line in one place, and it is the same line §9.9(a) draws for
+transmission — with the two riders that the NC/ND Creative Commons variants sit on
+the restricted side of the transmission question (§USE4) and the KJV sits on the
+restricted side despite being public domain (§APB27).
+
+So a faithful enum is **not** two-valued after all, and `ShareRights`'s three
+members (§USE7) remain right: `Unknown`, `NotPermitted`, `Permitted`.

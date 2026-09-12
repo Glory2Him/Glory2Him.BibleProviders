@@ -1,6 +1,6 @@
 # Abstractions — the provider contract
 
-**Area prefix:** `ABS` · **Sections:** §ABS1 – §ABS43
+**Area prefix:** `ABS` · **Sections:** §ABS1 – §ABS45
 **Package:** `Glory2Him.BibleProviders.Abstractions`
 **Solution overview:** [Design.md](Design.md) · **Providers:** [ApiBible.md](ApiBible.md) · [YouVersion.md](YouVersion.md)
 
@@ -46,7 +46,7 @@ if (result.IsFound)
 
 | Not done here | Where it belongs |
 |---|---|
-| Passage caching, persistence, retention | The consuming application. §ABS31 states the contractual limits it must meet |
+| Passage caching, persistence, retention | The consuming application. §ABS31 states the contractual limits it must meet. **No package here ever caches, stores or writes scripture anywhere** (§SOL2 rule 5) — a passage lives for the call and no longer, so this library is never a party to a retention obligation |
 | Usage reporting (e.g. FUMS `trackView`) | The consuming application, at render time. This library surfaces the obligation and the token (§ABS29), and never reports, because reporting needs the viewer's device and session identity and a fetch has no viewer |
 | Cross-provider fallback | The consuming application's orchestration layer. §ABS34 gives the decision table and a worked loop |
 | Cross-edition versification mapping | Out of scope entirely (§ABS17) |
@@ -96,6 +96,11 @@ public interface IBibleProvider : IDisposable
 
     /// <summary>Lookup by loose human reference: "John 3:16 NIV", "1 Jn 1:9 (ESV)", "Rom 8:28".</summary>
     Task<ScriptureResult> GetScriptureByReferenceAsync(string reference, CancellationToken cancellationToken = default);
+
+    /// <summary>What this provider's catalogue currently carries. Served from the cached catalogue,
+    /// so it costs an upstream request only on a cold cache. A snapshot, never a guarantee — §ABS44.</summary>
+    Task<IReadOnlyCollection<TranslationSummary>> GetTranslationsAsync(
+        CancellationToken cancellationToken = default);
 }
 ```
 
@@ -142,8 +147,13 @@ public interface IBibleProvider : IDisposable
 
 4. **No pre-flight "do you support translation X" method.** Availability is
    subscription-driven and changes without a redeploy; a provider attempts the
-   lookup and answers `TranslationNotSupported`. See §SOL17 rule 3 for the open
-   question this leaves.
+   lookup and answers `TranslationNotSupported`.
+
+   **`GetTranslationsAsync` is not that method, and the distinction is the whole of
+   §ABS44.** It reports what the catalogue *said*, for populating a list; it does
+   not answer "will this succeed". A caller that branches on its result instead of
+   attempting the lookup has reintroduced exactly the pre-flight check this rule
+   forbids, and will be wrong the first time a subscription changes underneath it.
 
 5. **Two channels, and they do not overlap** — §ABS6.
 
@@ -683,6 +693,10 @@ public sealed class ScripturePassage
     public string? RequestedUsfm { get; init; }                    // the caller's key when it differs from Usfm
     public IReadOnlyList<string> MissingVerseIds { get; init; } = Array.Empty<string>();
 
+    /// <summary>Footnotes and cross-references. Reserved and always empty today — providers
+    /// request notes suppressed. Populating it later is additive, not breaking. §ABS22</summary>
+    public IReadOnlyList<ScriptureNote> Notes { get; init; } = Array.Empty<ScriptureNote>();
+
     /// <summary>Diagnostics only — rawJson/rawHtml. Nothing a consumer is obliged to act on may live
     /// here; that is how usage tokens get lost.</summary>
     public IReadOnlyDictionary<string, string> ProviderMetadata { get; init; }
@@ -824,12 +838,116 @@ public static bool TryParse(string input, string? defaultTranslation, out UsfmRe
 protected BibleProviderBase(string name, string defaultTranslation, ILogger? logger = null);
 ```
 
-**Consequence to state plainly:** each provider applies *its own* default, so the
+~~**Consequence to state plainly:** each provider applies *its own* default, so the
 same unqualified input can resolve to different translations from different
-providers — and a consumer's fallback loop calls two providers with the same
-string. `ScripturePassage.Translation` and `Usfm` are the authoritative record of
-what was fetched, never the input. A consumer that fails over should qualify the
-reference at the call site, or keep the providers' defaults identical (§ABS34).
+providers…~~ **Closed by §ABS20.1.** The hazard was real and the mitigation offered
+was advice — "keep the providers' defaults identical" — which is the kind of
+instruction a consumer discovers they ignored after a reader reports the wrong
+verse numbering. The contract now supplies the identical default itself.
+
+**What survives unchanged:** `ScripturePassage.Translation` and `Usfm` are the
+authoritative record of what was fetched, **never the input** (§ABS34).
+
+### ABS20.1 The default is `WEB`, and it belongs to the contract (#3)
+
+**An unqualified reference resolves to the World English Bible, whichever provider
+answers.** The value is a constant in this package, not a literal repeated in each
+provider's configuration:
+
+```csharp
+public static class ScriptureDefaults
+{
+    /// <summary>The translation an unqualified reference resolves to when nothing
+    /// else specifies one. Public domain, transmissible, and territorially
+    /// unrestricted — §APB27, §USE6.6.</summary>
+    public const string Translation = "WEB";
+}
+```
+
+Each provider's `DefaultTranslation` initialises from it (§APB4, §YVN4), and
+`TryParse` falls back to it when handed a null `defaultTranslation`. **So there is
+one place the value lives**, and the previous arrangement — two independently
+typed `"WEB"` string literals in two configuration classes — cannot drift apart in
+a release where someone changes one.
+
+**Why this is a contract concern and not a provider one.** §ABS5 rule 1 keeps
+Abstractions from seeing provider *configuration*, and this does not breach it: a
+`const string` is not configuration, nothing reads it at runtime from a provider,
+and the parameter is still passed in as a plain `string`. What changed is where the
+*shipped* value comes from.
+
+**Why `WEB` and not `KJV`.** §APB27: the King James Version is unlicensed in the
+United Kingdom and fifteen other territories under API.Bible's terms irrespective
+of its public-domain status, and may not be transmitted anywhere. A value that
+fills a gap silently, for every consumer who never thought about it, has to be the
+safest available option rather than the most recognisable one.
+
+### ABS20.2 Precedence, stated once (#3)
+
+**Three sources can supply a translation. They rank, and the ranking is not
+negotiable:**
+
+| | Source | Wins over |
+|---|---|---|
+| 1 | **The reference itself** — `JHN.3.16.NIV`, `"John 3:16 NIV"`, `"1 Cor 13 (ESV)"` | everything |
+| 2 | **The provider's configured `DefaultTranslation`** | the constant |
+| 3 | **`ScriptureDefaults.Translation`** (`WEB`) | nothing |
+
+**Rule 2 exists because rule 3 must not be able to break a working deployment.** A
+consumer holding an NIV licence who sets `DefaultTranslation = "NIV"` gets NIV, and
+a hard-coded `WEB` that overrode them would make the configuration field dead
+weight. "Defaults to WEB" means *in the absence of any other instruction* — which
+is what a default is.
+
+**And rule 2 is the escape hatch for a live risk.** Whether a fresh YouVersion app
+key can see `WEBUS` without accepting an agreement in the portal is **[unverified]**
+(§YVN19 rule 2). If it cannot, that deployment sets `DefaultTranslation` and keeps
+working. Removing rule 2 to make rule 3 absolute would turn an open question into
+an outage.
+
+### ABS20.3 Divergent defaults are a documented risk, not a detectable one (#3)
+
+A consumer *may* still configure two providers with different defaults, and the
+original hazard returns in full when they do: the same string fetched from two
+providers, in Psalms, Joel or Malachi, can return **differently numbered verses**
+(§ABS17).
+
+> ~~**So `BibleAbstractionProvider` compares the composed providers' defaults at
+> construction and logs at Warning when they disagree**, naming both…~~
+> **Withdrawn. The rule specified a mechanism the published contract cannot
+> provide**, and it was published twice in the packed Abstractions README as fact
+> before anyone checked.
+
+**It cannot be built as written, and the reasons are each deliberate:**
+
+| What the check needs | Why it is not there |
+|---|---|
+| A provider's default translation | `IBibleProvider` declares `Name`, the two lookups and `GetTranslationsAsync` (§ABS4). `DefaultTranslation` is `protected` on `BibleProviderBase` (§ABS12), and `BibleAbstractionProvider` is `sealed`, not derived |
+| Provider configuration | §ABS5 rule 1 forbids the abstraction from seeing it, which is why the default is passed to the parser as a plain `string` (§ABS20) |
+| A logger | §ABS25's sole constructor is `BibleAbstractionProvider(IEnumerable<IBibleProvider>)` — it takes no `ILogger` |
+
+**The decision: the rule goes, the interface does not grow.** Adding
+`string DefaultTranslation { get; }` to `IBibleProvider` would put a member on the
+published contract that exists only to power a diagnostic, would breach §ABS5
+rule 1's separation, and would oblige every future provider to surface a
+configuration value the contract otherwise has no interest in. **That is a large,
+permanent cost for a warning about a configuration the consumer chose on purpose.**
+
+**What protects a consumer instead, in order of effect:**
+
+1. **§ABS20.1 removes the cause.** Both providers ship the same constant, so
+   divergence no longer happens by default — only by a deliberate edit.
+2. **Each provider already logs at Error** when its *own* configured default is
+   absent from its catalogue (§APB4, §YVN4), which is the failure that actually
+   strands a deployment.
+3. **The Abstractions README states the risk** where a consumer composing providers
+   will read it.
+
+**This is the second time on this branch that a rule was written for the
+abstraction which the abstraction cannot perform.** The first was §ABS20's original
+"keep the providers' defaults identical" advice. The pattern to resist is
+assigning work to the one component in this design that is deliberately incapable
+of it: it resolves by name and nothing else (§SOL2).
 
 ---
 
@@ -891,6 +1009,15 @@ public sealed record ScriptureSegment(
     ScriptureStyle Style,     // inline only, and genuinely combinable
     string? Verse);           // "16", "3-4", "1a"; null in headings
 
+/// <summary>Reserved (§ABS39 rule 3). No provider populates this yet.</summary>
+public sealed record ScriptureNote(
+    ScriptureNoteKind Kind,
+    string? Caller,        // the marker in the text: "a", "1", "*"
+    string? Verse,         // the verse it hangs off; null when it belongs to the block
+    string Text);          // the note's own text, already plain
+
+public enum ScriptureNoteKind { Unknown = 0, Footnote = 1, CrossReference = 2, Other = 3 }
+
 [Flags]
 public enum ScriptureStyle
 {
@@ -930,6 +1057,16 @@ is kept in `ProviderMetadata` for debugging, never for rendering.
    without merging a five-verse red-letter speech renders as five spans.
 3. `Text` is regenerated too: drop `SectionHeading` blocks entirely, drop markup,
    join blocks with `"\n"`.
+
+   **The scripture itself passes through unaltered, character for character.**
+   Dropping markup and headings is structural; touching the words is not. Do not
+   normalise quotation marks, collapse internal punctuation, expand or contract
+   abbreviations, or "fix" spelling — a 17th-century edition is meant to read like
+   one. YouVersion's terms make this contractual for that provider, requiring text
+   "reproduced word-for-word and 100% accurate to, and unaltered from, the licensed
+   source text" [verified, §YVN14.2 rule 1], and no publisher licence is likely to
+   be looser. Trimming whitespace an upstream left around a run is the one
+   permitted liberty, because it is markup residue rather than text.
 4. **Verse numbers never appear in either** — a consumer wanting numbered output
    renders its own from `Blocks` using each segment's `Verse`.
 5. Scripture text is HTML-escaped on the way in. It comes from an upstream, and an
@@ -962,6 +1099,10 @@ public interface IBibleAbstractionProvider : IDisposable
 
     Task<ScriptureResult> GetScriptureByReferenceAsync(
         string providerName, string reference, CancellationToken cancellationToken = default);
+
+    /// <summary>Forwards to the named provider. Never merged across providers — §ABS44.4.</summary>
+    Task<IReadOnlyCollection<TranslationSummary>> GetTranslationsAsync(
+        string providerName, CancellationToken cancellationToken = default);
 }
 ```
 
@@ -1298,8 +1439,9 @@ has been refreshed. `ScriptureUsage.IssuedAt` is what makes that decidable.
 
 Each provider document states its upstream's actual figure: API.Bible's is
 **30 days, plus a 24-hour response to a takedown or correction request**
-[verified] (§APB17); YouVersion's is unread and storage is blocked until it is
-(§YVN14).
+[verified] (§APB17); ~~YouVersion's is unread and storage is blocked until it is~~
+— **YouVersion has no cycle at all**: storage is permitted and the duty is
+update-on-request rather than on a timer (§YVN14.9).
 
 **The 24-hour clause has a design consequence the cycle does not.** A periodic
 refresh satisfies the 30-day rule on its own, but it cannot satisfy "within 24
@@ -1322,7 +1464,14 @@ because both conditions are otherwise silent.
 
 **`Attribution` is a string, and at least one upstream wants more than a string.**
 API.Bible's terms require a linked copyright page and a per-quotation citation
-(§APB19). Whether the DTO grows an `AttributionUrl` is §ABS39 rule 5.
+(§APB19). The link lives on `TranslationSummary.PublisherUrl` rather than on the
+passage, because no upstream puts one on a passage (§ABS44.5).
+
+**A null `Attribution` now has a remedy, which it did not when this section was
+written.** `TranslationMetadata` (§ABS45) lets a deployment supply the copyright
+text the upstream omitted, merged per field. The Warning still fires when both are
+empty — and that is the point of it: it is how a consumer learns which translation
+needs a config entry, rather than a defect with nowhere to go.
 
 ---
 
@@ -1564,6 +1713,12 @@ No HTTP anywhere.
    crossing a verse boundary rendering as one span, a merged-verse label
    round-tripping, `SectionHeading` omitted from `Text` but present in `Html`,
    scripture text HTML-escaped.
+11. **`TranslationMetadataMergeTests`** (§ABS45) — the merge as a pure function:
+   per-field, so an entry supplying only `PublisherUrl` leaves a live `Attribution`
+   intact; upstream wins where present; **null, empty and whitespace upstream values
+   all fall through to config** (rule 3); matching is case-insensitive on
+   `Abbreviation`; an unmatched abbreviation changes nothing; and a duplicate
+   abbreviation throws at construction rather than last-one-wins (rule 4).
 
 ---
 
@@ -1607,36 +1762,77 @@ third-party provider can take the same medicine (§SOL7 rule 3), and carries no
    through `ToStorageString()`, and is `None` exactly when `Html` is null (§ABS43).
 10. Every thrown `IBibleDependencyException` exposes `ProviderConsole` — a value or
     a deliberate null, never a throw (§ABS7.1).
+11. `GetTranslationsAsync` returns the same result twice without a second upstream
+    request, every entry's `Abbreviation` round-trips through `UsfmReference`, and a
+    cold-cache upstream failure **throws** rather than returning empty (§ABS44.2).
+12. ~~`Notes` is empty on every `Found` result and never null (§ABS39 rule 3).~~
+    **Struck.** §ABS39 rule 3 was reopened later on this branch — "footnote support
+    is a precondition of serving YouVersion content, not a later nicety", covering
+    1,120 licensed Bibles under eight agreements (§YVN14.6). This package **ships
+    to NuGet** and §YVN21 enrols the YouVersion provider in it, so the rule as
+    written meant a provider that passes the inherited test breaches eight
+    publisher agreements, and one that complies fails a test third parties run.
+    **`Notes` never being null still holds — as rule 14, not as part of any
+    existing rule.** An earlier draft handed it to rule 10, which governs
+    `ProviderConsole` on a *thrown exception* and is the one rule in this list that
+    expressly sanctions a null (§ABS7.1 rule 3, "Null is a legitimate answer"). The
+    guarantee would have been routed to a rule permitting its opposite.
+13. A configured `TranslationMetadata` entry backfills a `Found` passage whose
+    upstream attribution was absent, and does **not** displace one that was present
+    (§ABS45.1).
+14. **`Notes` is never null on a `Found` result** — an empty collection where a
+    provider carries no footnotes, never `null`. Split out of the struck rule 12,
+    which also required it to be *empty*; that half is gone because §ABS39 rule 3
+    makes footnotes a precondition of serving YouVersion content. **The surviving
+    half needs its own rule**: `ScripturePassage.Notes` is `init` with a default
+    rather than `required`, so nothing in the type system stops a provider
+    assigning null.
 
 ---
 
 ## ABS39. Open questions (#1)
 
-1. **Where does a consumer's translation list come from?** §SOL17 rule 3. Decide
-   before the first provider ships.
+1. ~~**Where does a consumer's translation list come from?**~~ **Settled: an async
+   `GetTranslationsAsync` on `IBibleProvider`, served from the cached catalogue.**
+   §ABS44.
 2. **TFM** — settled as `net10.0` (§SOL6). Recorded here only because earlier
    drafts left it open.
-3. **Footnotes and cross-references** — `ScriptureBlock`/`ScriptureSegment` have
-   no representation for USX `note` nodes, and providers request notes suppressed.
-   Fine for display; adding them later is a model change rather than a mapping
-   change. Note the interaction with §APB9: a verse whose *only* content is a
-   footnote is exactly the case the content check has to catch, and suppressing
-   notes is what makes it detectable.
-4. **A third provider** — §SOL17 rule 5.
-5. **Does `ScripturePassage` need an `AttributionUrl`?** API.Bible's terms
-   [verified] require a per-quotation citation hyperlinked to full copyright
-   information, and `Attribution` is a bare string with no link (§APB19). Either the
-   consumer holds that mapping itself, or the DTO grows a nullable
-   `AttributionUrl`. **Decide with §SOL17 rule 3** — both are additions to a
-   published DTO and should land in the same release.
+3. ~~**Footnotes and cross-references**~~ **Settled: the space is reserved, not
+   built.** `ScripturePassage.Notes` and `ScriptureNote` exist (§ABS16, §ABS22) and
+   are always empty; providers keep requesting notes suppressed. Populating them
+   later is then **additive and MINOR** rather than a model change and MAJOR
+   (§SOL7 rule 4) — which is the whole reason to spend the twenty lines now.
 
-   **The cluster is now five, and that is the point.** `Language`,
-   `ScriptDirection` (§ABS42.6) and `Markup` (§ABS43) landed during design;
-   `AttributionUrl` and `KnownTranslations` are still open. Every one is a
-   `required` member or an interface member, so every one is a breaking change
-   *after* the first publish and free *before* it (§SOL2 rule 7). **Close the
-   remaining two before the first `RELEASES:` PR**, or accept a major version to
-   add a nullable string later.
+   **Reopened by evidence, and it is contract-level rather than a quirk.** **Eight
+   of YouVersion's nine publisher agreements** carry the same clause: all footnotes
+   "must be included along with the Content and accessible to the end-user"
+   [verified, §YVN14.6]. That covers 1,120 of the licensed Bibles, NIV and TPT among
+   them. The reserved-space decision still stands and is exactly why this is
+   additive rather than breaking; what was wrong was assuming nothing needed them
+   yet. **Footnote support is a precondition of serving YouVersion content**, not a
+   later nicety — while API.Bible's terms carry no such clause, so `Notes` populated
+   by one provider and empty from another is precisely what a defaulted collection
+   is for.
+
+   **Whoever populates them must design the §APB9 interaction first.** A verse
+   whose *only* content is a footnote is exactly the case the content check has to
+   read as empty, and suppressing notes is currently what makes that detectable.
+   Turning `include-notes` on without that pass would turn omitted verses into
+   `Found` results carrying nothing but a footnote.
+4. **A third provider** — §SOL17 rule 5.
+5. ~~**Does `ScripturePassage` need an `AttributionUrl`?**~~ **Settled: no.** The
+   per-quotation hyperlink API.Bible's terms require points at the *consumer's own*
+   copyright page, which this library cannot know, and neither upstream puts a URL
+   on a passage at all (§ABS44.5). The publisher links that page needs ride on
+   `TranslationSummary.PublisherUrl` instead — populated for YouVersion, null for
+   API.Bible, and fillable either way from `TranslationMetadata` (§ABS45).
+
+   **The published-surface cluster is now closed.** `Language`, `ScriptDirection`
+   (§ABS42.6), `Markup` (§ABS43), `Notes` (rule 3), `GetTranslationsAsync` (§ABS44)
+   and `TranslationMetadata` (§ABS45) all landed during design — every one a
+   `required` member or an interface member, and therefore free now and a major
+   version after the first publish (§SOL7 rule 4). **Nothing in this cluster is
+   still open**, which is what the first `RELEASES:` PR was waiting on.
 
 ---
 
@@ -1654,11 +1850,13 @@ every item there depends on items 1–7 here.
 | 5 | **`ScriptureHtmlRenderer`** | Block + inline vocabulary, run merging, the plain-text projection, `dir="rtl"`, the `ScriptureMarkup` assertion and its storage round-trip (§ABS43), golden tests. **Before item 6 and before any provider**, because providers render `Html`/`Text` through it and their acceptance assertions cannot pass without it | 0.5–1 d |
 | 6 | **`BibleProviderBase`** | Parse → default fill-in → `FetchAsync`; `FetchByRawReferenceAsync`, `RenderReference`, `InternalServices`/disposal, logging scopes, the compliance warnings (§ABS32), the cancellation and exception-discipline arms (§ABS13); unit tests over a scripted fake subclass | 1–1.5 d |
 | 7 | **Usage contract** | `ScriptureUsage` + storage round-trip, `ScriptureViewerContext`, `IScriptureUsageReporter` and its result/payload types (§ABS29, §ABS30). No reporter implementation — that ships with the provider that needs one | 0.5–1 d |
-| 8 | **Conformance package** | A new project, plus the eight inherited tests in §ABS38 | 0.5 d |
+| 8 | **Conformance package** | A new project, plus the thirteen live inherited tests in §ABS38 | 0.5 d |
 | 9 | **Reference surface** (§ABS41) | `BibleReference` over items 2–3 — cheap, it is a facade. Then `Suggest`, `ReferenceSuggestion`, the confidence floor, and the invariant tests in §ABS36 item 3 including the one-character collision fixture. **Priced for the tests, not the matcher:** edit distance over the existing abbreviation table is an afternoon; proving `Jos` never becomes James is the work | 1–1.5 d |
 | 10 | **Language scoping** (§ABS42) | Per-language table format, the ISO 639-3 scope parameter threaded through `BibleReference`/`RenderReference`, the `Language` + `ScriptDirection` DTO fields, `dir="rtl"` in the renderer, and a second shipped table used purely to prove the format is real. **The English table alone does not prove the design** — build it with two | 1–1.5 d |
+| 11 | **Translation discovery** (§ABS44) | `TranslationSummary`, `GetTranslationsAsync` on the interface, the base class and the abstraction, projected from each provider's existing catalogue holder. Cheap because the cache already exists; the tests are the cold-cache-throws and no-second-request cases | 0.5 d |
+| 12 | **Metadata merge** (§ABS45) | `TranslationMetadata`, the per-field merge as a pure function, applied to both the summary and the passage, plus the duplicate-abbreviation validation. Small, and the tests are the whole of it | 0.5 d |
 
-Abstraction total ≈ **8.5–12 dev-days**. Sequencing that matters: 2 and 3 before
+Abstraction total ≈ **9.5–13 dev-days**. Sequencing that matters: 2 and 3 before
 6; 5 before 6 and before any provider; 4 is independent of 5–6 and can run in
 parallel. **Item 9 splits:** the `BibleReference` facade lands with items 2–3 and
 `BibleProviderBase` routes its parse through it (§ABS41), so that half is not
@@ -1792,8 +1990,9 @@ resolved, and there is nothing else it could honestly use.
   and does not consult `Suggest` on the caller's behalf.
 - **Nothing becomes provider-aware.** `BibleReference` has no catalogue, so it
   cannot tell you whether a translation is licensed — that stays
-  `TranslationNotSupported` at fetch time (§ABS5 rule 4), and stays the open
-  question in §SOL17 rule 3.
+  `TranslationNotSupported` at fetch time (§ABS5 rule 4). ~~and stays the open
+  question in §SOL17 rule 3.~~ **§SOL17 rule 3 is settled**; what remains here is the
+  behaviour above, not a pending decision.
 
 ---
 
@@ -2035,3 +2234,196 @@ to it afterwards. A consumer that stores `Html`, edits it, concatenates it with
 something else, or templates values into it has produced new markup and owns it.
 The assertion travels with the row precisely so that such a consumer can tell it is
 no longer holding what we handed it.
+
+---
+
+## ABS44. Translation discovery (#3)
+
+*Settles §SOL17 rule 3 and §ABS39 rule 1. Appended per the no-renumbering rule;
+read it with §ABS4 and §ABS5 rule 4.*
+
+A consuming application needs to populate a translation list, and until now had no
+way to: each provider's catalogue is private, and the only way to learn a
+translation was unavailable was to spend a metered request and read
+`TranslationNotSupported` (§SOL12).
+
+```csharp
+public sealed record TranslationSummary(
+    string Abbreviation,          // "NIV" — the key callers pass back in a USFM reference
+    string Name,                  // "New International Version"
+    string Language,              // ISO 639-3 (§ABS42.3)
+    ScriptDirection ScriptDirection,
+    string? Attribution,          // the edition's copyright text, where the catalogue carries it
+    string? PublisherUrl,         // the IP holder's page, where the upstream exposes one — §ABS44.5
+    string ProviderEditionId);    // the upstream's own id — opaque, for diagnostics and Usage
+```
+
+### ABS44.1 Why a method and not a property (#3)
+
+A `IReadOnlyCollection<string> KnownTranslations { get; }` was the obvious shape
+and is the wrong one: **it would lie.** The catalogue loads lazily over HTTP
+(§APB7, §YVN7), so a synchronous property either blocks on I/O behind a property
+getter, or returns empty before the first fetch — reporting "no translations" for a
+provider carrying hundreds. An async method is honest about what it does.
+
+### ABS44.2 What it costs (#3)
+
+**Nearly nothing, which is what makes it worth having.** Both providers already
+fetch and cache the whole catalogue to resolve an abbreviation to an upstream id,
+so this is served from memory once warm and spends an upstream request only on a
+cold cache. It is the same cached object, projected — not a second call, and not a
+second cache.
+
+It therefore obeys the same holder rules as the catalogue it reads: TTL honoured,
+faults not memoized, single-flight refresh, serve-stale-on-failure (§APB7 rule 5).
+A cold-cache call that cannot reach the upstream **throws** an availability
+exception rather than returning empty — an empty list means "the catalogue has
+nothing", and an outage must never be mistaken for that (§ABS6).
+
+### ABS44.3 What it does not promise (#3)
+
+1. **It is a snapshot, not a guarantee.** §ABS5 rule 4 stands: availability is
+   subscription-driven and can change between this call and the next lookup. A
+   caller populates a list from it; a caller must not gate a fetch on it.
+2. **It is not a support check.** Attempting the lookup and handling
+   `TranslationNotSupported` remains the only correct way to find out.
+3. **`Attribution` here is nullable and often null**, because not every catalogue
+   carries copyright on its list response — API.Bible needs
+   `include-full-details=true` for it (§APB7 rule 3), and this design does not send
+   that on the hot path. A provider fills it when it has it.
+4. **`PublisherUrl` is null more often than not**, and §ABS44.5 says which
+   provider supplies it.
+
+### ABS44.5 Publisher links, and why they are on the catalogue and not the passage (#3)
+
+API.Bible Terms §7 requires a hosted copyright page carrying "IP Holder details,
+and website links" (§APB19). Neither upstream puts such a link on a **passage** —
+checked against both schemas [verified] — so it could only ever come from the
+catalogue, which is why `TranslationSummary` is where it belongs rather than
+`ScripturePassage`.
+
+The two upstreams then differ, and the nullable type is carrying that difference
+rather than papering over it:
+
+| Provider | What the catalogue exposes |
+|---|---|
+| **YouVersion** | **`publisher_url`** — "URL to link to publisher page from the reader's footer" — plus `copyright` and `promotional_content`, a longer form of the copyright text [verified] |
+| **API.Bible** | **Nothing.** No URL property exists on the Bible or Passage schema. `info` is a *string* of publisher information, not a link [verified] |
+
+So `PublisherUrl` is populated for YouVersion and **null for API.Bible**, which is
+the provider whose terms demand the link. **A consumer building an API.Bible
+copyright page must source those links itself** — from the licence paperwork, or
+from the Digital Bible Library via the `dblId`/`relatedDbl` the catalogue does
+carry, though nothing documents a URL shape for those and this design does not
+invent one.
+
+That asymmetry is worth keeping visible rather than smoothing: a null here is not
+a gap in the mapping, it is an upstream that does not have the data its own terms
+ask a consumer to display.
+
+### ABS44.4 The abstraction forwards it (#3)
+
+`IBibleAbstractionProvider` gains the matching overload taking a provider name
+(§ABS24), classified through the same `TryCatch` as everything else (§ABS10). It
+does **not** merge across providers: two providers may carry the same abbreviation
+for different editions, and silently unioning them would produce a list no single
+provider can serve. Merging, if an application wants it, is an orchestration
+concern (§SOL10).
+
+---
+
+## ABS45. Translation metadata and the config backfill (#3)
+
+*Appended per the no-renumbering rule. Read it with §ABS44 and §ABS32.*
+
+§ABS44.5 established that the upstreams disagree about what metadata they carry,
+and that the provider whose terms demand a publisher link is the one that exposes
+none. This section closes that with a **merge**: whatever the upstream supplies
+wins, and configuration fills the rest, so a consumer gets a complete record from
+either provider.
+
+```csharp
+// Glory2Him.BibleProviders.Abstractions — PUBLIC
+public sealed record TranslationMetadata
+{
+    public required string Abbreviation { get; init; }   // the key; matches TranslationMap's
+    public string? Name { get; init; }
+    public string? Attribution { get; init; }
+    public string? PublisherUrl { get; init; }
+    public string? Language { get; init; }               // ISO 639-3
+    public ScriptDirection? ScriptDirection { get; init; }
+}
+```
+
+Each provider's configuration POCO gains
+`IList<TranslationMetadata> TranslationMetadata { get; set; } = new List<TranslationMetadata>();`
+— **a property on each POCO, not a shared base type**, because §ABS5 rule 1 keeps
+the configuration objects plain and unrelated. The *merge* is shared; the
+*configuration* is not.
+
+### ABS45.1 The merge rule (#3)
+
+**Field-level, upstream-wins-where-present, config-fills-the-rest.**
+
+1. Merge **per field, not per object.** A config entry supplying only
+   `PublisherUrl` fills exactly that and leaves everything else to the upstream. A
+   whole-object fallback would mean one missing URL discarded a live copyright
+   string.
+2. **Upstream wins where it returned a value**, because that value is current and
+   config is a snapshot someone typed. This is the opposite precedence to
+   `TranslationMap` (§APB7 rule 1), and deliberately so: `TranslationMap` overrides
+   *identity* — which edition to fetch, where the consumer knows better than an
+   ambiguous abbreviation — while this overrides *description*, where the publisher
+   is the authority and staleness is the risk.
+3. **A blank upstream value counts as absent.** Null, empty and whitespace all
+   fall through to config; §ABS32 exists because a null `Attribution` is a
+   compliance event, and treating `""` as "the upstream said so" would preserve the
+   defect this section removes.
+4. **Matching is by `Abbreviation`, case-insensitively**, the same key
+   `TranslationMap` uses. A duplicate abbreviation in the collection is a
+   configuration error and **throws at construction**, alongside the other eager
+   validation (§ABS5 rule 1) — last-one-wins would silently pick a copyright notice.
+5. **It applies to both surfaces**: `TranslationSummary` (§ABS44) and
+   `ScripturePassage.Attribution`. A passage whose upstream copyright was missing is
+   backfilled from the same entry, which is the point.
+6. **The merge is the foundation service's**, applied once where the passage and
+   the summary are built (§SOL2 rule 2). Not the broker, not the façade.
+
+### ABS45.2 What it fixes, per provider (#3)
+
+| | Upstream supplies | Config typically supplies |
+|---|---|---|
+| **API.Bible** | `Attribution` on every passage | `PublisherUrl` — always null upstream (§ABS44.5) |
+| **YouVersion** | `Attribution`, `PublisherUrl`, `promotional_content` | usually nothing |
+
+So the asymmetry stops reaching the consumer: both providers can now yield a
+`TranslationSummary` and a `ScripturePassage` carrying everything Terms §7 asks a
+consumer to display (§APB19).
+
+**`Attribution` stays `required` and stays nullable** (§ABS16). This section makes
+null *avoidable*, not impossible — a translation with no upstream copyright and no
+config entry still returns null, and §ABS32's Warning still fires. That is correct:
+the warning is how a consumer discovers it needs a config entry.
+
+### ABS45.3 No copyright data ships in the package (#3)
+
+**Deliberate, and the strongest rule in this section.** It would be easy to ship a
+prefilled table so consumers get publisher links with no configuration, and this
+design does not, because:
+
+1. **It is legal text about third-party IP we do not own.** A stale copyright
+   notice presented as authoritative is the consumer's breach, caused by us.
+2. **A NuGet package cannot be corrected in place.** Fixing a publisher's amended
+   notice would need a release, and consumers pick releases up whenever they pick
+   them up — with versions moving in lockstep across five packages (§SOL7 rule 3).
+3. **It contradicts the refresh obligation.** API.Bible Terms §11 requires stored
+   content be checked at least every 30 days (§APB17); a table compiled into a
+   binary is the opposite of a refreshable cache.
+4. **Getting it right for public-domain editions makes it worse, not better.**
+   `KJV → "Public Domain"` is stable and correct, which lends unearned credibility
+   to the `NIV` row next to it that went stale two releases ago.
+
+**What ships instead: a sample configuration block in each provider's README**
+(§SOL19.2 item 4), carrying the common editions, clearly dated and clearly the
+consumer's to own. Same head start, no staleness baked into a binary, and the
+consumer has actually read the notice they are displaying.

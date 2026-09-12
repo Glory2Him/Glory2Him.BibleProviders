@@ -20,7 +20,8 @@ Conventions, heading tags and provenance tags: [Design.md](Design.md), "Conventi
 | Interactive API reference | https://developers.youversion.com/api |
 | **Developer portal** — app keys, per-version licence acceptance | https://platform.youversion.com |
 | Versification specification (Copenhagen Alliance, YouVersion co-authored) | https://github.com/Copenhagen-Alliance/versification-specification |
-| **Platform terms** — published, unread, and blocking (§YVN14) | https://platform.youversion.com/terms |
+| **Platform terms** — read; they grant no rights in the Bible text, so they were never the instrument that could answer the storage question (§YVN14.2) | https://platform.youversion.com/terms |
+| **Publisher licence agreements** — **all nine read** (§YVN14.5); they grant storage expressly (§YVN14.9). Login required; each row links its own agreement | https://platform.youversion.com/platform/licenses |
 
 **YouVersion's public documentation is materially thinner than API.Bible's, and it
 contradicts itself in three places that matter.** There is no published OpenAPI
@@ -39,9 +40,11 @@ different APIs:
 follows first, with the fallback.** Three of these are §SOL16 items because a
 wrong guess is not a degraded feature — it is every call failing.
 
-**The platform terms are published and have not been read.** The page is
-client-rendered and returns no content to a fetch; it must be opened in a browser.
-Until its clauses are recorded here, §YVN14 blocks persistence. This document will
+~~**The platform terms are published and have not been read.**~~ **Read on
+2026-09-11** (§YVN14.2), along with all nine publisher agreements (§YVN14.5), and
+**storage is permitted** (§YVN14.9). The retrieval note is kept because it still
+applies to anyone re-reading them: the page is client-rendered and returns no
+content to a fetch; it must be opened in a browser. This document will
 not state obligations it has not read, and will not treat an unread rule as an
 absent one.
 
@@ -57,7 +60,7 @@ Base URL `https://api.youversion.com/v1/` [verified].
 | Access model | **Per-version licence agreements, accepted in the portal.** `GET /v1/bibles` returns only the versions the app key is licensed for — the single biggest operational difference from API.Bible and the source of most support questions (§YVN17) |
 | **`all_available`** | `all_available=true` widens the listing from "enabled for this app key" to the broader platform catalogue [verified]. This is the flag an earlier draft listed as an unknown; it exists |
 | Catalogue | `GET /v1/bibles` → **numeric** ids (e.g. `3034` BSB, `111` NIV, `1` KJV). Scoped by a required language filter (§YVN7). Paginated, `page_size` up to **100** [verified] |
-| Copyright | **Not on the passage response.** It lives on the Bible resource metadata, so the catalogue cache must retain it per version or `Attribution` is unfillable (§YVN7 rule 4) |
+| Copyright | **Not on the passage response.** The Bible resource carries `copyright` (short), `promotional_content` (longer copyright text), **`publisher_url`** — "URL to link to publisher page from the reader's footer" — and `info` [verified]. The catalogue cache must retain them or `Attribution` is unfillable (§YVN7 rule 4) |
 | Passage | `GET /v1/bibles/{bibleId}/passages/{usfm}` — e.g. `/v1/bibles/3034/passages/JHN.3.16` [verified on the api-usage page; absent from the quick reference — §YVN8] |
 | Chapter navigation | `GET /v1/bibles/{id}/books/{book_usfm}/chapters/{n}/verses` [verified] — returns `{id, passage_id, title}` per verse and **no text**; the reference says to use `/passages` for content. §YVN9 |
 | Response | `{ "id": "JHN.3.16", "content": "<p>…</p>", "reference": "John 3:16" }`. Collections wrap as `{ "data": [...], "next_page_token": "…" }` [verified] |
@@ -91,15 +94,18 @@ public sealed class YouVersionConfigurations
 {
     public string AppKey { get; set; } = string.Empty;                     // required — header X-YVP-App-Key
     public string BaseUrl { get; set; } = "https://api.youversion.com/v1/";
-    public string DefaultTranslation { get; set; } = "KJV";                // §YVN4
+    public string DefaultTranslation { get; set; }
+        = ScriptureDefaults.Translation;                                   // "WEB" — §YVN4, §ABS20.1
     public IList<string> LanguageRanges { get; set; } = new List<string> { "eng" };  // required upstream; also the parse scope (§ABS42.4)
+    public IList<TranslationMetadata> TranslationMetadata { get; set; } = new List<TranslationMetadata>();  // §ABS45
     public bool IncludeAllAvailable { get; set; } = false;                 // §YVN7 rule 6
-    public Dictionary<string, int> TranslationMap { get; set; } = new();   // "NIV" -> 111 override
+    public Dictionary<string, int> TranslationMap { get; set; }
+        = new() { ["WEB"] = 206 };                                         // §YVN4.1; "NIV" -> 111 override
     public TimeSpan CatalogueCacheDuration { get; set; } = TimeSpan.FromHours(6);
     public int MaxStitchedVerses { get; set; } = 30;                       // §YVN9
     public int TimeoutSeconds { get; set; } = 20;
     public int PerAttemptTimeoutSeconds { get; set; } = 5;
-    public int MaxRetryAttempts { get; set; } = 2;
+    public int MaxRetryAttempts { get; set; } = 1;
 }
 ```
 
@@ -107,8 +113,9 @@ Plain POCO plus optional logger, per §ABS5 rule 1.
 
 1. **Validates eagerly and throws on construction:** non-empty `AppKey`, non-blank
    `DefaultTranslation`, **non-empty `LanguageRanges`** (the upstream rejects the
-   catalogue call without it), parseable `BaseUrl`, and the timeout budget
-   inequality (§YVN6).
+   catalogue call without it), parseable `BaseUrl`, **no duplicate `Abbreviation`
+   in `TranslationMetadata`** (§ABS45.1 rule 4), and the timeout budget inequality
+   (§YVN6).
 2. The **logger is optional and defaults to `null`**, replaced internally with
    `NullLogger<T>.Instance`.
 3. **`LanguageRanges` does double duty**: it scopes the catalogue call upstream
@@ -122,12 +129,70 @@ Plain POCO plus optional logger, per §ABS5 rule 1.
 
 ---
 
-## YVN4. Why the default translation is KJV, and the caveat (#1)
+## YVN4. Why the default translation is WEB, and the abbreviation trap (#1)
 
-KJV is version id `1` and is public domain, so it is the most plausible
-translation to be available on any key. **But YouVersion gates access per accepted
-licence agreement**, and whether a *fresh* app key sees KJV without accepting
-anything in the portal is **[unverified]** (§YVN19 rule 2).
+**The shipped default is `WEB`, matching §APB4** — both take it from
+`ScriptureDefaults.Translation`, which is where the value now lives (§ABS20.1). ~~KJV, version id `1`.~~
+**Changed** for the reason §APB27 gives — the KJV is territorially restricted, and
+although §9.8 is an API.Bible term that does not bind this upstream, the Crown's
+rights in the Authorized Version are a fact of UK law rather than of either
+contract (§USE9 rule 7). **Defaulting the two providers to different translations
+would also break the promise §ABS4 exists to make** — that an abbreviation means
+the same thing whichever provider answers.
+
+WEB is additionally the *better* bet on this upstream, not merely the safer one:
+it sits in the **Public Domain and Creative Commons** row of the portal, the one
+licence group with **no agreement to accept** (§YVN14.1), so it is more likely
+than KJV to be visible to a fresh app key rather than less.
+
+### YVN4.1 The abbreviation is not `WEB` on this upstream (#3)
+
+**This is the trap, and it is why the default cannot simply be copied from
+§APB4.** YouVersion publishes the World English Bible as version **`206`**, named
+"World English Bible, American English Edition, without Strong's Numbers", and
+abbreviated **`WEBUS`** — not `WEB` [verified, **the platform's own
+[Quick Reference](https://developers.youversion.com/quick-reference)**, whose
+"Common Bible IDs" table reads:]
+
+| ID | Abbreviation | Name |
+|---|---|---|
+| 12 | `ASV` | American Standard Version |
+| 111 | `NIV` | New International Version |
+| **206** | **`WEBUS`** | **World English Bible, American English Edition, without Strong's Numbers** |
+| 3034 | `BSB` | Berean Standard Bible |
+
+Corroborated by [bible.com/versions/206](https://www.bible.com/versions/206-web-world-english-bible):
+"This Public Domain Bible text is courtesy of eBible.org".
+
+**Two of the other three matter too.** `BSB` is id **3034** and `ASV` is id **12**,
+so the two translations §USE6.6 recommends alongside WEB are both present and both
+named in first-party documentation. This is the first verified statement in this
+design that *any* specific version id is reachable on this upstream.
+
+So a bare `DefaultTranslation = "WEB"` would resolve on API.Bible and return
+`TranslationNotSupported` here. **The same abbreviation meaning different things on
+the two upstreams is exactly what §ABS4 exists to hide from a consumer.**
+
+**Resolution: this provider ships a default `TranslationMap` entry**, `"WEB"` to
+`206`, so `WEB` resolves on both providers out of the box. `TranslationMap` is
+already documented as authoritative over catalogue lookup (§YVN7 rule 7), which is
+precisely the override needed, and a consumer preferring the upstream's own
+spelling may still ask for `WEBUS` directly.
+
+That the two upstreams disagree about an abbreviation is **not a defect in
+either** — it is why §ABS44's `TranslationSummary` carries `ProviderEditionId`
+separately from `Abbreviation`, and why §ABS18 forbids echoing an upstream's
+reference string back to a consumer.
+
+**Still [unverified]:** that version `206` is visible to a key which has accepted
+no agreement in the portal. That it is exposed through the Platform API at all is
+now **[verified]** — the Quick Reference is Platform API documentation and its
+examples call `/bibles/3034` directly. §YVN19 rule 2 is narrowed accordingly.
+
+**The caveat that applied to KJV still applies to WEB.** YouVersion gates access
+per accepted licence agreement, and whether a *fresh* app key sees the
+public-domain set without accepting anything in the portal is **[unverified]**
+(§YVN19 rule 2).
 
 If it does not, `DefaultTranslation` must be set to a version the deployment's key
 has actually accepted — otherwise every unqualified reference returns
@@ -165,14 +230,22 @@ The broker holds no logic and gets no unit tests (§SOL8 rule 1).
 
 ## YVN6. Retry and timeout budget (#1)
 
-Per §ABS5 rule 8, with this provider's numbers: per-attempt **5 s**, **2** retries
-(⇒ 3 attempts), backoff exponential + jitter with base 0.5 s and each delay capped
-at 2 s (**≤ 4 s** total), overall budget **20 s**, `HttpClient.Timeout` left
+Per §ABS5 rule 8, with this provider's numbers: per-attempt **5 s**, **1** retry
+(⇒ 2 attempts), backoff exponential + jitter with base 0.5 s and each delay capped
+at 2 s (**≤ 2 s** total), overall budget **20 s**, `HttpClient.Timeout` left
 `Timeout.InfiniteTimeSpan` so the pipeline owns all timing.
+
+**One retry, not two, and §APB6.2 carries the argument** — it is a quota policy
+rather than a timeout one, and a second retry rarely converts a failure the first
+did not while always costing another metered request. It applies less sharply here,
+since this upstream publishes no quota, but the same reasoning holds: failing over
+to another provider is likelier to succeed than a third attempt at a struggling
+one. Keeping both providers on the same default also means a consumer tuning one
+is not surprised by the other.
 
 1. The constructor validates the closure inequality —
    `PerAttemptTimeoutSeconds × (MaxRetryAttempts + 1) + backoffCap ≤ TimeoutSeconds`
-   (5 × 3 + 4 = 19 ≤ 20) — and throws when it does not hold.
+   (5 × 2 + 2 = 12 ≤ 20, with 8 s of slack) — and throws when it does not hold.
 2. **`Retry-After` is documented here, unlike on the sibling provider.** The quick
    reference states that a 429 response carries a **`Retry-After` header** and
    recommends exponential backoff [verified]. So this provider has a real
@@ -269,9 +342,13 @@ Required by §ABS33 item 8, because this provider has timeout logic and
    (§YVN19 rule 10). Where it cannot be read, map from the language code against the
    built-in table and fall back to `Unknown` — never to `LeftToRight`.
 
-4. **Retain the copyright text here — for this provider it is mandatory.** It is
+4. **Retain the copyright text here — for this provider it is mandatory**, and
+   retain `publisher_url` and `promotional_content` with it. This catalogue is the
+   only place any of it exists, and `publisher_url` is the one thing either upstream
+   offers toward the copyright-page requirement API.Bible's terms impose
+   (§ABS44.5). It is
    not on the passage response, so if the catalogue does not keep it, `Attribution`
-   cannot be populated at all. Contrast §APB7 rule 2, where the passage response
+   cannot be populated at all. Contrast §APB7 rule 3, where the passage response
    carries it and catalogue retention is optional.
 
 5. **Pagination's request parameter is [contested] too.** The response field is
@@ -320,6 +397,17 @@ Required by §ABS33 item 8, because this provider has timeout logic and
    lookup as an availability exception. Publishing a partial map would silently turn
    licensed translations into `TranslationNotSupported`.
 
+
+### YVN7.1 Serving `GetTranslationsAsync` (#3)
+
+§ABS44 is a **projection of this cache**, not a second one and not a second call.
+Once warm it is a map over the holder above; on a cold cache it triggers the same
+single-flight fetch, and a fetch that fails with no usable previous catalogue
+**throws** rather than returning empty (§ABS44.2) — an outage must never read as
+"this provider carries nothing".
+
+Field mapping: `abbreviation` → `Abbreviation`, `name` → `Name`, the matched language range → `Language`, the retained script direction → `ScriptDirection`, the numeric id → `ProviderEditionId`, the retained copyright → `Attribution`, and `publisher_url` → `PublisherUrl` — both **are** populated here, because this catalogue is the only place either exists (rule 4).
+
 ---
 
 ## YVN8. Lookup flow (#1)
@@ -353,7 +441,8 @@ Required by §ABS33 item 8, because this provider has timeout logic and
    response → `ProviderReference` **verbatim**.
    `Usage = ScriptureUsage.NotRequired(ProviderName)` (§YVN15).
 
-   From the **cached catalogue entry** (§YVN7 rules 3–4): copyright →
+   From the **cached catalogue entry** (§YVN7 rules 3–4), then merged with
+   `TranslationMetadata` (§ABS45.1): copyright →
    `Attribution`, language code → `Language`, script direction → `ScriptDirection`,
    falling back to `Unknown` rather than `LeftToRight` where the upstream does not
    supply it (§ABS42.6). `Reference` comes from
@@ -414,7 +503,8 @@ but catching it is not the same as not doing it.
 6. Verses returning empty go into `MissingVerseIds`.
 7. **Whatever the spike settles, record it here**, and log at Debug when a lookup
    costs more than one upstream request so the real cost is visible during tuning
-   (§SOL14 rule 2).
+   (§SOL14 rule 1 — Debug. §SOL14 rule 2, the Warning list, names a *stitched*
+   range that cost more than one request; this is the per-call cost note).
 
 ---
 
@@ -587,47 +677,350 @@ concept, and here the honest answer is "not yet known", not "none".
 
 ---
 
-## YVN14. Terms — unread, and blocking for storage (#1)
+## YVN14. Terms — read, and storage is permitted (#1)
 
-**The platform terms are published at https://platform.youversion.com/terms and
-have not been read and recorded here.** The page is client-rendered and returns no
-content to a fetch; it must be opened in a browser. This section is therefore a
-placeholder with a restriction attached, which is what §ABS33 rule 5 requires
-where a figure cannot yet be established — an unstated figure is never an absent
-obligation.
+**Platform terms read 2026-09-11 (version dated 17 August 2026); all nine
+publisher agreements read the same day.** The page is client-rendered and returns
+nothing to a fetch, which is why it stayed unread for so long; the agreements sit
+behind the portal at Platform → Licensing.
 
-Consequences, stated plainly rather than glossed:
+**This section spent most of its life blocking persistence. It no longer does**
+(§YVN14.9), and the path to that answer is worth keeping because it was wrong
+twice.
 
-1. **Do not persist scripture obtained from this provider until those clauses are
-   recorded here.** The API.Bible obligations do not transfer — different licensor,
-   different agreement — and an unread rule is not an absent one.
-2. The spike (§YVN19 rule 9) must read the terms and record the actual figures
-   here: whether a refresh cycle, a caching cap, an attribution form or a
-   commercial-use restriction applies.
-3. Until then, treat results from this provider as **display-time only**.
+### YVN14.1 Why the platform terms were never going to answer it (#1)
 
-**One piece of indirect evidence, recorded as evidence and not as permission:**
-YouVersion ships first-party SDKs that maintain a local cache of fetched scripture
-[verified]. That makes a blanket prohibition on caching unlikely. It does not tell
-us the retention period, the attribution form, or the commercial terms, and it is
-not a licence. Rule 1 stands until the terms are read.
+> "This Agreement is limited to the YV IP. We are not providing You rights in
+> biblical works or works other than YV IP, which You must obtain from their
+> respective owners and licensors."
 
-The per-version licence agreements accepted in the portal are themselves
-contractual, and may carry publisher-specific conditions beyond the platform
-terms. Whoever accepts a version's agreement should record any obligation it
-imposes.
+**The platform terms grant no rights in the Bible text at all.** "YV IP" is the
+platform and the developer tools; scripture is explicitly outside it. So they carry
+no retention clause, no refresh cadence and no caching cap **because they are not
+the agreement that would carry one** [verified absence, and a sound one].
 
----
+Two instruments were then named as the real home. One turned out not to exist:
+
+1. **The publisher licence agreements** — **per publisher, not per version.** They
+   are at `platform.youversion.com/platform/licenses`, already accepted, each row
+   linking its own document. **These are the answer** (§YVN14.5).
+2. ~~**"YVP Terms"** — per-Tool terms published in the platform~~ — **very likely
+   do not exist for this Tool.** The Terms of Use define them as "set forth in the
+   YVP for that particular Tool", and nothing of the sort surfaces on the terms page,
+   Profiles, Licensing or the Apps list [verified]. Read the clause as a reservation
+   of right rather than a pointer to an unread obligation. Not proof of absence —
+   Dev Docs and an application's Details page were not exhaustively searched.
+
+**Record findings here; do not mirror the documents into this repository.**
+Tempting, since they sit behind a login and a Google Docs link that may not outlive
+the account — but three reasons say no, and the first settles it:
+
+1. **Publishing them would plausibly breach the agreement they are part of.** The
+   Terms define the YVP as including "the content on the platform", define YV IP as
+   the YVP and the Tools, and forbid you to "distribute, publish, transfer, or
+   otherwise make the YV IP available to third-parties" [verified]. This repository
+   is public.
+2. **They are not ours.** §ABS45.3's argument against shipping third-party legal
+   text applies with more force to an agreement than to a copyright line.
+3. **They would go stale in the worst way** — a stale copyright notice
+   misattributes; a stale retention clause misleads someone into breaching one.
+
+Record instead: `Publisher — document name — accepted date — clause — figure`.
+Durable, verifiable by anyone with portal access, redistributes nothing, and makes
+drift **detectable**. If durable copies are wanted they belong in the
+organisation's own document store, referenced from here by name and version.
+
+### YVN14.4 Spike, not integrity — and now closed (#3)
+
+This was recorded as a **spike** rather than an integrity matter, against
+§APB20.1's commercial-use question which is the opposite kind: no determinate
+answer, differs per deployment, documentation is terminal. Here there *was* a
+determinate answer, and reading produced it.
+
+**That distinction held, and is worth keeping for the next one of its kind.** The
+live blocker was *reading*, not *honouring*; honouring what the agreements say is
+now the same integrity matter as API.Bible's 30 days (§APB17), which this library
+does not enforce either.
+
+**Re-read whenever a new publisher agreement is accepted.** The portal label
+"Fast-track Bible License · v1" names a programme, not a document — Lockman's
+shares nothing with the other eight (§YVN14.5).
+
+### YVN14.5 All nine publisher agreements, read — storage is permitted (#3)
+
+**Read 2026-09-11 via Platform → Licensing, all nine accepted 4–6 Aug 2026.**
+Everything in §YVN14.5 to §YVN14.9 is [verified] from those documents.
+
+| Publisher | Bibles | Document |
+|---|---|---|
+| Public Domain and Creative Commons | 361 | *none — no agreement to show* |
+| Wycliffe | 1,037 | Content License Agreement |
+| Biblica (NIV, NIrV) | 69 | Content License Agreement — **fuller variant** |
+| SIL International | 8 | Content License Agreement |
+| Lockman (NASB, AMP, NBLA, LBLA) | 5 | **Free Distribution Permission Agreement — different document** |
+| Ewangeliczny Instytut Biblijny | 2 | Content License Agreement |
+| BroadStreet (TPT) | 1 | Content License Agreement |
+| MissionAssist (EASY) | 1 | Content License Agreement |
+| Biblion (B21) | 1 | Content License Agreement |
+| Hawaii Pidgin Bible | 1 | Content License Agreement |
+
+**Seven are word-for-word identical.** Biblica's is the same family with extra
+clauses; Lockman's shares nothing but its portal label. So "Fast-track Bible
+License · v1" names a *programme*, not a document — and a publisher-specific read
+remains necessary whenever a new one is accepted.
+
+### YVN14.9 The storage question is answered: yes (#3)
+
+**§YVN14.1's restriction lifts.** The common licence grant covers the right to
+"perform, **store**, distribute, and redistribute the Content on Your Application
+via the Developer Tools", and clause (d) lets a licensee sublicense to users "in
+all manners allowed by YVP, **both online and offline**". Offline use is not
+possible without storage; the grant names storage explicitly.
+
+**Refresh is update-on-request, not a fixed cadence.** Biblica's Section VI
+obliges the organisation to make all updates and revisions to held content "as may
+be requested by LICENSOR and as made available via the SDK", and separately to
+update copyright and trademark notices. The common template carries the softer
+form: no edits to the text, and a duty to *notify the publisher* if text appears to
+need revision.
+
+So a consumer needs §ABS31's forced-refresh path, and does **not** need API.Bible's
+30-day timer (§APB17). **The two upstreams differ in kind here, not degree.**
+
+### YVN14.11 The platform documentation tells you to cache (#3)
+
+The **Quick Reference**, under **Best Practices**, lists five items and the first
+is [verified, retrieved 2026-09-11, page last modified 2026-09-10]:
+
+> "**Cache responses when possible**"
+
+**What this is worth, and what it is not.** It sits under *Best Practices*,
+immediately below *Rate Limiting* — so its purpose is engineering guidance about
+call volume, **not a licence grant**, and it cannot be one: the platform terms
+expressly disclaim granting rights in the biblical text (§YVN14.2). A consumer's
+right to store a passage comes from the publisher agreement (§YVN14.9) or, for the
+public-domain set, from the work's own dedication (§USE6.4).
+
+**But it is the third independent signal pointing the same way**, and it is the
+only one that is first-party, current and public:
+
+| Signal | Kind |
+|---|---|
+| The publisher agreements grant "store" expressly (§YVN14.9) | **Permission** |
+| YouVersion's own SDKs cache locally (§YVN14.3) | Evidence |
+| The documentation instructs developers to cache | Evidence, and an expectation |
+
+**The practical consequence is a real one:** a consumer caching aggressively on
+this upstream is doing what the vendor asks, not straining a permission. **Contrast
+API.Bible**, where storage is permitted but arrives wrapped in a 30-day recency
+check, a deletion duty, a 72-hour purge and FUMS (§USE2, §USE6.2). **On the
+store-and-reuse axis these two upstreams are not close**, and §USE12 works through
+what that does and does not imply.
+
+### YVN14.10 What binds a consumer, across all nine (#3)
+
+Common to the eight Content License Agreements:
+
+1. **All footnotes must be included and accessible to the end-user** — §YVN14.6.
+2. **No alterations to the biblical text** before display, and a duty to tell the
+   publisher if text looks wrong. Reinforces §ABS23 rule 3 from eight sources.
+3. **Direct YVP API access is explicitly contemplated** — not merely tolerated by
+   the platform terms. The approach this provider takes is named in the agreements.
+4. **Industry-standard encryption** against unauthorised supply, onward-supply or
+   reproduction of the content as displayed.
+5. **Digital display only** — no printing or non-digital use without separate
+   written consent.
+6. **No AI-personalised content.** The content may not be used "to produce
+   personalized content through AI Technology". Narrower than the platform terms'
+   AI clause (§YVN14.2 rule 2) and pointing the same way.
+7. **Free of charge**, with no royalties owed either direction.
+
+**Biblica adds**, and these are the tightest constraints found anywhere in this
+design:
+
+8. **A hard display cap: no more than two chapters or twenty-five verses,
+   whichever is greater, per user at any given time.** Not per request and not per
+   store — per *user*, per *moment*. §APB18's 500-consecutive-verse request is loose
+   by comparison.
+9. **48 hours** to remove content on written request; a two-year auto-renewing
+   term, after which no rights survive.
+
+**Lockman differs entirely:**
+
+10. **No third-party advertising at all**, and no access charges or membership
+    fees. Stricter than "free to end users", and the closest analogue to API.Bible's
+    non-commercial definition (§APB20) — which makes §APB20.1's conclusion sharper:
+    the restriction is real, it varies per publisher, and no API exposes it.
+11. **Bulk extraction must be made impractical** — display must be arranged "as to
+    make the downloading of a large portion or the entire UNDERLYING WORKS difficult
+    or impractical for use without REQUESTER's website or application".
+12. **A conspicuous clickable link** to lockman.org plus the copyright notice, and
+    where the full notice is impractical a per-verse tag — `NASB 1995`, `AMP` — that
+    **must itself link**. This is the attribution *format* §YVN14.3 recorded as
+    unknown, for this publisher, and the clearest justification for
+    `TranslationSummary.PublisherUrl` (§ABS44.5).
+13. **An annual report** to Lockman by end of February of copies distributed the
+    previous calendar year — §YVN14.8.
+
+### YVN14.6 Footnotes are contract-level, and §ABS39 rule 3 must be built (#3)
+
+**Eight of the nine agreements carry the same sentence**: the content "shall be
+used in the form and format provided via SDKs or direct API calls", no alterations
+before display, and "**All footnotes must be included along with the Content and
+accessible to the end-user**" [verified — Biblica, BroadStreet, SIL, Wycliffe,
+MissionAssist, Biblion, Hawaii Pidgin, Ewangeliczny].
+
+**This design suppresses notes everywhere.** §APB8's query string sends
+`include-notes=false`, §YVN10 parses only the content, and §ABS39 rule 3 settled
+footnotes as *space reserved, not built*, with `ScripturePassage.Notes` always
+empty. **A consumer serving any of those 1,120 Bibles — NIV and TPT among them —
+cannot comply with this design as written.**
+
+It is not one publisher's quirk. It is the common clause of the standard
+agreement, so:
+
+1. **Footnote support is a precondition of serving YouVersion content at all**, not
+   a later release. It moves into §YVN21's critical path.
+2. **The reserved-space decision was right**, and is why this is additive rather
+   than breaking — `Notes` and `ScriptureNote` already exist (§ABS16, §ABS22). What
+   was wrong was assuming nothing needed them yet.
+3. **§APB9's interaction must be designed first**, exactly as §ABS39 rule 3 warned:
+   a verse whose only content is a footnote is what the content check currently
+   reads as empty, and enabling notes without that pass turns critical-text
+   omissions into `Found` results carrying nothing but a note.
+4. **API.Bible is unaffected** — its terms carry no such clause, and §APB8 keeps
+   `include-notes=false`. So this is a provider-level divergence in what gets
+   requested, not a contract change. `Notes` being populated by one provider and
+   empty from another is exactly what a nullable, defaulted collection is for.
+
+### YVN14.7 ~~The agreements are a common template~~ — withdrawn (#3)
+
+**Withdrawn in commit 4c79f44, and restored here as a struck heading rather than a
+gap.** The claim was that the nine agreements share one template with minor
+variation; reading Lockman's disproved it (§YVN14.8, §YVN14.10 rules 8–11).
+
+It was **deleted** rather than struck through, leaving the only numbering gap in
+roughly 140 sections across the five documents — the exact defect the Conventions
+block in [Design.md](Design.md) exists to prevent, committed two days after that
+block was written. A reader following a citation into §YVN14.7 found nothing and
+had no way to tell a withdrawn section from a typo.
+
+### YVN14.8 §YVN15's `NotRequired` is wrong for Lockman (#3)
+
+§YVN15 declares `ScriptureUsage.NotRequired` on every passage from this provider,
+because the platform exposes no reporting mechanism and the platform terms create
+no per-display duty. Both remain true. **Lockman's agreement creates a reporting
+duty anyway** (§YVN14.10 rule 13): an annual report, by end of February, of copies
+distributed the previous calendar year.
+
+It is not FUMS-shaped, and `ReportOnDisplay` would model it badly — annual,
+aggregate, per publisher, counting distributed copies rather than displays, and
+sent by the organisation rather than emitted per view. Nothing this library holds
+would satisfy it, and §SOL2 rule 5 means it retains nothing to count from.
+
+**But `NotRequired` is a positive assertion that nothing is owed (§ABS29), and for
+the five Lockman editions that assertion is false.** Three options:
+
+1. Keep `NotRequired` and treat the annual report as outside the model — documented
+   in §YVN18 and the README, surfaced by neither.
+2. A third obligation value meaning *owed, but not per display and not by this
+   library*. Honest, and it costs a published enum member (§SOL7 rule 4).
+3. Surface it through `TranslationMetadata` (§ABS45), since the obligation is per
+   publisher and the consumer already configures per translation.
+
+**Now decidable**, since all nine are read: **one publisher of nine, covering five
+Bibles of 1,486.** That makes option 1 defensible and option 2 disproportionate —
+a published enum member for a single publisher's annual paperwork. **Recommend
+option 1**, with the duty named explicitly in §YVN18 and the package README so a
+consumer serving NASB or AMP meets it in the place they would look.
+
+### YVN14.2 What the platform terms *do* impose (#1)
+
+All [verified], all inherited by the consuming application, and none of them
+previously in this design:
+
+1. **Scripture must be reproduced verbatim.** The AI clause permits retrieving and
+   displaying scripture "provided that the biblical text is reproduced
+   word-for-word and is 100% accurate to, and unaltered from, the licensed source
+   text". **This binds §YVN10 and §ABS23 directly**: the renderer regenerates
+   `Text` from `Blocks` and strips markup, and that pipeline must not alter a
+   character of the scripture itself. Whitespace normalisation (§YVN10 rule 4) is
+   the place to be careful — trimming the upstream's stray whitespace is fine;
+   "tidying" punctuation or quotation marks is not.
+2. **Two AI prohibitions that reach the product, not the library.** The Tools may
+   not be used with AI for open-ended chat with a user — verbatim scripture
+   retrieval is the stated exception — and may not be used to train, develop,
+   refine or improve any AI technology. Anything beyond that needs YouVersion's
+   prior written approval.
+3. **Built-in usage reporting must be left enabled:** "You shall enable and
+   maintain any usage reporting mechanisms built into YV IP." See §YVN15 — it does
+   not create a per-display obligation, but it does forbid disabling one.
+4. **Commercial use is permitted, with a disclosure.** If the application charges a
+   fee, it "will conspicuously and explicitly advise Users that the YouVersion Bible
+   App is provided at no cost to the User." **Markedly more permissive than
+   API.Bible's Terms §9.3** (§APB20), which bars advertising, freemium and
+   sponsorship outright on its non-commercial tier. The two upstreams are not
+   interchangeable on this point, and an application that is commercial may be able
+   to serve YouVersion editions while being unable to serve API.Bible's licensed
+   ones.
+5. **The app key is confidential and a loss is notifiable.** It may not be shared
+   with any third party, and YouVersion must be told if it is "lost, stolen, or
+   misused". §SOL2 rule 6 and §SOL14 rule 5 already keep it out of logs; the
+   notification duty is new and belongs to whoever operates the deployment.
+6. **The YouVersion marks may not be used** — "YouVersion", "YVP", "Life.Church",
+   "The Bible App" — unless a Tool's YVP Terms allow it. This constrains §YVN16:
+   attribution must name the *version* and its copyright holder, not brand the
+   feature as YouVersion's.
+7. **Termination is 30 days either way, or immediate for breach**, after which the
+   licence ceases. Note this covers the *tools*, not the text; the text is the
+   per-version agreement's problem (§YVN14.1).
+8. Governing law is Oklahoma, with a class-action waiver.
+
+### YVN14.3 What they still do not say — and what that is *not* (#1)
+
+No retention period, no refresh cadence, no caching cap, and no attribution
+*format* — and after §APB18, "absent" is a claim this design makes carefully. Here
+it is a sound absence for items that would live in a different agreement
+(§YVN14.1), and an open question for attribution format, which could plausibly sit
+in the YVP Terms.
+
+**Silence is not prohibition, and this design does not claim otherwise.** Nothing
+read forbids caching scripture from this provider. Contrast §APB18, where caching
+is affirmatively permitted with conditions attached.
+
+> ~~The restriction in §YVN14.1 exists because the *permission* is
+> unestablished…~~ **Lifted — see §YVN14.9.** The publisher agreements grant
+> storage expressly. This paragraph is kept because the *reasoning* it records is
+> the one this design wants repeated: "they said no" and "nobody has asked" are
+> different positions, and only the second was ever ours.
+
+**The indirect evidence, which turned out to point the right way:** YouVersion
+ships first-party SDKs that maintain a local cache of fetched scripture [verified],
+and its **own developer documentation lists "Cache responses when possible" as the
+first of its Best Practices** [verified, §YVN14.11]. A blanket prohibition would
+have sat oddly beside either. §YVN14.9 then found the express grant.
 
 ## YVN15. Usage reporting — none found (#1)
 
 This provider declares `ScriptureUsage.NotRequired(ProviderName)` on every passage:
 a **positive assertion that nothing is owed**, not an absence (§ABS29). No FUMS
 equivalent, no per-display reporting mechanism and no tracking token appear in the
-platform's documentation **[verified absence]** — with the caveat that the platform
-terms remain unread (§YVN14), so this is an absence in the *developer* docs and not
-in the agreement. §APB18 is the cautionary precedent: an absence is only as wide as
-the pages actually searched.
+platform's documentation **[verified absence]**, and the platform terms — now read
+(§YVN14) — create no per-display reporting duty either.
+
+**They do create a narrower one, and `NotRequired` survives it:** "You shall enable
+and maintain any usage reporting mechanisms built into YV IP" [verified]. That is a
+duty **not to disable** reporting that a tool ships with, not a duty to report. The
+REST API this provider uses ships none — no token, no beacon, no callback — so
+there is nothing to keep enabled and nothing for the provider to carry.
+
+**Two consequences worth stating.** First, the assertion is now positive on
+evidence rather than on absence of evidence: the agreement was read and does not
+ask for per-display reporting. Second, it is **scoped to the REST API**. The
+YouVersion *SDKs* are a different Tool with their own YVP Terms (§YVN14.1), and if
+one of those embeds a reporting mechanism, clause 3 binds whoever ships it. A
+consumer swapping this provider for an SDK inherits a duty this provider does
+not.
 
 That assertion is only as good as the search behind it, so it carries a caveat: if
 the spike or a per-version agreement reveals a reporting obligation, the provider
@@ -647,9 +1040,22 @@ not, `Attribution` is null on every passage and the consumer is silently
 non-compliant. A null `Attribution` on a licensed edition is a defect and is logged
 at Warning by the base class (§ABS32).
 
-**The required *form* of attribution is unknown here** — §YVN14 rule 2. The
-sibling provider's terms specify a copyright page and a hyperlinked citation
-(§APB19); nothing says YouVersion's are the same, and nothing says they are not.
+**The required *form* of attribution is still unknown** (§YVN14.3) — it is not in
+the platform terms and would sit in a version's own licence or in the YVP Terms.
+The sibling provider's terms specify a copyright page and a hyperlinked citation
+(§APB19); nothing says YouVersion's are the same.
+
+**This provider has more attribution material than the sibling**, and it is worth
+using: `copyright` for the short notice, `promotional_content` where a fuller form
+is wanted, and `publisher_url` for the link (§ABS44.5). All three are on the
+catalogue and none on the passage, which is why §YVN7 rule 4 retains them.
+
+**What the terms do constrain is the opposite direction.** The YouVersion marks —
+"YouVersion", "YVP", "Life.Church", "The Bible App" — may not be used unless a
+Tool's YVP Terms allow it (§YVN14.2 rule 6). So attribution names **the version and
+its copyright holder**, and a UI must not label the feature as YouVersion's or imply
+partnership. That is a restriction on attribution, not a specification of it, and
+the two should not be confused.
 
 ---
 
@@ -659,10 +1065,18 @@ The app key only sees versions whose agreements were accepted in the portal. Thi
 is the most common cause of a confusing `TranslationNotSupported`, and it looks
 identical to a translation that does not exist.
 
+**Acceptance is per publisher, not per version** [verified] — one Biblica
+agreement carries 69 Bibles, one Lockman agreement carries 5. So the unit of
+"licensed" is a publisher's whole set, which makes the trap both coarser and
+easier to fix than "accept the version you need": accepting one agreement can add
+hundreds of translations at once, and the portal reports plainly when all available
+agreements have been accepted (§YVN14.1).
+
 Three things follow:
 
-1. The package README must say so, and support guidance should start with "check
-   the portal".
+1. The package README must say so **first**, not in an appendix — §SOL19.3 makes it
+   that README's opening item — and support guidance should start with "check the
+   portal".
 2. `all_available=true` is the diagnostic that separates "exists on the platform
    but this key is not licensed" from "does not exist" (§YVN7 rule 6) — use it to
    *answer the support question*, not as the normal listing.
@@ -677,11 +1091,34 @@ Nothing in this provider requires the consumer to do anything at display time �
 there is no token to carry and no report to send. What a consumer does inherit:
 
 1. **Attribution** must be displayed (§YVN16).
-2. **Storage is not yet sanctioned** (§YVN14). Until the terms are recorded, use
-   results for display and do not persist them.
+2. **Storage is permitted** (§YVN14.9). The licence grant covers storing the
+   content and sublicensing it to users online *and offline*. There is no fixed
+   refresh cadence — the duty is to update on the publisher's request, so you need a
+   forced-refresh path but not a timer.
 3. **`TranslationNotSupported` is ambiguous here** — unlicensed, or outside the
    configured language ranges. Surface the configured `LanguageRanges` in
    diagnostics so the ambiguity is resolvable.
+4. **Footnotes must be displayed** (§YVN14.6) for all but the public-domain set.
+   Not optional, and not satisfiable by a link — "accessible to the end-user".
+5. **Biblica caps display at two chapters or twenty-five verses per user at any
+   given time**, whichever is greater (§YVN14.10 rule 8). Per user, per moment.
+6. **Lockman requires a conspicuous clickable link**, a per-verse tag that itself
+   links, no third-party advertising anywhere in your application, and **an annual
+   report by end of February** of copies distributed (§YVN14.10 rules 10–13), **including "no access charges or
+   membership fees"**, which is absolute and not a disclosure obligation. This
+   library surfaces none of that — it is yours.
+7. **No AI-personalised content**, and no printing (§YVN14.10 rules 5–6).
+8. **Scripture must be reproduced word-for-word and unaltered** (§YVN14.2 rule 1).
+   Anything a consumer does between `Text` and the screen — normalising quotes,
+   collapsing whitespace, truncating with an ellipsis — is its own risk to assess.
+9. **Commercial use is permitted with a disclosure** (§YVN14.2 rule 4) **for every
+   publisher except Lockman**, whose agreement bars third-party advertising
+   outright and allows **no access charges or membership fees** at all
+   (§YVN14.10 rule 10) — so an application charging for access may not serve NASB,
+   AMP, NBLA or LBLA. Biblica's position is **unsourced** rather than permissive
+   (§USE9). The permitted-with-disclosure case is
+   not true of API.Bible's licensed editions (§APB20). Do not assume one upstream's
+   commercial position applies to the other.
 
 ---
 
@@ -696,7 +1133,10 @@ gets built**, not merely how it is configured.
    **Existential, not cosmetic:** it is the only endpoint in this upstream known to
    return scripture text, so if it is gone §YVN8 is not rewritten — the provider is
    (§YVN8). Run this spike first.
-2. **Does a fresh app key see KJV (id 1) without accepting an agreement?** Decides
+2. **Does a fresh app key see WEB (`WEBUS`, id 206) without accepting an
+   agreement?** (§YVN4.1.) ~~And is id 206 exposed through the Platform API at
+   all?~~ **Closed** — the Quick Reference documents it. Ask the same of BSB
+   (3034) and ASV (12) while there. Decides
    whether the shipped `DefaultTranslation` works out of the box (§YVN4).
 3. **Does the passages endpoint accept a verse range** (`JHN.3.16-JHN.3.18`)?
    Decides whether a range is one request or a chapter fetch plus a slice (§YVN9
@@ -718,12 +1158,25 @@ gets built**, not merely how it is configured.
    rule is a workaround or the correct model.
 8. **What do critical-text omitted verses return — 204, 200-with-empty, or 404?**
    (§YVN11.)
-9. **Read and record the platform terms** — retention, caching, refresh cadence,
-   attribution form, commercial-use restrictions. The page is client-rendered, so
-   open it in a browser. §YVN14 cannot be completed without this, and storage is
-   blocked until it is.
+9. ~~**Read and record the platform terms.**~~ **Done** — §YVN14. It did not
+   unblock storage, because the platform terms explicitly grant no rights in the
+   Bible text.
+
+   **Its replacement is narrower still, and one of nine is now done.** The YVP
+   Terms half is closed — none appear to exist for this Tool (§YVN14.1 item 2). The
+   Biblica agreement is read and recorded (§YVN14.5), and it answered the storage
+   question in the affirmative while surfacing four obligations nothing else in this
+   design had.
+
+   ~~**Eight agreements remain unread**~~ — **all read on 2026-09-11** (§YVN14.5):
+   Lockman, BroadStreet, MissionAssist, SIL
+   International, Wycliffe, Biblion, Hawaii Pidgin Bible and Ewangeliczny Instytut
+   Biblijny. Each is a "View Agreement" link at `platform/licenses`. Two questions
+   for each: does it permit holding content and on what refresh terms, and **does it
+   require footnotes** (§YVN14.6)? If footnotes are a common publisher requirement
+   rather than Biblica's alone, that is a contract-level obligation.
 10. **Does the Bible resource expose a script direction** (or a script code we can
-    map from)? §ABS42.6 needs it and §YVN7 rule 4 falls back to a built-in table
+    map from)? §ABS42.6 needs it and §YVN7 rule 3 falls back to a built-in table
     without it. Low cost to check, and it decides whether a Hebrew or Arabic edition
     renders correctly by default.
 11. **Capture fixtures** for the acceptance suite: a two-page catalogue, a passage
@@ -751,7 +1204,7 @@ exception mapping tables including 204 → `NotFound` and 406 →
 only through `IBibleProvider` (§ABS35 rule 3).
 
 1. **`X-YVP-App-Key` present on every outbound request, and the key value absent
-   from every log the test captures** (§SOL14 rule 4).
+   from every log the test captures** (§SOL14 rule 5).
 2. Catalogue: a two-page response is exhausted and merged; the language filter is
    sent as `language_ranges[]` with literal brackets; **a 422 naming the field
    triggers exactly one retry with the bare spelling and a Warning** (§YVN7 rule 2);
@@ -817,9 +1270,9 @@ change what gets built.
 
 | # | Item | Contents | Est. |
 |---|---|---|---|
-| 1 | **Spikes** | The ten items in §YVN19, including reading the platform terms. Endpoint existence and range support decide item 4's shape; the terms decide whether consumers may store at all | 1–1.5 d |
+| 1 | **Spikes** | The eleven items in §YVN19, including reading the platform terms. Endpoint existence and range support decide item 4's shape; the terms decided that consumers may store (§YVN14.9) | 1–1.5 d |
 | 2 | **Transport & container** | Internal `ServiceCollection`, typed client with `X-YVP-App-Key`, resilience pipeline and budget validation, disposal | 0.5 d |
-| 3 | **Catalogue** | Per-range merge, pagination with the §YVN7 rule 5 detection, the rule 2 parameter fallback, copyright retention, **atomic refresh** | 1–1.5 d |
+| 3 | **Catalogue** | Per-range merge, pagination with the §YVN7 rule 5 detection, the rule 2 parameter fallback, copyright retention, **atomic refresh**, and the §YVN7.1 projection | 1–1.75 d |
 | 4 | **Lookup flow** | Shape-based routing, all content through `/passages` (§YVN9), the range strategy the spike settles, AngleSharp HTML→`Blocks`, the `format=text` fallback, content check | 1.5–2 d |
 | 5 | **Failure mapping** | §YVN12 and §YVN13, including 204, 406 and the 429 discriminator | 0.5 d |
 | 6 | **Tests** | The three projects in §YVN20 plus the inherited Conformance suite | 1–1.5 d |

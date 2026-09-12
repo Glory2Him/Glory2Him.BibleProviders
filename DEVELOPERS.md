@@ -77,7 +77,7 @@ written into the design document is lost the moment that session ends.
 
 | Role | Durable artifact | Where the next role reads it |
 | --- | --- | --- |
-| architect | a design section | `Documentation/Design/*.md` — four area-scoped files |
+| architect | a design section | `Documentation/Design/*.md` — five area-scoped files |
 | analyst | numbered acceptance criteria | the GitHub issue body, under `## Acceptance criteria` |
 | developer | commits, a branch, a PR, a handoff report | the PR and its diff |
 | qa | BLOCKING / ADVISORY findings | its final report — on the issue when it reviews criteria, on the PR when it reviews code |
@@ -285,7 +285,7 @@ Documentation/
 ```
 
 `Documentation/Design.md` started as a single file. **That split has happened.**
-The design is now four area-scoped files under `Documentation/Design/`:
+The design is now five area-scoped files under `Documentation/Design/`:
 
 | Area | Prefix | File |
 | --- | --- | --- |
@@ -293,6 +293,7 @@ The design is now four area-scoped files under `Documentation/Design/`:
 | Provider contract | `ABS` | `Abstractions.md` |
 | API.Bible provider | `APB` | `ApiBible.md` |
 | YouVersion provider | `YVN` | `YouVersion.md` |
+| Usage permission | `USE` | `UsagePermission.md` |
 
 A new area reserves its prefix in `Design.md`'s header table before its file is
 written. Split by area — never by size.
@@ -312,7 +313,8 @@ Two cautions worth inheriting rather than rediscovering:
 - **Resolving is not the same as being right.** The annotation maps an old number
   to a new one; it says nothing about whether the section was the correct one to
   cite originally.
-- **Nothing validates citations.** No CI step, no script. The guarantee that an
+- ~~**Nothing validates citations.** No CI step, no script.~~ **Both exist now**:
+  `Documentation/Check-Design.ps1`, run as a required step in `build.yml`. The guarantee that an
   old `§10.X` still resolves is the annotation convention and nothing else.
 
 ### Citing design from code
@@ -786,7 +788,7 @@ than mechanism:
   once. Note the trap either way: an all-caps `DESIGN` label turns up regardless,
   auto-created by the PR linter from a `DESIGN:` title prefix. That is a category
   label on PRs, not an area label on issues.
-- ~~**Section 1 of the design.**~~ Done — `Documentation/Design/` holds four
+- ~~**Section 1 of the design.**~~ Done — `Documentation/Design/` holds five
   area-scoped documents (§4). The architect has sections to extend and the analyst
   has design to derive criteria from; the implementation backlog is the
   work-breakdown table at the foot of each file.
@@ -797,6 +799,15 @@ than mechanism:
 `README.md` has the full setup checklist, including the parts of this that are
 one-off.
 
-Two things will not exist unless someone builds them, here or anywhere:
-**nothing validates design citations**, and **nothing reads the `Model - Effort`
-label to configure a session**.
+One thing will not exist unless someone builds it: **nothing reads the
+`Model - Effort` label to configure a session**.
+
+**Design citations are validated.** Run it before you push a design change:
+
+```
+powershell -ExecutionPolicy Bypass -File .\Documentation\Check-Design.ps1
+```
+
+It checks six things and its header lists, just as plainly, the four it does
+**not** — chiefly whether an obligation in a design section reached the README
+§SOL19.3 assigns it to, which is the class that has caused the most rework here.

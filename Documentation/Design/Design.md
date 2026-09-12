@@ -1,10 +1,11 @@
 # Design — Bible Providers
 
-**Area prefix:** `SOL` · **Sections:** §SOL1 – §SOL18
+**Area prefix:** `SOL` · **Sections:** §SOL1 – §SOL19
 
 How this system is built: package boundaries, layer placement, the provider
-contract, and the decisions that belong to no single package. `INTENT.md` says
-what the system is *for* — it does not exist yet (§SOL17 rule 1).
+contract, and the decisions that belong to no single package.
+[`INTENT.md`](../../INTENT.md) says what the system is *for*, and is where the
+reasoning behind this design's weight of licence obligations lives.
 
 **This document is authoritative.** An issue that disagrees with it is stale
 intent, not an instruction — correct the issue.
@@ -17,19 +18,20 @@ The architect writes here. Nobody else does.
 | The provider contract | `ABS` | [Abstractions.md](Abstractions.md) |
 | API.Bible provider | `APB` | [ApiBible.md](ApiBible.md) |
 | YouVersion provider | `YVN` | [YouVersion.md](YouVersion.md) |
+| Usage permission — storage and onward transmission | `USE` | [UsagePermission.md](UsagePermission.md) |
 
 ---
 
 ## Conventions
 
 **The split has happened.** `Documentation/Design.md` was a single stub; it is now
-four area-scoped files under `Documentation/Design/`. Everything below follows
+five area-scoped files under `Documentation/Design/`. Everything below follows
 `DEVELOPERS.md` §4 and §6, adjusted for the fact that the split is done rather
 than hypothetical.
 
 **Numbered, prefixed, flat.** Every section carries an area prefix and a flat
 number that never restarts — `§ABS1`, `§ABS2`, `§APB1` — so a bare citation stays
-unambiguous with four files side by side:
+unambiguous with five files side by side:
 
 ```csharp
 // design §ABS6: scripture outcomes return, availability failures throw
@@ -45,9 +47,17 @@ decoration.** Three lists in these documents — §APB15, §APB17 and §YVN7 —
 renumbered in place during drafting, and every citation into them silently began
 pointing at a *different rule that still existed*. That is worse than a dangling
 reference: `§APB17 rule 4` resolves, the number is real, it simply means something
-else now, so no validator catches it and no reader doubts it. One of those
-mis-citations sent a developer at the wrong mitigation for the most dangerous
-unknown in the design.
+else now, and no reader doubts it. One of those mis-citations sent a developer at
+the wrong mitigation for the most dangerous unknown in the design.
+
+~~So no validator catches it.~~ **`Documentation/Check-Design.ps1` now does**, by
+diffing rule *text* against the base ref and failing when a rule that already
+existed changes number. It was written after this class had recurred **four**
+times — §APB15, §APB17, §YVN7 above, then §ABS36 and §YVN18 on the decisions branch.
+**The convention did not stop it; a human sweep did not stop it three times
+running; a diff stops it in under a second.** What the script still cannot see is
+whether an obligation reached the README that §SOL19.3 assigns it to, which is the
+other recurring class.
 
 So: **numbered rules are append-only.** A new rule goes at the end of its list,
 never in the middle; a dead rule is struck through in place and keeps its number,
@@ -57,7 +67,7 @@ tomorrow what it meant when it was written, which nothing else in this repositor
 guarantees.
 
 **A new area reserves its prefix in the table above before its file is written.**
-Reserved so far: `SOL`, `ABS`, `APB`, `YVN`. A third provider takes the next free
+Reserved so far: `SOL`, `ABS`, `APB`, `YVN`, `USE`. A third provider takes the next free
 three-letter token and gets `Documentation/Design/<Provider>.md` (§ABS33).
 
 **Every heading carries exactly one tag, never bare:**
@@ -80,7 +90,8 @@ The two example headings above sit inside a code fence and still match that grep
 They use `EVN`, which is not a reserved prefix in this solution, so a sweep can
 discard them on sight rather than chasing a section that does not exist.
 
-**Every heading in all four files currently carries `(#1)`** — the issue that
+**Every heading carries the issue it was settled under** — `(#1)` for the
+original design pass, `(#3)` for the decisions and licence review that followed —
 defined this design in one pass. A sweep therefore finds nothing, and that is
 correct rather than a gap: the tag answers *"which issue defined this section?"*,
 not *"is it built yet?"*.
@@ -98,7 +109,12 @@ time a section is touched.
 the old number still resolve by grep. Two cautions worth inheriting rather than
 rediscovering: resolving is not the same as being right — the annotation says
 nothing about whether the section was the correct one to cite originally; and
-nothing validates citations, so the annotation convention is the whole guarantee.
+**`Documentation/Check-Design.ps1` validates that a cited section and a cited
+*rule* both exist**, so a dangling `§EVN99` or a `§EVN7 rule 44` now fails a gate. (Those two use the
+reserved `EVN` example prefix on purpose — written with a real prefix they would
+fail the very check they describe, which is how this sentence was first drafted.)
+It cannot tell that a citation resolving to a real rule names the *wrong* one —
+for that the `(formerly §X)` annotation convention is still the whole guarantee.
 
 **Provenance tags.** These documents describe two upstreams this repository does
 not control, so a claim's evidence is part of the design:
@@ -193,6 +209,36 @@ forgotten.
    seed. The consuming application stores; §SOL11 says what shape to store, and
    the upstreams' retention rules (§APB17, §YVN14) bound how long.
 
+   **Stated as an invariant, because every compliance question in this design
+   turns on it: no package here ever caches, stores or writes scripture
+   anywhere.** A `ScripturePassage` exists for the lifetime of the call and
+   whatever reference the caller keeps. There is no passage cache, no disk write,
+   no de-duplication store, and no configuration that turns one on.
+
+   **The one thing a provider does hold is its catalogue** — abbreviation → upstream
+   id, plus name, language, script direction, copyright and publisher URL — in
+   memory, per provider instance, for `CatalogueCacheDuration` (6 hours by default),
+   never written to disk. That is edition *metadata*, not scripture, and it is
+   refreshed far inside any retention window either upstream sets.
+
+   Three consequences worth being explicit about:
+
+   - **This library is never a party to a retention obligation.** §APB17's 30-day
+     refresh, its delete-on-withdrawal and 72-hour removal duties, and §YVN14's
+     storage question — since settled, §YVN14.9 — all bind **the consumer**, and only once the
+     consumer chooses to persist. Nothing in this solution can breach them, because
+     nothing in it retains anything to breach them with.
+   - **A display-only consumer inherits none of them.** ~~That is why §YVN14 blocks
+     persistence without blocking the provider~~ — **the block lifted, §YVN14.9**;
+     YouVersion storage is permitted and the platform encourages it (§YVN14.11).
+     The point survives the reversal: a display-only consumer still inherits no
+     retention duty at all. The question once cost a consumer a
+     cache, not a capability.
+   - **The obligations that remain unconditional are the display-time ones** —
+     attribution (§ABS32), usage reporting where owed (§ABS30), and verbatim
+     reproduction (§ABS23 rule 3). Those bind whether or not anything is stored,
+     which is exactly why they are `required` members rather than guidance.
+
 6. **Security boundary.** Not identity — **credentials**. Three rules:
    - An API key or app key reaches exactly one assembly: the provider package
      that owns it, via its configuration POCO. It is never static, never
@@ -239,7 +285,7 @@ forgotten.
    major-version break; the async shape and the token parameter *are* that surface,
    so the decision belonged in this list and was only ever visible as an incidental
    detail of a code sample. It is the same class and the same deadline as the two
-   surface questions still open at §SOL17 rule 3 and §ABS39 rule 5: free now,
+   surface questions ~~still open at~~ **settled at** §SOL17 rule 3 and §ABS39 rule 5: free now,
    breaking after the first `RELEASES:` PR.
 
    The *mechanism* — how a caller's token composes with a provider's own timeout
@@ -382,7 +428,9 @@ not resolve.
    own `using` block, per `the-standard-csharp-directives`. Code samples in these
    documents omit them for brevity; real files do not.
 3. `<GeneratePackageOnBuild>true</GeneratePackageOnBuild>`, `Version 0.1.0.0`,
-   G2HSL licence, icon and README packed from the repository root.
+   G2HSL licence and icon packed from the repository root — but **each package's
+   `PackageReadmeFile` must point at its own README**, not the repository's
+   (§SOL19.1).
 4. `<NoWarn>CS1998,CS8632</NoWarn>` on libraries. CS1998 (async without await) is
    expected in this codebase — broker methods and `TryCatch` shapes produce it
    routinely.
@@ -391,8 +439,17 @@ not resolve.
 
 5. **`Xeption` is not referenced by any shipped package. Settled — see §SOL17
    rule 6 for the decision and its reasoning.** Test projects *will* reference it
-   directly — not yet; no `.csproj` in the repository names it today — where it is
+   directly — no `.csproj` in the repository names it today — where it is
    not published and costs a consumer nothing.
+
+   **This was false when written and is true now.** `Glory2Him.BibleProviders.Abstractions.csproj`
+   carried `<PackageReference Include="Xeption" Version="2.9.0" />` from the initial
+   project scaffold, so the packed nuspec declared it and the package README's claim
+   of a single dependency was untrue. **The reference is removed**; the packed nuspec
+   now declares `Microsoft.Extensions.Logging.Abstractions` alone [verified by
+   inspecting the nuspec inside the built `.nupkg`]. No production code referenced
+   `Xeption` — only the vendored skill examples under `.claude/`, which are not
+   compiled.
 
    The measured reason: `Xeption` 2.9.0 depends on `FluentAssertions [7.2.2]` and
    `DeepCloner`, and `FluentAssertions` pulls
@@ -679,6 +736,13 @@ the recommended shape is:
    API.Bible's terms require more than a copyright string — see §APB19, which is
    also the one place this design knows the DTO may be a field short.
 
+8. **Read [UsagePermission.md](UsagePermission.md) before you store or share it.**
+   It sets out the storage limits and the onward-transmission rights per provider
+   and per publisher, rather than leaving them scattered through the compliance
+   sections. The headline: storage is permitted on both upstreams, and **passing
+   scripture out of your application is not** — except for public-domain and
+   permissively-licensed translations (§USE1).
+
 ---
 
 ## SOL12. Request cost — size this before you ship (#1)
@@ -756,11 +820,12 @@ abstraction items.
 
 | Package | Estimate | Detail |
 |---|---|---|
+| Package READMEs (§SOL19) | 0.25 d | **Mostly done:** the root README and the three existing packages' READMEs are written and packing verified. Remaining: one each for `.Fums` and `.Conformance`, with those projects |
 | Scaffolding gaps (§SOL6) | 0.25 d | **Done:** project references, `IsPackable=false`, the `pwsh` fix, the ubuntu long-paths removal. **Remaining:** `Directory.Build.props`, `TreatWarningsAsErrors` + analyzers, and `WireMock.Net` on the three acceptance projects |
-| Abstractions | 8.5–12 d | §ABS40 |
+| Abstractions | 9.5–13 d | §ABS40 |
 | API.Bible | 6.5–9 d | §APB25 |
 | YouVersion | 5–7 d | §YVN21 |
-| **Solution total** | **≈ 20.5–28.5 dev-days** | |
+| **Solution total** | **≈ 21.5–30 dev-days** | |
 
 **Cross-package sequencing:**
 
@@ -799,7 +864,7 @@ can still change what gets built.
 | 1 | Does API.Bible signal an exhausted plan as 429, 403, or something else? | §APB15 | A 403 is currently mapped to `TranslationNotSupported`, which is *returned*. An exhausted plan arriving as 403 would be read as "this translation isn't here", and a consumer would fail over silently and permanently instead of suspending the provider. **The most dangerous unknown in this design** |
 | 2 | YouVersion: `language_ranges[]` with brackets, or `language_ranges` comma-separated? | §YVN7 | Two upstream pages disagree [contested]. Wrong answer ⇒ 422 on every catalogue call ⇒ every lookup fails |
 | 3 | YouVersion: `page_token` or `next_page_token` as the request parameter? | §YVN7 | Two upstream pages disagree [contested]. Wrong answer ⇒ silent single-page catalogue ⇒ licensed translations report as unsupported |
-| 4 | YouVersion platform terms — still unread | §YVN14 | Blocks persistence entirely |
+| 4 | ~~YouVersion platform terms unread~~ — **read**, and the per-version licences with them: **storage is permitted** (§YVN14.9). The per-Tool YVP Terms are struck as very likely not existing for this Tool | §YVN14.9 | ~~Still blocks persistence~~ — **closed**; nothing blocks persistence on this upstream |
 | 5 | Do critical-text omitted verses return 200-with-empty, 204, or 404? | §APB9, §YVN11 | Decides whether the content check is a safety net or the primary mechanism |
 | 6 | Is a YouVersion passage fetchable for a Bible absent from the catalogue? | §YVN7 | If yes, a catalogue miss is not a sound basis for `TranslationNotSupported` |
 
@@ -810,10 +875,20 @@ can still change what gets built.
 Package-specific questions live in each document. These span the solution and
 are **decisions, not spikes** — no amount of upstream research settles them.
 
-1. **`INTENT.md` does not exist.** `CLAUDE.md` and `DEVELOPERS.md` both treat it
-   as the statement of what this system is for, and both these design documents
-   and the analyst's criteria are supposed to trace to it. Write it, or accept
-   that §SOL1 is doing its job by default.
+1. ~~**`INTENT.md` does not exist.**~~ **Written** — it states what the system is
+   for, who it serves, and the three things that must never go wrong, in the order
+   they matter.
+
+   It also carries the one piece of reasoning this design needs and had nowhere to
+   put: **why so much of it is about obligations.** A reader meeting a `required`
+   usage token, a required-but-nullable `Attribution`, a library that refuses to
+   report on your behalf and a deliberate absence of any shipped copyright table
+   could reasonably read all of it as ceremony. `INTENT.md` is the argument they
+   would be arguing with.
+
+   It was written from what the repository already shows rather than from the
+   owner's own words, and says so. **If it is wrong, correct it there** — this
+   design cites it rather than restating it.
 
 2. ~~**Files still pointing at the deleted `Documentation/Design.md`.**~~
    **Done.** All 30 references across `CLAUDE.md`, `DEVELOPERS.md`, `README.md`,
@@ -826,24 +901,38 @@ are **decisions, not spikes** — no amount of upstream research settles them.
    merely repointed.
 
    Kept as a numbered rule rather than deleted, because what it records is general
-   and will recur: **a relocated rule goes stale, and nothing validates a citation.**
+   and will recur: **a relocated rule goes stale.** ~~and nothing validates a
+   citation.~~ Citations are validated now (`Documentation/Check-Design.ps1`);
+   *relocation* still is not, because a repointed citation resolves.
 
-3. **Where does the consuming application's translation list come from?** Each
-   provider's catalogue is private and the only way to learn a translation is
-   unavailable is to spend a metered request. Either the list is
-   application-owned configuration — in which case each provider's
-   `TranslationMap` is authoritative and the live catalogue merely validates it —
-   or `IBibleProvider` grows a read-only `KnownTranslations` snapshot.
-   **Decide before the first provider ships**: a small addition now, a breaking
-   change later (§SOL2 rule 7).
+3. ~~**Where does the consuming application's translation list come from?**~~
+   **Settled: `GetTranslationsAsync` on `IBibleProvider`**, async, served from the
+   catalogue each provider already caches, and explicitly a snapshot rather than a
+   support check. §ABS44. Landed before the first release, which is what kept it a
+   MINOR-cost addition rather than a MAJOR one.
 
-4. **Is a ~20-second worst-case lookup acceptable?** Both providers ship a 20 s
-   overall / 5 s per-attempt / 2-retry budget — the smallest that closes
-   arithmetically while leaving room for a real retry. An interactive page may
-   prefer to fail faster (`MaxRetryAttempts = 1`, `TimeoutSeconds = 12`, which
-   also closes). Because these are per-provider POCO values, an interactive
-   surface and a background import can be configured differently — so the
-   question is really *which surface calls this*.
+4. ~~**Is a ~20-second worst-case lookup acceptable?**~~ **Settled, and the
+   question was framed as one dial when it is two.**
+
+   **`TimeoutSeconds` stays 20 — it is a ceiling, not a target.** §APB6.1 links the
+   caller's token with the provider's budget, so a caller who cares passes a
+   `CancellationToken` and gets *their* number; an interactive page passing three
+   seconds gets three seconds. The provider budget binds only when nobody
+   specified, which is exactly when it should be forgiving. The `TimeoutSeconds = 12`
+   alternative this rule used to float was rejected for closing with **zero** slack —
+   brittle arithmetic for no gain, since a caller wanting twelve seconds should pass
+   a token rather than move the backstop.
+
+   **`MaxRetryAttempts` drops from 2 to 1, and that is the change that mattered.**
+   It is a quota policy wearing a timeout's clothes: every retry is another metered
+   request, so at two retries one failing lookup burned three of API.Bible's
+   5,000-a-month while succeeding no more often (§SOL12). §APB6.2 carries the full
+   argument; both providers take the same default so that tuning one does not
+   surprise anyone about the other.
+
+   **"Which surface calls this" therefore mostly dissolves.** With the token
+   honoured the caller decides, and what the default must be is *quota-safe*,
+   because the default is what gets used by everyone who did not think about it.
 
 5. **A third provider** — construct it and add it to the list; there is no
    registry to extend. Its obligations are §ABS5's rules, the §ABS7 markers, a
@@ -903,6 +992,26 @@ are **decisions, not spikes** — no amount of upstream research settles them.
 
 ---
 
+8. ~~**Does either upstream expose a publisher website URL?**~~ **Settled, and the
+   answer is split** (§ABS44.5). Neither puts one on a passage, so it was never a
+   DTO question. YouVersion's catalogue carries `publisher_url` and a longer
+   `promotional_content`; API.Bible's carries no URL property at all, and its `info`
+   field is a string of publisher information rather than a link — both [verified]
+   against the published schemas.
+
+   `TranslationSummary.PublisherUrl` therefore ships nullable, populated for
+   YouVersion and null for API.Bible — which is the provider whose Terms §7 demands
+   the link. Building that page for API.Bible stays the consumer's job (§APB19).
+
+9. **Commercial use is not enforced in code, deliberately.** §APB20.1 settles it:
+   nothing in either upstream exposes a licence tier or a commercial-use flag, the
+   determination is made in the portal before this code runs, and a self-declared
+   boolean that gated behaviour would be compliance theatre. The mitigation is
+   documentation placed where it bites. Recorded because "we chose not to build it"
+   and "nobody thought of it" are indistinguishable a year later.
+
+---
+
 ## SOL18. Reference links (#1)
 
 - **`Xeption`** (package id singular, namespace `Xeptions`):
@@ -912,3 +1021,94 @@ are **decisions, not spikes** — no amount of upstream research settles them.
   https://github.com/Copenhagen-Alliance/versification-specification
 - Upstream documentation for each provider is listed in that provider's document
   (§APB1, §YVN1).
+
+---
+
+## SOL19. What ships inside each package (#3)
+
+A consumer meets this solution through a NuGet page and a `README`, not through
+`Documentation/Design/`. The design documents are for whoever *builds* the
+providers; they are long, they cite each other by prefixed section, and they are
+not shipped. **This section specifies what a consumer gets instead.**
+
+### SOL19.1 The defect this section starts from (#3)
+
+~~All three shipped packages set `<PackageReadmeFile>` pointing at the repository
+root README~~ — the template's setup checklist, opening `# {{REPOSITORY_NAME}}` and
+"After creating this repository". That is what a consumer would have seen on
+nuget.org for `Glory2Him.BibleProviders.ApiBible`, while three places in this
+design already said "the package README" as though one existed: §ABS45.3, §YVN17
+and §SOL6's shipping list.
+
+**Fixed.** Each of the three existing packages now carries and packs its own
+README, verified by packing each `.nupkg` and reading the embedded file rather
+than trusting the project file. The two packages not yet created (§SOL5) take
+theirs with them.
+
+**The banner must survive**, and in a package README it can only be an absolute
+URL — nuget.org does not resolve repository-relative image paths. Same for links:
+relative paths work on GitHub and break on nuget.org, so package READMEs link to
+nuget.org and to the repository by full URL.
+
+### SOL19.2 What every package README contains (#3)
+
+In this order, because it is the order a consumer needs it:
+
+1. **One paragraph on what the package is**, and which of the five it is — a
+   consumer arriving from a search result does not know the solution's shape.
+2. **The minimum working example.** Construct the configuration, construct the
+   provider, one lookup, read `Text` and `Attribution`. It must compile as written.
+3. **Every configuration field**, with which are mandatory, what each defaults to,
+   and — for anything with a shipped default that is a *safe* choice rather than a
+   *recommended* one — which is which. `DefaultTranslation` **used to be** that
+   example and is now the counter-example: `WEB` is both safe and recommended
+   (§APB4, §YVN4). The rule stands for every other such field, and §APB27 is why it
+   stands — the previous default, `KJV`, read as safe for two drafts before anyone
+   read the territorial clause.
+4. **The `TranslationMetadata` sample block** (§ABS45.3), dated, with a sentence
+   saying it is the consumer's to own and verify. This is the one piece of
+   documentation this design deliberately ships *instead of* code.
+5. **The obligations the consumer inherits**, in plain terms and with figures, or
+   the explicit statement that a figure is unestablished and what that restricts
+   (§ABS33 item 5). A consumer who reads only the README must not be able to breach
+   a licence by following it.
+6. **The traps, at the point they bite** — not in an appendix. The licence-
+   acceptance trap for YouVersion (§YVN17), the FUMS display obligation for
+   API.Bible (§APB16).
+7. **A link to the design**, for anyone who wants the reasoning rather than the
+   instructions.
+
+### SOL19.3 Per package (#3)
+
+| Package | What its README must carry beyond §SOL19.2 |
+|---|---|
+| **Abstractions** | The two-channel rule (§ABS6) — returns for scripture outcomes, throws for availability — and the marker interfaces, because a consumer's `catch` blocks depend on it. The composition-root sample and its three traps (§ABS28) |
+| **ApiBible** | FUMS in full: it is a licence condition, not analytics, and the consumer reports on **display** (§APB16). The content-recency duties, the **24-hour** clock on a written removal request and the **72-hour** clock on termination — they are different events (§APB17 duties 4 and 5). The Starter plan's **1,000 Monthly End Users** ceiling (§APB29.1). The Terms §12 security duties (§APB26.1). The non-commercial definition (§APB20) — broad enough that an ad-supported surface is commercial |
+| **ApiBible.Fums** | That it deliberately does not reference the provider package, and why (§SOL2 rule 6). The browser and server paths, and the four silent browser failures |
+| **YouVersion** | The licence-acceptance trap first, because it is the most common support question and looks identical to a translation that does not exist (§YVN17). That storage is **permitted and encouraged** — express grant, no refresh timer (§YVN14.9, §YVN14.11). **Biblica's 48-hour removal clock** and **Lockman's end-of-February usage report**, because "no timer" is not "no duty" (§YVN14.10 rules 9 and 13). Lockman's **clickable link to lockman.org** and per-verse linking tag, naming all four editions it covers |
+| **Abstractions.Conformance** | How to inherit it — one class, one override (§ABS38) |
+
+### SOL19.4 Rules (#3)
+
+1. **XML documentation comments on every public member**, since that is what a
+   consumer's IDE shows and most of them will never open a README.
+2. **A README says what a consumer must do. The design says why.** Duplicating the
+   reasoning guarantees the two drift, and the README is the copy that ships frozen
+   inside a package version.
+3. **No section numbers in README prose.** `§ABS45.1` means nothing to someone who
+   has not cloned the repository. Link to the design once, at the end.
+4. **Obligations are stated, never summarised away.** If a figure is unestablished,
+   say so and say what it restricts — the §YVN14 shape, which was the model — and §YVN14.9 shows the other half of
+   it, where the figure is found and the restriction lifts.
+5. **Absolute URLs only, in a package README.** nuget.org does not resolve
+   repository-relative paths, so a relative image is a broken banner and a relative
+   link is a 404. The root README is the opposite case — it is read on GitHub, so
+   it links to the project READMEs by relative path and is the only one that may use
+   mermaid, which nuget.org does not render.
+
+**This section is enforced rather than hoped for.** `.claude/agents/qa.md` item 12
+makes README currency a standing check on every pull request: a configuration field
+added without a row, an obligation whose figure the design has since corrected, or
+a sample that no longer compiles is BLOCKING, because a consumer who reads only the
+README must not be able to breach a licence by following it. The packaging traps in
+§SOL19.1 are on that checklist too, each of them having already happened here once.

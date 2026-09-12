@@ -1,118 +1,288 @@
-# {{REPOSITORY_NAME}}
+# Glory2Him.BibleProviders
+
 ![Glory 2 Him](https://raw.githubusercontent.com/Glory2Him/Glory2Him/main/Resources/Images/Glory2Him-Banner.png)
----
-
-## ✅ After creating this repository
-
-Work through this, then **delete this whole section**. Everything here is
-something the template cannot do for you — GitHub copies files, not settings,
-and no file can know what this repository is for.
-
-**First — run the label sync**
-
-GitHub runs **no workflows at all** on the commit that "Use this template" creates.
-Nothing fires. Until you do this by hand, this repository has no label set and the
-PR linter, the analyst and the status lifecycle all have nothing to work with.
-
-- [ ] Actions → Labels → Run workflow.
-
-**Read first**
-
-- [ ] `DEVELOPERS.md` — how work moves from an idea to merged code here, and how to
-      drive the four agents. Its §12 lists what this repository still has to create
-      before the workflow it describes is real rather than aspirational.
-
-**Names and placeholders**
-
-- [ ] Replace `{{REPOSITORY_NAME}}` in this file, in `CLAUDE.md` and in `LICENSE.txt`.
-- [ ] Replace `{{YEAR}}` in `LICENSE.txt` with the year this repository was created.
-
-**Say what this repository is**
-
-- [ ] Fill in *What is {{REPOSITORY_NAME}}?*, *Key Features* and *Getting started* below.
-- [ ] Write `INTENT.md` — what this system is for, in prose, before any of it exists.
-- [x] ~~Fill in the design.~~ Done: `Documentation/Design/` holds four area-scoped
-      documents — `Design.md` (`SOL`), `Abstractions.md` (`ABS`), `ApiBible.md`
-      (`APB`) and `YouVersion.md` (`YVN`). The architect records layer placement and
-      boundaries there, and every agent treats it as outranking any issue that
-      disagrees with it.
-
-**`CLAUDE.md`**
-
-- [ ] Fill in the one-line description at the top.
-- [ ] Trim **Commands** to what actually exists here.
-- [ ] Delete any rule under **Non-negotiables** this repository genuinely cannot
-      have — a rule kept for a thing that does not exist is noise. Deleting one
-      because it is inconvenient is an architect decision, not a setup step.
-- [ ] Delete its *Before this repository is real* section once the above are done.
-- [ ] Keep **Commands** in step with `DEVELOPERS.md` §11 — they describe the same
-      thing and will drift if only one is updated.
-
-**CI**
-
-- [ ] Check Issues → Labels shows the full set. Around twenty base category labels
-      arrive with any new repository in this org — it has default labels configured —
-      so the sync reports most of its work as created and a handful as already
-      correct. `documentation` is renamed to `DOCUMENTATION`.
-- [ ] Delete GitHub's other stock labels (`bug`, `duplicate`, `enhancement`, `good
-      first issue`, `help wanted`, `invalid`, `question`, `wontfix`) if you do not
-      want them. The sync never deletes, so they stay until you remove them.
-- [ ] Trim the `design: <area>` labels to the areas this repository will actually
-      have. All five reserved areas ship in `labels.json` and the sync creates
-      them; it never deletes, so dropping one means editing the manifest *and*
-      deleting the label by hand.
-- [ ] Confirm the **Build** check reports on your first pull request. It passes with
-      nothing to do while the repository has no projects; the org ruleset requires it,
-      so a check that never reports blocks the merge.
-- [ ] Grow `.github/workflows/build.yml` as code arrives — integration tests and their
-      LocalDB start, a JavaScript app's npm steps, the EF migration drift check. The
-      comment at the foot of the file lists them.
-
-**GitHub settings — none of these come from a template**
-
-- [ ] Visibility, description and topics.
-- [ ] Branch protection or rulesets, if the org-level ruleset does not already cover
-      this repository.
-- [ ] Secrets, variables and Actions permissions, if the repository needs them.
-
-**Skills**
-
-- [ ] `.claude/skills/` is a frozen copy of the six packs in `skills-lock.json`, taken
-      from `hassanhabib/the-standard-skills`. Nothing pulls upstream fixes in — refresh
-      deliberately when you want them.
-
-## ✝️ Introduction
-
-**Glory 2 Him** creates software to connect people with God, offering digital tools and resources
-that bring faith into *everyday life*.
-
-Our mission is to **encourage and equip every believer** on their journey of faith through
-open-source software, tools, and libraries that we develop.
-
-Join our *community of developers and designers*—or, if you don't have technical skills but
-see a **digital need**, share it with us. Together, we can discover new ways to serve the
-**body of Christ** in meaningful and lasting ways.
 
 ---
 
-## 🌄 What is {{REPOSITORY_NAME}}?
+> **Pre-release.** The design is complete and reviewed; the implementation is not
+> written yet. Every package here is `0.1.0` and nothing is published to NuGet.
+> Code samples below describe the designed API, not shipped behaviour.
 
-*One paragraph on what this repository does and who it is for.*
+**Fetch scripture from more than one Bible API behind one contract.**
 
-**Key Features:**
-- ✨ *Feature one*
-- ✨ *Feature two*
+Ask for `John 3:16` or `JHN.3.16.NIV`, from API.Bible or YouVersion, and get back
+the same shape either way — plain text, rich markup, a block model that preserves
+red-letter and poetry, the copyright you are obliged to display, and whatever the
+rights holder requires you to report.
 
 ---
 
-## 🛠️ Getting started
+## 🌄 What it is
 
-*How to build and run this repository.*
+Three ideas, and the third is the one that makes it worth using.
 
-```bash
-dotnet build
-dotnet test
+**One contract.** `IBibleProvider` is the same whichever upstream answers.
+`Usfm`, `Reference`, `Translation` and `Text` are identical for a given lookup no
+matter who served it — because references are parsed and rendered by this library
+rather than echoed from an upstream that makes no promises about their form.
+
+**Two channels, never one.** A provider that *answers* returns a
+`ScriptureResult`: found, not found, translation unsupported, reference invalid. A
+provider that *cannot answer* throws: rate limited, quota spent, credentials
+rejected, upstream down. That split is what makes failover writable — a consumer
+can tell "this passage isn't there" (asking another provider is pointless) from
+"this provider is unavailable" (asking another is exactly right).
+
+**The licence obligations travel with the scripture.** Attribution, the
+per-display reporting token where one is required, the language and its script
+direction. Not as a footnote in a wiki — as required members on the passage, so
+dropping one is a compile error rather than a compliance incident discovered
+months later.
+
+---
+
+## 🧭 How it fits together
+
+```mermaid
+graph TD
+    App["Your application"]
+    Broker["Your own IBibleBroker<br/><i>one class, forwards verbatim</i>"]
+    Abs["BibleAbstractionProvider<br/><i>resolves by name, forwards, classifies</i>"]
+    ApiB["ApiBibleProvider"]
+    YV["YouVersionProvider"]
+    UA(["API.Bible<br/><i>American Bible Society</i>"])
+    UY(["YouVersion Platform<br/><i>Life.Church</i>"])
+
+    App --> Broker --> Abs
+    Abs -->|"by name"| ApiB
+    Abs -->|"by name"| YV
+    ApiB --> UA
+    YV --> UY
+
+    style App fill:#e8f0fe,stroke:#4285f4
+    style Abs fill:#fff4e5,stroke:#f9ab00
+    style UA fill:#f1f3f4,stroke:#9aa0a6
+    style UY fill:#f1f3f4,stroke:#9aa0a6
 ```
+
+The abstraction **resolves which provider answers, by name — and nothing else.**
+It never picks between providers, never retries, never inspects a result. Choosing
+an order and falling back is an application concern, deliberately, because which
+providers exist and under what subscription changes independently of any contract
+here.
+
+Inside each provider the layering is the same:
+
+```mermaid
+graph LR
+    F["Provider façade<br/><i>public</i>"] --> S["Foundation service<br/><i>internal</i>"] --> B["HTTP broker<br/><i>internal, no logic</i>"] --> U(["Upstream"])
+    style F fill:#e6f4ea,stroke:#34a853
+    style U fill:#f1f3f4,stroke:#9aa0a6
+```
+
+---
+
+## 🛠️ A lookup
+
+```csharp
+var configurations = new ApiBibleConfigurations { ApiKey = "…" };
+using var provider = new ApiBibleProvider(configurations);
+
+using var bibleProvider = new BibleAbstractionProvider(new[] { provider });
+
+ScriptureResult result = await bibleProvider.GetScriptureByReferenceAsync(
+    ApiBibleProvider.ProviderName, "John 3:16", cancellationToken);
+
+if (result.IsFound)
+{
+    Console.WriteLine(result.Passage.Reference);     // "John 3:16"
+    Console.WriteLine(result.Passage.Text);          // never empty on a Found result
+    Console.WriteLine(result.Passage.Attribution);   // display this
+}
+```
+
+Handling the other channel — the one a status check alone will miss:
+
+```csharp
+try
+{
+    ScriptureResult result = await bibleProvider.GetScriptureByUsfmAsync(
+        providerName, "JHN.3.16.NIV", cancellationToken);
+}
+catch (Exception exception) when (exception is IBibleDependencyException)
+{
+    // Through the abstraction every availability failure arrives WRAPPED, carrying
+    // only the broad marker. The specific one is on InnerException — unwrap it, or
+    // a quota catch compiles, never fires, and nothing warns you.
+    if (exception.InnerException is IBibleQuotaExceededException quota)
+    {
+        // Stop asking this provider until quota.QuotaResetsOn. Retrying spends an
+        // allowance that is already gone.
+    }
+
+    // Anything else — try the next provider.
+}
+```
+
+Consumers catch **marker interfaces**, never concrete exception types. That is what
+lets your failover handle a provider you hold no reference to.
+
+**Catching the specific marker directly only works on a provider you called as
+`IBibleProvider`.** Through the abstraction it is wrapped, so a
+`when (exception is IBibleQuotaExceededException)` clause compiles and silently
+never matches — and on API.Bible an exhausted quota is an outage, not a slowdown.
+
+---
+
+## 📦 Packages
+
+| Package | What it is | Docs |
+|---|---|---|
+| `Glory2Him.BibleProviders.Abstractions` | The contract, the DTOs, the parsers and the renderer. No HTTP, no DI container | [README](Glory2Him.BibleProviders.Abstractions/README.md) |
+| `Glory2Him.BibleProviders.ApiBible` | API.Bible (American Bible Society) | [README](Glory2Him.BibleProviders.ApiBible/README.md) |
+| `Glory2Him.BibleProviders.YouVersion` | YouVersion Platform (Life.Church) | [README](Glory2Him.BibleProviders.YouVersion/README.md) |
+| `Glory2Him.BibleProviders.ApiBible.Fums` | The FUMS usage reporter. **Not yet created** | — |
+| `Glory2Him.BibleProviders.Abstractions.Conformance` | Contract tests a provider inherits. **Not yet created** | — |
+
+Reference `Abstractions` from a domain layer and it brings **two** packages with
+it. Reference a provider where you compose the application.
+
+---
+
+## ⚖️ What can I do with these providers
+
+Permissions vary by the **rights class** of a translation, not by which provider
+served it. Full detail and the clauses behind every mark:
+[UsagePermission.md](Documentation/Design/UsagePermission.md).
+
+### API.Bible
+
+| | Public domain<br/>CC BY · CC BY-SA | CC BY-**NC**<br/>CC BY-**ND** | Licensed<br/>NIV · ESV · NLT |
+|---|:---:|:---:|:---:|
+| Look it up and display it in your app | ✅ | ✅ | ✅ |
+| Store and cache the text | ✅ | ✅ | ✅ |
+| **Share the text outside your app**<br/><sub>WhatsApp, X, email, SMS</sub> | ✅ | ❌ | ❌ <sub>unless the rights holder authorises</sub> |
+| Share a *reference* + link instead | ✅ | ✅ | ✅ |
+| Print more than 100 verses | ❌ | ❌ | ❌ |
+| Use commercially | ⚠️ <sub>your plan</sub> | ❌ | ❌ <sub>licence *and* plan</sub> |
+| Let users copy or redistribute freely | ✅ <sub>DRM binds "the Property"; public domain is excluded from it</sub> | ❌ | ❌ <sub>DRM required</sub> |
+
+### YouVersion
+
+| | Public Domain &<br/>Creative Commons<br/><sub>361 Bibles</sub> | Biblica<br/><sub>NIV, NIrV — 69</sub> | Lockman<br/><sub>NASB, AMP, NBLA, LBLA — 5</sub> | Other publishers<br/><sub>1,051</sub> |
+|---|:---:|:---:|:---:|:---:|
+| Look it up and display it in your app | ✅ | ✅ | ✅ | ✅ |
+| Store and cache the text | ✅ | ✅ | ✅ | ✅ |
+| Use it offline | ✅ | ✅ | ✅ | ✅ |
+| **Share the text outside your app** | ⚠️ <sub>per work's own licence</sub> | ❌ | ❌ | ❌ |
+| Share a *reference* + link instead | ✅ | ✅ | ✅ | ✅ |
+| Print it | ❌ | ❌ | ❌ | ❌ |
+| Use commercially | ⚠️ <sub>per work's own licence</sub> | ❓ <sub>unsourced — no fee clause found; re-read Biblica's agreement before charging</sub> | ❌ <sub>no access or membership fees</sub> | ✅ <sub>with disclosure</sub> |
+| Run third-party advertising | ⚠️ | ⚠️ | ❌ | ⚠️ |
+| Display more than 2 chapters / 25 verses at once | ✅ | ❌ | ✅ | ✅ |
+| Hide the footnotes | ✅ | ❌ | ❌ | ❌ |
+| Use it to personalise content with AI | ❌ | ❌ | ❌ | ❌ |
+
+**Neither API tells you which class a translation is in** — there is no rights
+field on either catalogue. If you build a share button, classify translations in
+**configuration** and default to *not shareable*.
+
+### Public-domain translations, and the one exception
+
+**The common case — look a verse up, show it on a page, let a reader send it on —
+is fully permitted for public-domain translations.**
+
+| Translation | Rights | Display | **Send on**<br/><sub>email · WhatsApp · SMS</sub> | Print | Commercial |
+|---|---|:---:|:---:|:---:|:---:|
+| **WEB** — World English Bible | Public domain (dedicated) | ✅ | ✅ | ✅ | ⚠️ <sub>your plan, not the licence</sub> |
+| **BSB** — Berean Standard Bible | Public domain (dedicated) | ✅ | ✅ | ✅ | ⚠️ <sub>your plan, not the licence</sub> |
+| **ASV** — American Standard Version | Public domain | ✅ | ✅ | ✅ | ⚠️ <sub>your plan, not the licence</sub> |
+| **YLT**, **DARBY**, **DRA**, **GNV**, **WBT**, **JPS 1917** | Public domain | ✅ | ✅ | ✅ | ⚠️ <sub>your plan, not the licence</sub> |
+| **OEB** — Open English Bible | CC0 | ✅ | ✅ | ✅ | ⚠️ <sub>your plan, not the licence</sub> |
+| **FBV**, **ULB/UST** | CC BY-SA 4.0 | ✅ | ✅ <sub>share-alike follows it</sub> | ✅ | ⚠️ <sub>your plan, not the licence</sub> |
+| **KJV** | Public domain in the US · **Crown copyright in the UK** | ⚠️ | ❌ | ⚠️ | ⚠️ |
+| Any CC BY-**NC** / **ND** edition | Restricted CC | ✅ | ❌ | ⚠️ | ❌ |
+
+> **⚠️ The King James Version is the exception to all of it.** API.Bible grants
+> **no licence** for the KJV within the United Kingdom, the Isle of Man, Jersey,
+> Guernsey or twelve British Overseas Territories — "irrespective of whether your
+> use is Commercial Use or Non-Commercial Use … **whether the content is identified
+> as Public Domain**, and irrespective of format" (Terms §9.8) — and separately
+> bars transmitting it anywhere (§9.9(b)(i)). **The duty follows your reader's
+> location, not yours.** NKJV, ESV, NASB, RSV, NRSV, MEV and **ASV** are expressly
+> *not* covered by it.
+
+> **⚠️ Commercial use is your API.Bible *plan*, not the translation.** Terms §9.2
+> bars commercial use on a non-commercial plan, and "API content" includes
+> public-domain content. **A free-Starter app running advertising while serving WEB
+> is in breach** even though WEB is public domain. On YouVersion the position is
+> different again: permitted with a disclosure for most publishers, **barred for
+> Lockman** (NASB, AMP, NBLA, LBLA — no access charges or membership fees), **per
+> each work's own licence** for the public-domain and Creative Commons set, and
+> **unsourced for Biblica** — this repository could not find a fee clause either
+> way, so re-read that agreement before charging for an NIV application.
+
+**So: for anything that leaves your app, reach for WEB or BSB.** Both are modern,
+dedicated to the public domain by their translators, and carry neither a
+territorial restriction nor a share-alike obligation.
+
+**And public domain does not switch the API terms off.** FUMS reporting, the
+30-day recency check on stored text, and the deletion duties are owed on a WEB
+verse exactly as on an NIV one — they are contractual duties to the API operator,
+not copyright duties to a rights holder. Full reasoning:
+[§USE6](Documentation/Design/UsagePermission.md).
+
+---
+
+## ⚖️ Before you ship
+
+Both upstreams impose obligations on **your** application, not on this library.
+The short version; each provider's README carries the detail and the figures.
+
+- **Display the attribution.** It arrives on every passage.
+- **API.Bible requires usage reporting on display**, not on fetch — it is a licence
+  condition, not analytics. One fetch can produce a thousand displays, or none.
+- **Stored scripture is a refreshable cache, not an archive.** API.Bible requires a
+  check at least every 30 days, deletion when content is withdrawn upstream, and
+  removal within **24 hours of a written request** (Terms §13) and within 72
+  hours of a lapsed or terminated subscription (Terms §10) — different clocks for
+  different events.
+- **Storing YouVersion scripture is permitted, and the platform encourages it.**
+  The publisher agreements grant "store" expressly and the developer docs list
+  "Cache responses when possible" first among their best practices. There is **no
+  refresh timer and no usage reporting** on that upstream — but **Biblica gives you
+  48 hours to remove content on written request**, and Lockman wants a usage report
+  by the end of February each year, so "no timer" is not "no duty". The
+  duty is to update on request. Its platform terms grant no rights in the Bible
+  text themselves, so the right comes from the per-version licence you accept in
+  their portal.
+- **Size your request budget.** Every lookup is one live upstream call. API.Bible's
+  free tier is 5,000 a month — about 165 lookups a day — and past it *service is
+  disrupted rather than billed*.
+
+---
+
+## 📚 Documentation
+
+- **[`Documentation/Design/`](Documentation/Design/)** — the full design, in five
+  area-scoped documents. Start at [`Design.md`](Documentation/Design/Design.md).
+  [`UsagePermission.md`](Documentation/Design/UsagePermission.md) is the one to read
+  before you store or share anything.
+  Sections are prefixed and cited by number (`§ABS6`, `§APB14`) from code comments.
+- **[`INTENT.md`](INTENT.md)** — what this system is for, and why the design
+  carries the weight of licence obligations that it does.
+- **[`DEVELOPERS.md`](DEVELOPERS.md)** — how work moves from an idea to merged code
+  here, and how to drive the four agents.
+- **[`CLAUDE.md`](CLAUDE.md)** — the rules that bind contributors and agents alike.
+
+---
+
+## 🚧 Repository setup still outstanding
+
+Tracked on [#3](https://github.com/Glory2Him/Glory2Him.BibleProviders/issues/3):
+
+- `CLAUDE.md` — trim **Commands** to what exists here, and delete its *Before this
+  repository is real* section.
 
 ---
 
@@ -121,6 +291,10 @@ dotnet test
 Pull request titles must start with one of the category prefixes listed in
 `.github/workflows/prLinter.yml` (for example `MINOR FOUNDATIONS:` or `DOCUMENTATION:`),
 and the description must link an issue with `Closes #<n>`. Both are enforced by CI.
+
+`.github/workflows/*.yml` are **build output** — edit
+`Glory2Him.BibleProviders.Infrastructure` and regenerate. A hand-edit is reverted
+silently by the next regeneration.
 
 ---
 

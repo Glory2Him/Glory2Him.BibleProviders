@@ -1,4 +1,4 @@
-﻿// ────────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────────────────
 // Copyright (c) Glory 2 Him. All rights reserved.
 // Licensed under the Glory 2 Him Software License (G2HSL).
 // See License.txt in the project root for full license information.
@@ -71,6 +71,18 @@ namespace Glory2Him.BibleProviders.Infrastructure.Services
                                     {
                                         DotNetVersion = dotNetVersion
                                     }
+                                },
+
+                                new TestTask
+                                {
+                                    Name = "Check Design Consistency",
+                                    Shell = "pwsh",
+                                    Run =
+                                        // checkout@v5 is shallow, so the base ref is not
+                                        // present. Without it check 5 silently self-disables.
+                                        "git fetch --no-tags --depth=1 origin " +
+                                        "${{ github.base_ref || 'main' }}\n" +
+                                        "./Documentation/Check-Design.ps1 -BaseRef FETCH_HEAD"
                                 },
 
                                 new RestoreTask
