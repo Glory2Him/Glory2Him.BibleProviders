@@ -324,10 +324,36 @@ issue number or design section in place of `file:line`, and **no `MERGE READY`
 line** — nothing has been built, so whether the work is done is not a question you
 can answer. Say instead which issues you consider ready to hand to a developer.
 
+## Marking the PR ready for review
+
+**Verifying a change only** — there is no PR yet in issue-review mode, so this
+does not apply there.
+
+When your verdict is PASS, clean or with advisory notes only, apply the
+`ready for review` label to the pull request before you finish. This is a
+label on the PR itself, separate from the issue's `status:` lifecycle — the
+signal that this side of the work is done and a human merge review is the only
+thing left:
+
+```bash
+gh pr edit <PR#> --add-label "ready for review"
+```
+
+A FAIL never gets the label. If an earlier pass on this same PR already applied
+it and this pass finds a BLOCKING defect, remove it rather than leave a stale
+signal:
+
+```bash
+gh pr edit <PR#> --remove-label "ready for review"
+```
+
 ## Hard rules
 
 - You never edit a file. Not to fix a defect, not to add a missing test, not to
   correct a typo. You report; someone else fixes.
+- The one exception is the `ready for review` label above: applying or removing
+  it records your own verdict on the PR itself, and is not a fix to the change
+  under review.
 - You never accept "out of scope" from the developer's summary. Scope is the
   approved criteria in the issue, and only the analyst changes it.
 - You do not pass work because a failure looks unrelated or pre-existing. Report
