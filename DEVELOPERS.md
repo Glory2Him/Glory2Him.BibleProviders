@@ -597,7 +597,8 @@ with `Closes #512` in the body. You move the issue to `status: in-progress`.
 criteria review's context into the code review is exactly what fresh contexts are
 for: *"Act as QA. Verify PR #520 against the acceptance criteria on issue #512."*
 Move the issue to `status: in-qa`. QA reports two ADVISORY findings and no
-BLOCKING ones.
+BLOCKING ones, and applies `ready for review` to PR #520 itself — a label on the
+PR, separate from the issue's `status:` lifecycle.
 
 **8 — Merge**, and set `status: done`. Issues #513 and #514 still sit at
 `status: needs-scoping` with criteria written and already reviewed — they resume
